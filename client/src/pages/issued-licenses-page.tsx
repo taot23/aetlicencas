@@ -1,0 +1,335 @@
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { LicenseRequest } from "@shared/schema";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import { FileDown, ExternalLink } from "lucide-react";
+import { Status } from "@/components/licenses/status-badge";
+
+export default function IssuedLicensesPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
+  const itemsPerPage = 10;
+
+  const { data: issuedLicenses, isLoading } = useQuery<LicenseRequest[]>({
+    queryKey: ["/api/licenses/issued"],
+  });
+
+  const filteredLicenses = issuedLicenses?.filter(license => {
+    // Only include approved licenses
+    if (license.status !== "approved") return false;
+
+    const matchesSearch = !searchTerm || 
+      license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const licenseDate = license.updatedAt ? new Date(license.updatedAt) : null;
+    
+    const matchesDateFrom = !dateFrom || (
+      licenseDate && 
+      licenseDate >= new Date(dateFrom)
+    );
+    
+    const matchesDateTo = !dateTo || (
+      licenseDate && 
+      licenseDate <= new Date(dateTo)
+    );
+    
+    const matchesState = !stateFilter || (
+      license.states.includes(stateFilter)
+    );
+    
+    return matchesSearch && matchesDateFrom && matchesDateTo && matchesState;
+  }) || [];
+
+  // Pagination
+  const totalPages = Math.ceil(filteredLicenses.length / itemsPerPage);
+  const paginatedLicenses = filteredLicenses.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const viewLicenseDetails = (license: LicenseRequest) => {
+    setSelectedLicense(license);
+  };
+
+  return (
+    <MainLayout>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Licenças Emitidas</h1>
+        <p className="text-gray-600 mt-1">Histórico de todas as licenças liberadas</p>
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="flex flex-wrap gap-4">
+          <div className="w-full md:w-auto flex-1">
+            <label htmlFor="issued-search" className="block text-sm font-medium text-gray-700 mb-1">
+              Pesquisar
+            </label>
+            <div className="relative">
+              <Input
+                id="issued-search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Nº do pedido ou placa..."
+                className="pl-10"
+              />
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+            </div>
+          </div>
+          
+          <div className="w-full md:w-auto">
+            <label htmlFor="date-from" className="block text-sm font-medium text-gray-700 mb-1">
+              Data Inicial
+            </label>
+            <Input
+              id="date-from"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          
+          <div className="w-full md:w-auto">
+            <label htmlFor="date-to" className="block text-sm font-medium text-gray-700 mb-1">
+              Data Final
+            </label>
+            <Input
+              id="date-to"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+          
+          <div className="w-full md:w-auto">
+            <label htmlFor="state-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Estado
+            </label>
+            <Select value={stateFilter} onValueChange={setStateFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os estados" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os estados</SelectItem>
+                <SelectItem value="SP">SP</SelectItem>
+                <SelectItem value="MG">MG</SelectItem>
+                <SelectItem value="MT">MT</SelectItem>
+                <SelectItem value="PE">PE</SelectItem>
+                <SelectItem value="TO">TO</SelectItem>
+                <SelectItem value="MS">MS</SelectItem>
+                <SelectItem value="PR">PR</SelectItem>
+                <SelectItem value="ES">ES</SelectItem>
+                <SelectItem value="DNIT">DNIT</SelectItem>
+                <SelectItem value="RS">RS</SelectItem>
+                <SelectItem value="BA">BA</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nº do Pedido</TableHead>
+                <TableHead>Tipo de Conjunto</TableHead>
+                <TableHead>Placa Principal</TableHead>
+                <TableHead>Estados</TableHead>
+                <TableHead>Data Liberação</TableHead>
+                <TableHead>Validade</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10">
+                    Carregando licenças...
+                  </TableCell>
+                </TableRow>
+              ) : paginatedLicenses.length > 0 ? (
+                paginatedLicenses.map((license) => (
+                  <TableRow key={license.id}>
+                    <TableCell className="font-medium">{license.requestNumber}</TableCell>
+                    <TableCell>
+                      {license.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
+                      {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
+                      {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
+                      {license.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
+                      {license.type === "flatbed" && "Prancha"}
+                    </TableCell>
+                    <TableCell>{license.mainVehiclePlate}</TableCell>
+                    <TableCell>{license.states.join(", ")}</TableCell>
+                    <TableCell>
+                      {license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      {license.validUntil && format(new Date(license.validUntil), "dd/MM/yyyy")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {license.licenseFileUrl && (
+                        <Button variant="ghost" size="icon" asChild className="mr-2">
+                          <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                            <FileDown className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => viewLicenseDetails(license)}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10">
+                    Nenhuma licença emitida encontrada.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Mostrando <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, filteredLicenses.length)}
+              </span> de <span className="font-medium">{filteredLicenses.length}</span> licenças
+            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  />
+                </PaginationItem>
+                {Array.from({ length: Math.min(totalPages, 3) }).map((_, i) => {
+                  const pageNumber = currentPage <= 2 
+                    ? i + 1 
+                    : currentPage >= totalPages - 1 
+                      ? totalPages - 2 + i 
+                      : currentPage - 1 + i;
+                  
+                  if (pageNumber <= 0 || pageNumber > totalPages) return null;
+                  
+                  return (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        isActive={currentPage === pageNumber}
+                        onClick={() => setCurrentPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
+
+      {selectedLicense && (
+        <Dialog open={!!selectedLicense} onOpenChange={(open) => !open && setSelectedLicense(null)}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Licença</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Número do Pedido</h3>
+                <p className="text-gray-900">{selectedLicense.requestNumber}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Tipo de Conjunto</h3>
+                <p className="text-gray-900">
+                  {selectedLicense.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
+                  {selectedLicense.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
+                  {selectedLicense.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
+                  {selectedLicense.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
+                  {selectedLicense.type === "flatbed" && "Prancha"}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Placa Principal</h3>
+                <p className="text-gray-900">{selectedLicense.mainVehiclePlate}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Estados</h3>
+                <p className="text-gray-900">{selectedLicense.states.join(", ")}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                <Status status={selectedLicense.status} />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Data de Liberação</h3>
+                <p className="text-gray-900">
+                  {selectedLicense.updatedAt && format(new Date(selectedLicense.updatedAt), "dd/MM/yyyy")}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Validade</h3>
+                <p className="text-gray-900">
+                  {selectedLicense.validUntil && format(new Date(selectedLicense.validUntil), "dd/MM/yyyy")}
+                </p>
+              </div>
+              {selectedLicense.licenseFileUrl && (
+                <div className="pt-4">
+                  <Button asChild className="w-full">
+                    <a href={selectedLicense.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                      Download da Licença
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </MainLayout>
+  );
+}

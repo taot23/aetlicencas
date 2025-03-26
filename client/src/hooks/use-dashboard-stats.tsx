@@ -1,0 +1,23 @@
+import { useQuery } from "@tanstack/react-query";
+
+export type DashboardStats = {
+  issuedLicenses: number;
+  pendingLicenses: number;
+  registeredVehicles: number;
+  activeVehicles: number;
+  recentLicenses: Array<{
+    id: number;
+    requestNumber: string;
+    type: string;
+    mainVehiclePlate: string;
+    states: string[];
+    status: string;
+    createdAt: string;
+  }>;
+};
+
+export function useDashboardStats() {
+  return useQuery<DashboardStats>({
+    queryKey: ["/api/dashboard/stats"],
+  });
+}
