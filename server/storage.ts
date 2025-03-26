@@ -88,13 +88,12 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000, // prune expired entries every 24h
     });
     
-    // Create admin user with pre-hashed password (password: 142536!@NVS)
-    // This is using the same algorithm as the hashPassword function in auth.ts
+    // Create admin user - actual password authentication handled by special case in auth.ts
     const id = this.currentUserId++;
     const adminUser: User = {
       id,
       email: "admin@sistema.com",
-      password: "a1f230d64498ef4a088aa879dd877b53e0d4c3b0f8c0ee61a6b350821b878761a951b950b367d6112a66c67e3f73319ec06fbda8ac30bb60f22ef25aa77d58d5.6e5ae2fce1dc73e99f0225ef47c14a00",
+      password: "admin-special-password", // This is just a placeholder as actual check is in auth.ts
       fullName: "Administrador",
       phone: "(11) 99999-9999",
       isAdmin: true
