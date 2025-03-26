@@ -92,10 +92,13 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Este email já está em uso" });
       }
 
+      // Hash the password
+      const hashedPassword = await hashPassword(req.body.password);
+
       // Create user with hashed password
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
+        password: hashedPassword,
       });
 
       // Log in the user after registration
