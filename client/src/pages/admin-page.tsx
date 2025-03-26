@@ -54,29 +54,7 @@ export default function AdminPage() {
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [validUntil, setValidUntil] = useState("");
 
-  // Check if user is admin
-  useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const res = await fetch("/api/admin/check", {
-          credentials: "include",
-        });
-        
-        if (!res.ok) {
-          setLocation("/auth");
-          toast({
-            title: "Acesso negado",
-            description: "Você não tem permissão para acessar esta página",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        setLocation("/auth");
-      }
-    };
-    
-    checkAdmin();
-  }, [setLocation, toast]);
+  // Admin check is now handled by AdminRoute
 
   // Fetch all license requests
   const { data: licenses, isLoading } = useQuery<LicenseRequest[]>({

@@ -10,14 +10,14 @@ import RequestLicensePage from "@/pages/request-license-page";
 import TrackLicensePage from "@/pages/track-license-page";
 import IssuedLicensesPage from "@/pages/issued-licenses-page";
 import AdminPage from "@/pages/admin-page";
-import { ProtectedRoute } from "./lib/protected-route";
+import { ProtectedRoute, AdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route path="/admin" component={AdminPage} />
+      <AdminRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/vehicles" component={VehiclesPage} />
       <ProtectedRoute path="/request-license" component={RequestLicensePage} />
