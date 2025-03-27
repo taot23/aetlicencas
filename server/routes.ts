@@ -49,6 +49,25 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   }
 };
 
+// Adicionar middleware para processar dados JSON dentro do formulário
+const processVehicleData = (req: any, res: any, next: any) => {
+  console.log('Processing request body:', req.body);
+  
+  if (req.body && req.body.vehicleData) {
+    try {
+      req.body = {
+        ...req.body,
+        ...JSON.parse(req.body.vehicleData)
+      };
+      console.log('Processed vehicle data:', req.body);
+    } catch (error) {
+      console.error('Error parsing vehicleData JSON:', error);
+    }
+  }
+  
+  next();
+};
+
 const upload = multer({ 
   storage: storage_config,
   fileFilter,
@@ -128,25 +147,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/vehicles', requireAuth, upload.single('crlvFile'), async (req, res) => {
+  app.post('/api/vehicles', requireAuth, upload.single('crlvFile'), processVehicleData, async (req, res) => {
     try {
       const userId = req.user.id;
       
       // Extrair dados do campo vehicleData (JSON string)
       let vehicleData;
       
-      try {
-        if (req.body.vehicleData) {
-          vehicleData = JSON.parse(req.body.vehicleData);
-          console.log('Parsed vehicle data:', vehicleData);
-        } else {
-          vehicleData = { ...req.body };
-          console.log('Using raw vehicle data:', vehicleData);
-        }
-      } catch (error) {
-        console.error('Error parsing vehicleData:', error);
-        vehicleData = { ...req.body };
-      }
+      // Já processado pelo middleware processVehicleData
+      vehicleData = { ...req.body };
+      delete vehicleData.vehicleData; // Remove o campo vehicleData se presente
+      console.log('Using processed vehicle data:', vehicleData);
       
       // Debug: log the request body
       console.log('Vehicle data received:', vehicleData);
@@ -178,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/vehicles/:id', requireAuth, upload.single('crlvFile'), async (req, res) => {
+  app.patch('/api/vehicles/:id', requireAuth, upload.single('crlvFile'), processVehicleData, async (req, res) => {
     try {
       const userId = req.user.id;
       const vehicleId = parseInt(req.params.id);
@@ -196,18 +207,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extrair dados do campo vehicleData (JSON string)
       let vehicleData;
       
-      try {
-        if (req.body.vehicleData) {
-          vehicleData = JSON.parse(req.body.vehicleData);
-          console.log('Parsed vehicle update data:', vehicleData);
-        } else {
-          vehicleData = { ...req.body };
-          console.log('Using raw vehicle update data:', vehicleData);
-        }
-      } catch (error) {
-        console.error('Error parsing vehicleData for update:', error);
-        vehicleData = { ...req.body };
-      }
+      // Já processado pelo middleware processVehicleData
+      vehicleData = { ...req.body };
+      delete vehicleData.vehicleData; // Remove o campo vehicleData se presente
+      console.log('Using processed vehicle update data:', vehicleData);
       
       // Validate vehicle data
       try {
