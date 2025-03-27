@@ -45,9 +45,12 @@ export default function AdminPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [updateData, setUpdateData] = useState<UpdateLicenseStatus>({
+  const [updateData, setUpdateData] = useState<{
+    status: LicenseStatus;
+    comments: string;
+  }>({
     status: "pending_registration",
     comments: "",
   });
@@ -63,7 +66,7 @@ export default function AdminPage() {
 
   // Filter licenses
   const filteredLicenses = licenses?.filter(license => {
-    const matchesStatus = !statusFilter || license.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || license.status === statusFilter;
     const matchesSearch = !searchQuery || 
       license.requestNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       license.mainVehiclePlate.toLowerCase().includes(searchQuery.toLowerCase());
@@ -114,11 +117,11 @@ export default function AdminPage() {
     if (!selectedLicense) return;
     
     const formData = new FormData();
-    formData.append("status", updateData.status);
+    // Garantir que status nunca seja undefined
+    formData.append("status", updateData.status || "pending_registration");
     
-    if (updateData.comments) {
-      formData.append("comments", updateData.comments);
-    }
+    // Verificar se existem comentários e garantir que nunca seja undefined ou null
+    formData.append("comments", updateData.comments || "");
     
     if (licenseFile) {
       formData.append("licenseFile", licenseFile);
@@ -176,7 +179,7 @@ export default function AdminPage() {
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os status</SelectItem>
+                    <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
                     <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
                     <SelectItem value="rejected">Reprovado</SelectItem>
