@@ -133,10 +133,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const vehicleData = { ...req.body };
       
+      // Debug: log the request body
+      console.log('Vehicle data received:', vehicleData);
+      
       // Validate vehicle data
       try {
         insertVehicleSchema.parse(vehicleData);
       } catch (error: any) {
+        console.log('Validation error:', error);
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
