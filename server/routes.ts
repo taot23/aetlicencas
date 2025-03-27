@@ -131,7 +131,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/vehicles', requireAuth, upload.single('crlvFile'), async (req, res) => {
     try {
       const userId = req.user.id;
-      const vehicleData = { ...req.body };
+      
+      // Extrair dados do campo vehicleData (JSON string)
+      let vehicleData;
+      
+      try {
+        if (req.body.vehicleData) {
+          vehicleData = JSON.parse(req.body.vehicleData);
+          console.log('Parsed vehicle data:', vehicleData);
+        } else {
+          vehicleData = { ...req.body };
+          console.log('Using raw vehicle data:', vehicleData);
+        }
+      } catch (error) {
+        console.error('Error parsing vehicleData:', error);
+        vehicleData = { ...req.body };
+      }
       
       // Debug: log the request body
       console.log('Vehicle data received:', vehicleData);
@@ -178,12 +193,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Acesso negado' });
       }
       
-      const vehicleData = { ...req.body };
+      // Extrair dados do campo vehicleData (JSON string)
+      let vehicleData;
+      
+      try {
+        if (req.body.vehicleData) {
+          vehicleData = JSON.parse(req.body.vehicleData);
+          console.log('Parsed vehicle update data:', vehicleData);
+        } else {
+          vehicleData = { ...req.body };
+          console.log('Using raw vehicle update data:', vehicleData);
+        }
+      } catch (error) {
+        console.error('Error parsing vehicleData for update:', error);
+        vehicleData = { ...req.body };
+      }
       
       // Validate vehicle data
       try {
         insertVehicleSchema.partial().parse(vehicleData);
       } catch (error: any) {
+        console.log('Validation error on update:', error);
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }

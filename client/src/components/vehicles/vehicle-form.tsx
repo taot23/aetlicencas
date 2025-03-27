@@ -82,6 +82,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Semelhante ao método para novo veículo
       const res = await apiRequest("PATCH", `/api/vehicles/${vehicle?.id}`, data);
       return await res.json();
     },
@@ -104,16 +105,24 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const formData = new FormData();
     
-    // Append form values to FormData
-    formData.append("plate", values.plate.toUpperCase());
-    formData.append("type", values.type);
-    formData.append("tare", values.tare.toString());
-    formData.append("crlvYear", values.crlvYear.toString());
+    // Importante: converter para JSON string e adicionar como campo
+    // Isso assegura que o backend receberá os dados do formulário
+    const vehicleData = {
+      plate: values.plate.toUpperCase(),
+      type: values.type,
+      tare: Number(values.tare),
+      crlvYear: Number(values.crlvYear)
+    };
+    
+    // Append form values as JSON string
+    formData.append("vehicleData", JSON.stringify(vehicleData));
     
     // Append file if selected
     if (file) {
       formData.append("crlvFile", file);
     }
+    
+    console.log("Sending vehicle data:", vehicleData);
     
     if (vehicle) {
       updateMutation.mutate(formData);
