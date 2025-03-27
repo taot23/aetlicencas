@@ -24,8 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getVehicleTypeLabel } from "@/lib/utils";
+
 import { LoaderCircle, UploadCloud } from "lucide-react";
+import { getVehicleTypeLabel } from "@/lib/utils";
 
 interface VehicleFormProps {
   vehicle?: Vehicle | null;
@@ -52,7 +53,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       crlvYear: vehicle.crlvYear,
     } : {
       plate: "",
-      type: "",
+      type: "tractor_unit", // Valor padrão para o tipo (Unidade Tratora)
       tare: 0,
       crlvYear: new Date().getFullYear(),
     },
@@ -152,7 +153,10 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipo de Veículo</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value}
+                defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um tipo" />
