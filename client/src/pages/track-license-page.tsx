@@ -31,7 +31,7 @@ export default function TrackLicensePage() {
       license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = !statusFilter || license.status === statusFilter;
+    const matchesStatus = !statusFilter || statusFilter === "all_status" || license.status === statusFilter;
     
     const matchesDate = !dateFilter || (
       license.createdAt && 
@@ -83,7 +83,7 @@ export default function TrackLicensePage() {
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all_status">Todos os status</SelectItem>
                 <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
                 <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
                 <SelectItem value="rejected">Reprovado</SelectItem>

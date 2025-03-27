@@ -45,7 +45,7 @@ export default function AdminPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all_status");
   const [searchQuery, setSearchQuery] = useState("");
   const [updateData, setUpdateData] = useState<{
     status: LicenseStatus;
@@ -66,7 +66,7 @@ export default function AdminPage() {
 
   // Filter licenses
   const filteredLicenses = licenses?.filter(license => {
-    const matchesStatus = statusFilter === "all" || license.status === statusFilter;
+    const matchesStatus = statusFilter === "all_status" || license.status === statusFilter;
     const matchesSearch = !searchQuery || 
       license.requestNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       license.mainVehiclePlate.toLowerCase().includes(searchQuery.toLowerCase());
@@ -179,7 +179,7 @@ export default function AdminPage() {
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="all_status">Todos os status</SelectItem>
                     <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
                     <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
                     <SelectItem value="rejected">Reprovado</SelectItem>

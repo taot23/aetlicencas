@@ -58,7 +58,7 @@ export default function IssuedLicensesPage() {
       licenseDate <= new Date(dateTo)
     );
     
-    const matchesState = !stateFilter || (
+    const matchesState = !stateFilter || stateFilter === "all_states" || (
       license.states.includes(stateFilter)
     );
     
@@ -138,7 +138,7 @@ export default function IssuedLicensesPage() {
                 <SelectValue placeholder="Todos os estados" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os estados</SelectItem>
+                <SelectItem value="all_states">Todos os estados</SelectItem>
                 <SelectItem value="SP">SP</SelectItem>
                 <SelectItem value="MG">MG</SelectItem>
                 <SelectItem value="MT">MT</SelectItem>
@@ -237,7 +237,6 @@ export default function IssuedLicensesPage() {
                 <PaginationItem>
                   <PaginationPrevious 
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
                   />
                 </PaginationItem>
                 {Array.from({ length: Math.min(totalPages, 3) }).map((_, i) => {
@@ -263,7 +262,6 @@ export default function IssuedLicensesPage() {
                 <PaginationItem>
                   <PaginationNext 
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
                   />
                 </PaginationItem>
               </PaginationContent>

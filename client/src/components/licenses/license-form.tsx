@@ -231,7 +231,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : tractorUnits.length > 0 ? (
                         tractorUnits.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -239,7 +239,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhuma unidade tratora cadastrada</SelectItem>
+                        <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -265,7 +265,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : semiTrailers.length > 0 ? (
                         semiTrailers.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -273,7 +273,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -299,7 +299,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : dollys.length > 0 ? (
                         dollys.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -307,7 +307,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhum dolly cadastrado</SelectItem>
+                        <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -333,7 +333,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : semiTrailers.length > 0 ? (
                         semiTrailers.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -341,7 +341,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -374,7 +374,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : tractorUnits.length > 0 ? (
                         tractorUnits.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -382,7 +382,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhuma unidade tratora cadastrada</SelectItem>
+                        <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -408,7 +408,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : semiTrailers.length > 0 ? (
                         semiTrailers.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -416,7 +416,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -442,7 +442,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : semiTrailers.length > 0 ? (
                         semiTrailers.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -450,7 +450,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -483,7 +483,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : tractorUnits.length > 0 ? (
                         tractorUnits.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -491,7 +491,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhuma unidade tratora cadastrada</SelectItem>
+                        <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -517,7 +517,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                     </FormControl>
                     <SelectContent>
                       {isLoadingVehicles ? (
-                        <SelectItem value="">Carregando...</SelectItem>
+                        <SelectItem value="loading">Carregando...</SelectItem>
                       ) : flatbeds.length > 0 ? (
                         flatbeds.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
@@ -525,7 +525,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="">Nenhuma prancha cadastrada</SelectItem>
+                        <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>

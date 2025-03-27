@@ -30,8 +30,8 @@ export default function VehiclesPage() {
   const filteredVehicles = vehicles?.filter(vehicle => {
     const matchesSearch = !searchTerm || 
       vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !typeFilter || vehicle.type === typeFilter;
-    const matchesStatus = !statusFilter || vehicle.status === statusFilter;
+    const matchesType = !typeFilter || typeFilter === "all_types" || vehicle.type === typeFilter;
+    const matchesStatus = !statusFilter || statusFilter === "all_status" || vehicle.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
   });
 
@@ -96,7 +96,7 @@ export default function VehiclesPage() {
                 <SelectValue placeholder="Todos os tipos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="all_types">Todos os tipos</SelectItem>
                 <SelectItem value="tractor_unit">Unidade Tratora (Cavalo)</SelectItem>
                 <SelectItem value="semi_trailer">Semirreboque</SelectItem>
                 <SelectItem value="trailer">Reboque</SelectItem>
@@ -115,7 +115,7 @@ export default function VehiclesPage() {
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all_status">Todos os status</SelectItem>
                 <SelectItem value="active">Ativo</SelectItem>
                 <SelectItem value="maintenance">Em Manutenção</SelectItem>
                 <SelectItem value="inactive">Inativo</SelectItem>
