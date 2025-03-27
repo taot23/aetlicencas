@@ -40,7 +40,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   
   // Extend the schema to handle file upload
   const formSchema = insertVehicleSchema.extend({
-    tare: z.coerce.number().min(1, "O peso deve ser maior que zero"),
+    tare: z.coerce.number().min(0.1, "O peso deve ser maior que zero"),
     crlvYear: z.coerce.number().min(1990, "O ano deve ser posterior a 1990"),
   });
 

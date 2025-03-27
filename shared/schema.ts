@@ -34,6 +34,8 @@ export const vehicles = pgTable("vehicles", {
 export const insertVehicleSchema = createInsertSchema(vehicles)
   .omit({ id: true, userId: true })
   .extend({
+    // Substituir validação de tare para aceitar números decimais
+    tare: z.number(),
     crlvFile: z.any().optional(),
   });
 
