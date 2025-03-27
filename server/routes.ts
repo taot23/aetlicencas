@@ -49,22 +49,41 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   }
 };
 
-// Adicionar middleware para processar dados JSON dentro do formulário
+// Middleware para processar dados do veículo, tanto de FormData quanto JSON direto
 const processVehicleData = (req: any, res: any, next: any) => {
   console.log('Processing request body:', req.body);
   
+  // Se tiver contentType application/json, já está processado como JSON
+  const contentType = req.headers['content-type'] || '';
+  
+  // Caso 1: Dados no formato FormData com campo vehicleData (abordagem antiga)
   if (req.body && req.body.vehicleData) {
     try {
       req.body = {
         ...req.body,
         ...JSON.parse(req.body.vehicleData)
       };
-      console.log('Processed vehicle data:', req.body);
+      console.log('Processed vehicle data from vehicleData field:', req.body);
     } catch (error) {
       console.error('Error parsing vehicleData JSON:', error);
     }
+  } 
+  // Caso 2: FormData com campos individuais (nossa nova abordagem)
+  else if (contentType.includes('multipart/form-data') && req.body) {
+    // Campos individuais já estão acessíveis em req.body
+    console.log('Using form-data fields directly:', req.body);
+    
+    // Garantir que números são convertidos corretamente
+    if (req.body.tare) req.body.tare = Number(req.body.tare);
+    if (req.body.crlvYear) req.body.crlvYear = Number(req.body.crlvYear);
+  }
+  // Caso 3: JSON direto (nossa nova abordagem para requests sem arquivo)
+  else if (contentType.includes('application/json')) {
+    // Já processado como JSON pelo bodyParser
+    console.log('Request is already in JSON format:', req.body);
   }
   
+  console.log('Final vehicle data for processing:', req.body);
   next();
 };
 

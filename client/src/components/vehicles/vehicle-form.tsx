@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertVehicleSchema, vehicleTypeOptions, Vehicle } from "@shared/schema";
 import { z } from "zod";
@@ -91,6 +91,51 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         title: "Veículo atualizado",
         description: "O veículo foi atualizado com sucesso",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar o veículo",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const createWithoutFileMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/vehicles", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Veículo cadastrado",
+        description: "O veículo foi cadastrado com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível cadastrar o veículo",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const updateWithoutFileMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/vehicles/${vehicle?.id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Veículo atualizado", 
+        description: "O veículo foi atualizado com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
       onSuccess();
     },
     onError: (error: Error) => {
@@ -103,31 +148,47 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const formData = new FormData();
-    
-    // Importante: converter para JSON string e adicionar como campo
-    // Isso assegura que o backend receberá os dados do formulário
-    const vehicleData = {
-      plate: values.plate.toUpperCase(),
-      type: values.type,
-      tare: Number(values.tare),
-      crlvYear: Number(values.crlvYear)
-    };
-    
-    // Append form values as JSON string
-    formData.append("vehicleData", JSON.stringify(vehicleData));
-    
-    // Append file if selected
     if (file) {
+      // Se tiver arquivo, usar FormData
+      const formData = new FormData();
+      
+      const vehicleData = {
+        plate: values.plate.toUpperCase(),
+        type: values.type,
+        tare: Number(values.tare),
+        crlvYear: Number(values.crlvYear)
+      };
+      
+      // Para veículos sem arquivo, enviar diretamente como JSON
+      formData.append("plate", vehicleData.plate);
+      formData.append("type", vehicleData.type);
+      formData.append("tare", vehicleData.tare.toString());
+      formData.append("crlvYear", vehicleData.crlvYear.toString());
       formData.append("crlvFile", file);
-    }
-    
-    console.log("Sending vehicle data:", vehicleData);
-    
-    if (vehicle) {
-      updateMutation.mutate(formData);
+      
+      console.log("Sending vehicle data with file:", vehicleData);
+      
+      if (vehicle) {
+        updateMutation.mutate(formData);
+      } else {
+        createMutation.mutate(formData);
+      }
     } else {
-      createMutation.mutate(formData);
+      // Se não tiver arquivo, enviar diretamente como JSON
+      const vehicleData = {
+        plate: values.plate.toUpperCase(),
+        type: values.type,
+        tare: Number(values.tare),
+        crlvYear: Number(values.crlvYear)
+      };
+      
+      console.log("Sending vehicle data as JSON:", vehicleData);
+      
+      if (vehicle) {
+        updateWithoutFileMutation.mutate(vehicleData);
+      } else {
+        createWithoutFileMutation.mutate(vehicleData);
+      }
     }
   };
 
@@ -137,7 +198,8 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
     }
   };
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || 
+    createWithoutFileMutation.isPending || updateWithoutFileMutation.isPending;
 
   return (
     <Form {...form}>
