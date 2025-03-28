@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -73,6 +74,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       flatbedId: draft.flatbedId,
       length: draft.length / 100, // Convert from cm to meters for display
       additionalPlates: draft.additionalPlates || [],
+      additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
       isDraft: draft.isDraft,
     } : {
@@ -86,6 +88,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       length: 0,
       additionalPlates: [],
       states: [],
+      additionalPlatesDocuments: [],
       isDraft: true,
     },
   });
@@ -560,56 +563,96 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="additionalPlates"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Relação de Placas Adicionais</FormLabel>
-              <div className="text-sm text-muted-foreground mb-2">Adicione as placas que fazem parte da composição mas não constam da listagem acima</div>
-              <div className="flex flex-col space-y-2">
-                {field.value?.map((plate, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Input 
-                      value={plate} 
-                      onChange={(e) => {
-                        const newPlates = [...field.value || []];
-                        newPlates[index] = e.target.value;
-                        field.onChange(newPlates);
-                      }}
-                      placeholder="ABC1234"
-                      className="uppercase"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        const newPlates = [...field.value || []];
-                        newPlates.splice(index, 1);
-                        field.onChange(newPlates);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 flex items-center"
-                  onClick={() => {
-                    field.onChange([...field.value || [], '']);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" /> Adicionar Placa
-                </Button>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="border border-gray-200 rounded-md p-4 space-y-4">
+          <h3 className="font-medium text-gray-800 mb-2">Relação de Placas Adicionais</h3>
+          <div className="text-sm text-muted-foreground mb-2">Adicione as placas que fazem parte da composição mas não constam da listagem acima</div>
+          
+          <FormField
+            control={form.control}
+            name="additionalPlates"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex flex-col space-y-4">
+                  {field.value?.map((plate, index) => (
+                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <Input 
+                          value={plate} 
+                          onChange={(e) => {
+                            const newPlates = [...field.value || []];
+                            newPlates[index] = e.target.value;
+                            field.onChange(newPlates);
+                          }}
+                          placeholder="ABC1234"
+                          className="uppercase"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            // Remove both plate and document
+                            const newPlates = [...field.value || []];
+                            newPlates.splice(index, 1);
+                            field.onChange(newPlates);
+                            
+                            const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                            newDocs.splice(index, 1);
+                            form.setValue('additionalPlatesDocuments', newDocs);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {/* Document upload for each plate */}
+                      <div className="mt-2">
+                        <Label htmlFor={`plate-doc-${index}`}>Documento do veículo (CRLV)</Label>
+                        <Input
+                          id={`plate-doc-${index}`}
+                          type="file"
+                          accept="application/pdf,image/*"
+                          className="mt-1"
+                          onChange={(e) => {
+                            const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                            if (e.target.files?.[0]) {
+                              // We store file path reference here
+                              // In a real implementation, you'd upload this to a server and store the URL
+                              newDocs[index] = URL.createObjectURL(e.target.files[0]);
+                              form.setValue('additionalPlatesDocuments', newDocs);
+                            }
+                          }}
+                        />
+                        {form.getValues('additionalPlatesDocuments')?.[index] && (
+                          <div className="text-sm text-green-600 mt-1">
+                            Documento anexado ✓
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 flex items-center"
+                    onClick={() => {
+                      field.onChange([...field.value || [], '']);
+                      // Add empty document slot
+                      const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                      newDocs.push('');
+                      form.setValue('additionalPlatesDocuments', newDocs);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Placa
+                  </Button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

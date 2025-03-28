@@ -76,6 +76,7 @@ export const licenseRequests = pgTable("license_requests", {
   flatbedId: integer("flatbed_id").references(() => vehicles.id),
   length: integer("length").notNull(), // total length in cm
   additionalPlates: text("additional_plates").array(), // Lista de placas adicionais 
+  additionalPlatesDocuments: text("additional_plates_documents").array(), // URLs dos documentos das placas adicionais
   states: text("states").array().notNull(),
   status: text("status").default("pending_registration").notNull(), // From licenseStatusEnum
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -100,6 +101,7 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
     states: z.array(z.string()).min(1, "Select at least one state"),
     length: z.coerce.number().min(1, "Length must be greater than 0"),
     additionalPlates: z.array(z.string()).optional().default([]),
+    additionalPlatesDocuments: z.array(z.string()).optional().default([]),
   });
 
 export const insertDraftLicenseSchema = insertLicenseRequestSchema.partial().extend({
