@@ -204,6 +204,7 @@ export class MemStorage implements IStorage {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       isDraft: licenseData.isDraft,
+      additionalPlates: licenseData.additionalPlates || [],
       comments: licenseData.comments || null,
       licenseFileUrl: null,
       validUntil: null

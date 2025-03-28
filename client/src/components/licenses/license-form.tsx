@@ -16,6 +16,7 @@ import { z } from "zod";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, X, Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface LicenseFormProps {
@@ -71,6 +72,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       secondTrailerId: draft.secondTrailerId,
       flatbedId: draft.flatbedId,
       length: draft.length / 100, // Convert from cm to meters for display
+      additionalPlates: draft.additionalPlates || [],
       states: draft.states,
       isDraft: draft.isDraft,
     } : {
@@ -82,6 +84,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       secondTrailerId: undefined,
       flatbedId: undefined,
       length: 0,
+      additionalPlates: [],
       states: [],
       isDraft: true,
     },
@@ -552,6 +555,57 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="additionalPlates"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Relação de Placas Adicionais</FormLabel>
+              <div className="text-sm text-muted-foreground mb-2">Adicione as placas que fazem parte da composição mas não constam da listagem acima</div>
+              <div className="flex flex-col space-y-2">
+                {field.value?.map((plate, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input 
+                      value={plate} 
+                      onChange={(e) => {
+                        const newPlates = [...field.value || []];
+                        newPlates[index] = e.target.value;
+                        field.onChange(newPlates);
+                      }}
+                      placeholder="ABC1234"
+                      className="uppercase"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const newPlates = [...field.value || []];
+                        newPlates.splice(index, 1);
+                        field.onChange(newPlates);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 flex items-center"
+                  onClick={() => {
+                    field.onChange([...field.value || [], '']);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" /> Adicionar Placa
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
