@@ -53,15 +53,7 @@ export default function AdminPage() {
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all_status");
   const [searchQuery, setSearchQuery] = useState("");
-  const [updateData, setUpdateData] = useState<{
-    status: LicenseStatus;
-    comments: string;
-  }>({
-    status: "pending_registration",
-    comments: "",
-  });
-  const [licenseFile, setLicenseFile] = useState<File | null>(null);
-  const [validUntil, setValidUntil] = useState("");
+  // Removido updateData, licenseFile, validUntil que não são mais necessários
   
   // Estado para controlar o estado selecionado na seção de status por estado
   const [selectedState, setSelectedState] = useState<string>("");
@@ -95,38 +87,7 @@ export default function AdminPage() {
     return matchesStatus && matchesSearch;
   });
 
-  // Update license status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
-      const res = await fetch(`/api/admin/licenses/${id}/status`, {
-        method: "PATCH",
-        credentials: "include",
-        body: data,
-      });
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || res.statusText);
-      }
-      
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
-      setSelectedLicense(null);
-      toast({
-        title: "Status atualizado",
-        description: "O status da licença foi atualizado com sucesso",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível atualizar o status",
-        variant: "destructive",
-      });
-    },
-  });
+  // Mutação para atualizar status foi removida - agora utilizamos apenas atualização por estado
   
   // Update state-specific status mutation
   const updateStateStatusMutation = useMutation({
@@ -167,37 +128,10 @@ export default function AdminPage() {
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setLicenseFile(e.target.files[0]);
-    }
-  };
-  
   const handleStateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setStateFile(e.target.files[0]);
     }
-  };
-
-  const handleUpdateStatus = () => {
-    if (!selectedLicense) return;
-    
-    const formData = new FormData();
-    // Garantir que status nunca seja undefined
-    formData.append("status", updateData.status || "pending_registration");
-    
-    // Verificar se existem comentários e garantir que nunca seja undefined ou null
-    formData.append("comments", updateData.comments || "");
-    
-    if (licenseFile) {
-      formData.append("licenseFile", licenseFile);
-    }
-    
-    if (validUntil) {
-      formData.append("validUntil", validUntil);
-    }
-    
-    updateStatusMutation.mutate({ id: selectedLicense.id, data: formData });
   };
   
   const handleUpdateStateStatus = () => {
@@ -217,12 +151,6 @@ export default function AdminPage() {
 
   const openLicenseDialog = (license: LicenseRequest) => {
     setSelectedLicense(license);
-    setUpdateData({
-      status: license.status as LicenseStatus,
-      comments: license.comments || "",
-    });
-    setValidUntil(license.validUntil ? format(new Date(license.validUntil), "yyyy-MM-dd") : "");
-    setLicenseFile(null);
     setSelectedState("");
     setSelectedStateStatus("pending_registration");
     setStateComments("");
@@ -370,9 +298,8 @@ export default function AdminPage() {
               </DialogHeader>
               
               <Tabs defaultValue="details">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="details">Detalhes da Licença</TabsTrigger>
-                  <TabsTrigger value="update">Atualizar Status</TabsTrigger>
                   <TabsTrigger value="states">Status por Estado</TabsTrigger>
                 </TabsList>
                 
@@ -430,78 +357,6 @@ export default function AdminPage() {
                           </a>
                         </Button>
                       </div>
-                    )}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="update">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="status">Status da Licença</Label>
-                      <Select 
-                        value={updateData.status} 
-                        onValueChange={(value) => setUpdateData({ ...updateData, status: value as LicenseStatus })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
-                          <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
-                          <SelectItem value="rejected">Reprovado - Pendência</SelectItem>
-                          <SelectItem value="under_review">Análise do Órgão</SelectItem>
-                          <SelectItem value="pending_approval">Pendente Liberação</SelectItem>
-                          <SelectItem value="approved">Liberada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="comments">Comentários</Label>
-                      <Textarea 
-                        id="comments"
-                        value={updateData.comments || ""}
-                        onChange={(e) => setUpdateData({ ...updateData, comments: e.target.value })}
-                        placeholder="Adicione comentários ou instruções para o solicitante..."
-                        rows={4}
-                      />
-                    </div>
-                    
-                    {updateData.status === "approved" && (
-                      <>
-                        <div>
-                          <Label htmlFor="validUntil">Válido até</Label>
-                          <Input 
-                            id="validUntil"
-                            type="date"
-                            value={validUntil}
-                            onChange={(e) => setValidUntil(e.target.value)}
-                            required={updateData.status === "approved"}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="licenseFile">Arquivo da Licença</Label>
-                          <Input 
-                            id="licenseFile"
-                            type="file"
-                            onChange={handleFileChange}
-                            accept=".pdf,.jpg,.jpeg,.png"
-                          />
-                          <p className="text-sm text-gray-500 mt-1">
-                            {licenseFile ? `Arquivo selecionado: ${licenseFile.name}` : "Formatos aceitos: PDF, JPG, PNG"}
-                          </p>
-                        </div>
-                        
-                        {!licenseFile && !selectedLicense.licenseFileUrl && (
-                          <div className="flex items-center">
-                            <AlertCircle className="h-4 w-4 text-yellow-500 mr-2" />
-                            <p className="text-sm text-yellow-500">
-                              É recomendado anexar o arquivo da licença ao mudar para o status "Liberada"
-                            </p>
-                          </div>
-                        )}
-                      </>
                     )}
                   </div>
                 </TabsContent>
