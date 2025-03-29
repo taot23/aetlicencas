@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Input } from "@/components/ui/input";
+import { FileDown } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -144,13 +145,34 @@ export default function TrackLicensePage() {
                 <p className="text-gray-900">{selectedLicense.mainVehiclePlate}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Estados</h3>
-                <p className="text-gray-900">{selectedLicense.states.join(", ")}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                <h3 className="text-sm font-medium text-gray-500">Status Geral</h3>
                 <StatusBadge status={selectedLicense.status} />
               </div>
+              
+              {/* Status por Estado */}
+              {selectedLicense.states && selectedLicense.states.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Status por Estado</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedLicense.states.map(state => {
+                      // Procura o status para este estado
+                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || selectedLicense.status;
+                      
+                      return (
+                        <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
+                          <div className="flex flex-col">
+                            <div className="flex items-center">
+                              <span className="font-medium text-gray-800">{state}</span>
+                              <div className="mx-1 text-gray-400">•</div>
+                              <StatusBadge status={stateStatus} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Data de Solicitação</h3>
                 <p className="text-gray-900">
@@ -163,11 +185,50 @@ export default function TrackLicensePage() {
                   <p className="text-gray-900">{selectedLicense.comments}</p>
                 </div>
               )}
+              {/* Arquivos por estado quando a licença está liberada */}
+              {selectedLicense.status === "approved" && selectedLicense.states && selectedLicense.states.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Arquivos por Estado</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedLicense.states.map(state => {
+                      // Procura o arquivo para este estado
+                      const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
+                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || selectedLicense.status;
+                      
+                      return (
+                        <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
+                          <div className="flex flex-col">
+                            <div className="flex items-center mb-1">
+                              <span className="font-medium text-gray-800">{state}</span>
+                              <div className="mx-1 text-gray-400">•</div>
+                              <StatusBadge status={stateStatus} />
+                            </div>
+                            
+                            {!stateFileEntry && (
+                              <span className="text-xs text-gray-500 italic">Nenhum arquivo disponível</span>
+                            )}
+                          </div>
+                          
+                          {stateFileEntry && stateStatus === "approved" && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={stateFileEntry.split(':')[1]} target="_blank" rel="noopener noreferrer">
+                                <FileDown className="h-4 w-4 mr-1" /> Baixar
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Arquivo principal da licença (manter para compatibilidade) */}
               {selectedLicense.status === "approved" && selectedLicense.licenseFileUrl && (
                 <div className="pt-4">
                   <Button asChild className="w-full">
                     <a href={selectedLicense.licenseFileUrl} target="_blank" rel="noopener noreferrer">
-                      Download da Licença
+                      Download da Licença Completa
                     </a>
                   </Button>
                 </div>
