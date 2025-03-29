@@ -167,6 +167,6 @@ export function setupAuth(app: Express) {
       return res.status(403).json({ message: "Acesso negado" });
     }
     
-    res.status(200).json({ message: "Acesso de administrador confirmado" });
+    res.status(200).json({ message: "Acesso de administrador confirmado", isAdmin: true });
   });
 }
