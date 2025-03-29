@@ -17,6 +17,15 @@ interface StatusChartProps {
 export function StatusChart({ type, isLoading }: StatusChartProps) {
   const { data: chartData } = useQuery<ChartData[]>({
     queryKey: [type === "vehicle" ? "/api/dashboard/vehicle-stats" : "/api/dashboard/state-stats"],
+    queryFn: async ({ queryKey }) => {
+      const res = await fetch(queryKey[0] as string, {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error(`Erro ao buscar estatísticas de ${type === "vehicle" ? "veículos" : "estados"}`);
+      }
+      return res.json();
+    }
   });
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];

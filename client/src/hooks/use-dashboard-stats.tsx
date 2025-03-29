@@ -19,5 +19,14 @@ export type DashboardStats = {
 export function useDashboardStats() {
   return useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/stats", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar estatísticas do dashboard");
+      }
+      return res.json();
+    }
   });
 }

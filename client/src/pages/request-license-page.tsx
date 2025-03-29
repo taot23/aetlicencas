@@ -13,6 +13,15 @@ export default function RequestLicensePage() {
 
   const { data: draftLicenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses/drafts"],
+    queryFn: async () => {
+      const res = await fetch("/api/licenses/drafts", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar rascunhos de licenças");
+      }
+      return res.json();
+    }
   });
 
   const handleNewRequest = () => {

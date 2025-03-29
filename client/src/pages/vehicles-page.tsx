@@ -25,6 +25,15 @@ export default function VehiclesPage() {
 
   const { data: vehicles, isLoading, refetch } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
+    queryFn: async () => {
+      const res = await fetch("/api/vehicles", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar veículos");
+      }
+      return res.json();
+    }
   });
 
   const filteredVehicles = vehicles?.filter(vehicle => {

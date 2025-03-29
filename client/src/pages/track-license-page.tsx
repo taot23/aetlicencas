@@ -24,6 +24,15 @@ export default function TrackLicensePage() {
 
   const { data: licenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses"],
+    queryFn: async () => {
+      const res = await fetch("/api/licenses", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar licenças");
+      }
+      return res.json();
+    }
   });
 
   const filteredLicenses = licenses?.filter(license => {

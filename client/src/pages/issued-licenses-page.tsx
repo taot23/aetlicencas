@@ -36,6 +36,15 @@ export default function IssuedLicensesPage() {
 
   const { data: issuedLicenses, isLoading } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses/issued"],
+    queryFn: async () => {
+      const res = await fetch("/api/licenses/issued", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar licenças emitidas");
+      }
+      return res.json();
+    }
   });
 
   const filteredLicenses = issuedLicenses?.filter(license => {
