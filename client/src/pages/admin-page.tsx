@@ -318,7 +318,15 @@ export default function AdminPage() {
                           {license.type === "flatbed" && "Prancha"}
                         </TableCell>
                         <TableCell>{license.mainVehiclePlate}</TableCell>
-                        <TableCell>{license.states.join(", ")}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {license.states.map(state => (
+                              <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                {state}
+                              </span>
+                            ))}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {license.createdAt && format(new Date(license.createdAt), "dd/MM/yyyy")}
                         </TableCell>
@@ -377,7 +385,13 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Estados</h3>
-                      <p className="text-gray-900">{selectedLicense.states.join(", ")}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedLicense.states.map(state => (
+                          <span key={state} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {state}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Comprimento</h3>
@@ -487,45 +501,46 @@ export default function AdminPage() {
                   <div className="space-y-4">
                     <h3 className="text-base font-medium">Status por Estado</h3>
                     
-                    {/* Estado atual dos estados */}
-                    {selectedLicense.states.length > 0 && (
-                      <Accordion type="single" collapsible className="w-full mb-6">
-                        <AccordionItem value="state-status">
-                          <AccordionTrigger>Status atual por estado</AccordionTrigger>
-                          <AccordionContent>
-                            <div className="space-y-2 mt-2">
-                              {selectedLicense.states.map(state => (
-                                <div key={state} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                  <div>
-                                    <span className="font-medium">{state}</span>
-                                    <StatusBadge 
-                                      status={
-                                        selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] as LicenseStatus || 
-                                        "pending_registration"
-                                      } 
-                                      className="ml-2"
-                                    />
-                                  </div>
-                                  
-                                  {/* Mostrar botão de download se houver arquivo para este estado */}
-                                  {selectedLicense.stateFiles?.some(sf => sf.startsWith(`${state}:`)) && (
-                                    <Button variant="outline" size="sm" asChild>
-                                      <a 
-                                        href={selectedLicense.stateFiles.find(sf => sf.startsWith(`${state}:`))?.split(':')[1]} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                      >
-                                        <FileDown className="h-4 w-4 mr-1" /> Baixar
-                                      </a>
-                                    </Button>
-                                  )}
-                                </div>
-                              ))}
+                    {/* Status atual por estado */}
+                    <div className="mb-6">
+                      <h4 className="font-medium text-gray-700 mb-2">Status atual por estado</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {selectedLicense.states.map(state => (
+                          <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
+                            <div className="flex flex-col">
+                              <div className="flex items-center mb-1">
+                                <span className="font-medium text-gray-800">{state}</span>
+                                <div className="mx-1 text-gray-400">•</div>
+                                <StatusBadge 
+                                  status={
+                                    selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] as LicenseStatus || 
+                                    "pending_registration"
+                                  } 
+                                />
+                              </div>
+                              
+                              {/* Mostrar status "Nenhum arquivo enviado" */}
+                              {!selectedLicense.stateFiles?.some(sf => sf.startsWith(`${state}:`)) && (
+                                <span className="text-xs text-gray-500 italic">Nenhum arquivo enviado</span>
+                              )}
                             </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    )}
+                            
+                            {/* Mostrar botão de download se houver arquivo para este estado */}
+                            {selectedLicense.stateFiles?.some(sf => sf.startsWith(`${state}:`)) && (
+                              <Button variant="outline" size="sm" asChild>
+                                <a 
+                                  href={selectedLicense.stateFiles.find(sf => sf.startsWith(`${state}:`))?.split(':')[1]} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                >
+                                  <FileDown className="h-4 w-4 mr-1" /> Arquivo
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     
                     {/* Formulário para atualizar o status de um estado específico */}
                     <div className="space-y-4 border p-4 rounded-lg">

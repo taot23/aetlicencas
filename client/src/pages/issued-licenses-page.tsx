@@ -9,7 +9,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { LicenseRequest } from "@shared/schema";
+import { LicenseRequest, LicenseStatus } from "@shared/schema";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { FileDown, ExternalLink } from "lucide-react";
-import { Status } from "@/components/licenses/status-badge";
+import { Status, StatusBadge } from "@/components/licenses/status-badge";
 
 export default function IssuedLicensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -189,7 +189,15 @@ export default function IssuedLicensesPage() {
                       {license.type === "flatbed" && "Prancha"}
                     </TableCell>
                     <TableCell>{license.mainVehiclePlate}</TableCell>
-                    <TableCell>{license.states.join(", ")}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {license.states.map(state => (
+                          <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            {state}
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}
                     </TableCell>
@@ -297,7 +305,13 @@ export default function IssuedLicensesPage() {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Estados</h3>
-                <p className="text-gray-900">{selectedLicense.states.join(", ")}</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {selectedLicense.states.map(state => (
+                    <span key={state} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {state}
+                    </span>
+                  ))}
+                </div>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
@@ -315,25 +329,37 @@ export default function IssuedLicensesPage() {
                   {selectedLicense.validUntil && format(new Date(selectedLicense.validUntil), "dd/MM/yyyy")}
                 </p>
               </div>
-              {/* Arquivos por estado */}
-              {selectedLicense.stateFiles && selectedLicense.stateFiles.length > 0 && (
+              {/* Arquivos por estado - mostrar sempre, mesmo que não haja arquivos ainda */}
+              {selectedLicense.states && selectedLicense.states.length > 0 && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-2">Arquivos por Estado</h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {selectedLicense.states.map(state => {
                       // Procura o arquivo para este estado
                       const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
-                      if (!stateFileEntry) return null;
+                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
                       
-                      const fileUrl = stateFileEntry.split(':')[1];
                       return (
-                        <div key={state} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                          <span className="font-medium">{state}</span>
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                              <FileDown className="h-4 w-4 mr-1" /> Baixar
-                            </a>
-                          </Button>
+                        <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
+                          <div className="flex flex-col">
+                            <div className="flex items-center mb-1">
+                              <span className="font-medium text-gray-800">{state}</span>
+                              <div className="mx-1 text-gray-400">•</div>
+                              <StatusBadge status={stateStatus as LicenseStatus} />
+                            </div>
+                            
+                            {!stateFileEntry && (
+                              <span className="text-xs text-gray-500 italic">Nenhum arquivo disponível</span>
+                            )}
+                          </div>
+                          
+                          {stateFileEntry && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={stateFileEntry.split(':')[1]} target="_blank" rel="noopener noreferrer">
+                                <FileDown className="h-4 w-4 mr-1" /> Baixar
+                              </a>
+                            </Button>
+                          )}
                         </div>
                       );
                     })}
