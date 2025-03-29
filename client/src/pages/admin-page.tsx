@@ -74,6 +74,15 @@ export default function AdminPage() {
   // Fetch all license requests
   const { data: licenses, isLoading } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/admin/licenses"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/licenses", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar licenças");
+      }
+      return res.json();
+    }
   });
 
   // Filter licenses
