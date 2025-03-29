@@ -2,7 +2,7 @@ import {
   users, type User, type InsertUser,
   vehicles, type Vehicle, type InsertVehicle,
   licenseRequests, type LicenseRequest, type InsertLicenseRequest, type UpdateLicenseStatus, 
-  LicenseStatus, LicenseType
+  type UpdateLicenseState, LicenseStatus, LicenseType
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -57,6 +57,7 @@ export interface IStorage {
   deleteLicenseRequest(id: number): Promise<void>;
   submitLicenseDraft(id: number, requestNumber: string): Promise<LicenseRequest>;
   updateLicenseStatus(id: number, statusUpdate: UpdateLicenseStatus & { licenseFileUrl?: string }): Promise<LicenseRequest>;
+  updateLicenseStateStatus(data: UpdateLicenseState): Promise<LicenseRequest>;
   
   // Dashboard stats
   getDashboardStats(userId: number): Promise<DashboardStats>;
@@ -265,7 +266,7 @@ export class MemStorage implements IStorage {
     }
     
     const now = new Date();
-    const updatedLicense: LicenseRequest = {
+    let updatedLicense: LicenseRequest = {
       ...license,
       status: statusUpdate.status,
       comments: statusUpdate.comments || license.comments,
@@ -274,7 +275,110 @@ export class MemStorage implements IStorage {
       validUntil: statusUpdate.validUntil || license.validUntil
     };
     
+    // Se temos um estado específico para atualizar
+    if (statusUpdate.state && statusUpdate.stateStatus) {
+      // Inicializa arrays se necessário
+      const stateStatuses = updatedLicense.stateStatuses || [];
+      const stateFiles = updatedLicense.stateFiles || [];
+      
+      const stateStatusKey = `${statusUpdate.state}:${statusUpdate.stateStatus}`;
+      
+      // Remove status antigo para este estado, se existir
+      const stateStatusIndex = stateStatuses.findIndex(s => s.startsWith(`${statusUpdate.state}:`));
+      if (stateStatusIndex >= 0) {
+        stateStatuses.splice(stateStatusIndex, 1);
+      }
+      
+      // Adiciona novo status
+      stateStatuses.push(stateStatusKey);
+      
+      // Se tiver arquivo, adiciona ou atualiza
+      if (statusUpdate.stateFile) {
+        const stateFileIndex = stateFiles.findIndex(f => f.startsWith(`${statusUpdate.state}:`));
+        if (stateFileIndex >= 0) {
+          stateFiles.splice(stateFileIndex, 1);
+        }
+        
+        // Usa o caminho do arquivo salvo pelo middleware multer
+        const fileUrl = `/uploads/${statusUpdate.stateFile.filename}`;
+        stateFiles.push(`${statusUpdate.state}:${fileUrl}`);
+      }
+      
+      updatedLicense = {
+        ...updatedLicense,
+        stateStatuses,
+        stateFiles
+      };
+      
+      // Verifica se todos os estados possuem status 'approved' e atualiza o status geral
+      const allStatesApproved = updatedLicense.states.every(state => {
+        const stateStatus = stateStatuses.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+        return stateStatus === 'approved';
+      });
+      
+      if (allStatesApproved) {
+        updatedLicense.status = 'approved';
+      }
+    }
+    
     this.licenseRequests.set(id, updatedLicense);
+    return updatedLicense;
+  }
+  
+  // Método específico para atualizar apenas o status de um estado
+  async updateLicenseStateStatus(data: UpdateLicenseState): Promise<LicenseRequest> {
+    const { licenseId, state, status, file, comments } = data;
+    
+    const license = this.licenseRequests.get(licenseId);
+    if (!license) {
+      throw new Error("License not found");
+    }
+    
+    // Inicializa arrays se necessário
+    const stateStatuses = license.stateStatuses || [];
+    const stateFiles = license.stateFiles || [];
+    
+    // Remove status antigo para este estado, se existir
+    const stateStatusIndex = stateStatuses.findIndex(s => s.startsWith(`${state}:`));
+    if (stateStatusIndex >= 0) {
+      stateStatuses.splice(stateStatusIndex, 1);
+    }
+    
+    // Adiciona novo status
+    stateStatuses.push(`${state}:${status}`);
+    
+    // Se tiver arquivo, adiciona ou atualiza
+    if (file) {
+      const stateFileIndex = stateFiles.findIndex(f => f.startsWith(`${state}:`));
+      if (stateFileIndex >= 0) {
+        stateFiles.splice(stateFileIndex, 1);
+      }
+      
+      // Usa o caminho do arquivo salvo pelo middleware multer
+      const fileUrl = `/uploads/${file.filename}`;
+      stateFiles.push(`${state}:${fileUrl}`);
+    }
+    
+    const now = new Date();
+    const updatedLicense: LicenseRequest = {
+      ...license,
+      stateStatuses,
+      stateFiles,
+      updatedAt: now.toISOString(),
+      comments: comments || license.comments
+    };
+    
+    // Verifica se todos os estados possuem status 'approved' e atualiza o status geral
+    const allStatesApproved = updatedLicense.states.every(state => {
+      const stateStatus = stateStatuses.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+      return stateStatus === 'approved';
+    });
+    
+    if (allStatesApproved) {
+      updatedLicense.status = 'approved';
+    }
+    
+    this.licenseRequests.set(licenseId, updatedLicense);
     return updatedLicense;
   }
 

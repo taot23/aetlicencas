@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { 
@@ -35,11 +35,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { StatusBadge } from "@/components/licenses/status-badge";
-import { LicenseRequest, LicenseStatus, UpdateLicenseStatus } from "@shared/schema";
+import { LicenseRequest, LicenseStatus, brazilianStates } from "@shared/schema";
 import { format } from "date-fns";
-import { AlertCircle, FileText } from "lucide-react";
+import { AlertCircle, FileText, FileDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function AdminPage() {
   const [, setLocation] = useLocation();
@@ -56,6 +62,12 @@ export default function AdminPage() {
   });
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [validUntil, setValidUntil] = useState("");
+  
+  // Estado para controlar o estado selecionado na seção de status por estado
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedStateStatus, setSelectedStateStatus] = useState<LicenseStatus>("pending_registration");
+  const [stateComments, setStateComments] = useState<string>("");
+  const [stateFile, setStateFile] = useState<File | null>(null);
 
   // Admin check is now handled by AdminRoute
 
@@ -106,10 +118,55 @@ export default function AdminPage() {
       });
     },
   });
+  
+  // Update state-specific status mutation
+  const updateStateStatusMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
+      const res = await fetch(`/api/admin/licenses/${id}/state-status`, {
+        method: "PATCH",
+        credentials: "include",
+        body: data,
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || res.statusText);
+      }
+      
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
+      // Atualiza a licença selecionada com os novos dados
+      setSelectedLicense(data);
+      setSelectedState("");
+      setSelectedStateStatus("pending_registration");
+      setStateComments("");
+      setStateFile(null);
+      
+      toast({
+        title: "Status do estado atualizado",
+        description: "O status do estado foi atualizado com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar o status do estado",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setLicenseFile(e.target.files[0]);
+    }
+  };
+  
+  const handleStateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setStateFile(e.target.files[0]);
     }
   };
 
@@ -133,15 +190,54 @@ export default function AdminPage() {
     
     updateStatusMutation.mutate({ id: selectedLicense.id, data: formData });
   };
+  
+  const handleUpdateStateStatus = () => {
+    if (!selectedLicense || !selectedState) return;
+    
+    const formData = new FormData();
+    formData.append("state", selectedState);
+    formData.append("status", selectedStateStatus);
+    formData.append("comments", stateComments || "");
+    
+    if (stateFile) {
+      formData.append("stateFile", stateFile);
+    }
+    
+    updateStateStatusMutation.mutate({ id: selectedLicense.id, data: formData });
+  };
 
   const openLicenseDialog = (license: LicenseRequest) => {
     setSelectedLicense(license);
     setUpdateData({
-      status: license.status,
+      status: license.status as LicenseStatus,
       comments: license.comments || "",
     });
     setValidUntil(license.validUntil ? format(new Date(license.validUntil), "yyyy-MM-dd") : "");
     setLicenseFile(null);
+    setSelectedState("");
+    setSelectedStateStatus("pending_registration");
+    setStateComments("");
+    setStateFile(null);
+  };
+  
+  // Função auxiliar para obter o status de um estado específico
+  const getStateStatus = (license: LicenseRequest, state: string): string => {
+    if (!license.stateStatuses) return "Não definido";
+    
+    const stateStatus = license.stateStatuses.find(ss => ss.startsWith(`${state}:`));
+    if (!stateStatus) return "Não definido";
+    
+    const status = stateStatus.split(':')[1];
+    
+    switch(status) {
+      case "pending_registration": return "Pendente Cadastro";
+      case "registration_in_progress": return "Cadastro em Andamento";
+      case "rejected": return "Reprovado";
+      case "under_review": return "Análise do Órgão";
+      case "pending_approval": return "Pendente Liberação";
+      case "approved": return "Liberada";
+      default: return "Não definido";
+    }
   };
 
   return (
@@ -257,9 +353,10 @@ export default function AdminPage() {
               </DialogHeader>
               
               <Tabs defaultValue="details">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="details">Detalhes da Licença</TabsTrigger>
                   <TabsTrigger value="update">Atualizar Status</TabsTrigger>
+                  <TabsTrigger value="states">Status por Estado</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
@@ -385,18 +482,139 @@ export default function AdminPage() {
                     )}
                   </div>
                 </TabsContent>
+                
+                <TabsContent value="states">
+                  <div className="space-y-4">
+                    <h3 className="text-base font-medium">Status por Estado</h3>
+                    
+                    {/* Estado atual dos estados */}
+                    {selectedLicense.states.length > 0 && (
+                      <Accordion type="single" collapsible className="w-full mb-6">
+                        <AccordionItem value="state-status">
+                          <AccordionTrigger>Status atual por estado</AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2 mt-2">
+                              {selectedLicense.states.map(state => (
+                                <div key={state} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                  <div>
+                                    <span className="font-medium">{state}</span>
+                                    <StatusBadge 
+                                      status={
+                                        selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] as LicenseStatus || 
+                                        "pending_registration"
+                                      } 
+                                      className="ml-2"
+                                    />
+                                  </div>
+                                  
+                                  {/* Mostrar botão de download se houver arquivo para este estado */}
+                                  {selectedLicense.stateFiles?.some(sf => sf.startsWith(`${state}:`)) && (
+                                    <Button variant="outline" size="sm" asChild>
+                                      <a 
+                                        href={selectedLicense.stateFiles.find(sf => sf.startsWith(`${state}:`))?.split(':')[1]} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                      >
+                                        <FileDown className="h-4 w-4 mr-1" /> Baixar
+                                      </a>
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    )}
+                    
+                    {/* Formulário para atualizar o status de um estado específico */}
+                    <div className="space-y-4 border p-4 rounded-lg">
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <Label htmlFor="state-select">Selecione o Estado</Label>
+                          <Select 
+                            value={selectedState}
+                            onValueChange={setSelectedState}
+                          >
+                            <SelectTrigger id="state-select">
+                              <SelectValue placeholder="Selecione um estado" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {selectedLicense.states.map(state => (
+                                <SelectItem key={state} value={state}>
+                                  {state} - {getStateStatus(selectedLicense, state)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {selectedState && (
+                          <>
+                            <div>
+                              <Label htmlFor="state-status">Status para {selectedState}</Label>
+                              <Select 
+                                value={selectedStateStatus}
+                                onValueChange={(value) => setSelectedStateStatus(value as LicenseStatus)}
+                              >
+                                <SelectTrigger id="state-status">
+                                  <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
+                                  <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
+                                  <SelectItem value="rejected">Reprovado</SelectItem>
+                                  <SelectItem value="under_review">Análise do Órgão</SelectItem>
+                                  <SelectItem value="pending_approval">Pendente Liberação</SelectItem>
+                                  <SelectItem value="approved">Liberada</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="state-comments">Comentários para {selectedState}</Label>
+                              <Textarea 
+                                id="state-comments"
+                                value={stateComments}
+                                onChange={(e) => setStateComments(e.target.value)}
+                                placeholder="Adicione comentários específicos para este estado..."
+                                rows={3}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="state-file">Arquivo para {selectedState}</Label>
+                              <Input 
+                                id="state-file"
+                                type="file"
+                                onChange={handleStateFileChange}
+                                accept=".pdf,.jpg,.jpeg,.png"
+                              />
+                              <p className="text-sm text-gray-500 mt-1">
+                                {stateFile ? `Arquivo selecionado: ${stateFile.name}` : "Formatos aceitos: PDF, JPG, PNG"}
+                              </p>
+                            </div>
+                            
+                            <Button 
+                              onClick={handleUpdateStateStatus}
+                              disabled={updateStateStatusMutation.isPending}
+                              className="mt-2"
+                            >
+                              {updateStateStatusMutation.isPending ? "Atualizando..." : "Atualizar Estado"}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
               </Tabs>
               
               <DialogFooter className="gap-2 sm:gap-0">
                 <Button variant="outline" onClick={() => setSelectedLicense(null)}>
-                  Cancelar
+                  Fechar
                 </Button>
-                <Button
-                  onClick={handleUpdateStatus}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  {updateStatusMutation.isPending ? "Atualizando..." : "Salvar Alterações"}
-                </Button>
+                {/* O botão de salvar agora aparece apenas em cada aba específica */}
               </DialogFooter>
             </DialogContent>
           </Dialog>

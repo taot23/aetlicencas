@@ -315,11 +315,38 @@ export default function IssuedLicensesPage() {
                   {selectedLicense.validUntil && format(new Date(selectedLicense.validUntil), "dd/MM/yyyy")}
                 </p>
               </div>
+              {/* Arquivos por estado */}
+              {selectedLicense.stateFiles && selectedLicense.stateFiles.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Arquivos por Estado</h3>
+                  <div className="space-y-2">
+                    {selectedLicense.states.map(state => {
+                      // Procura o arquivo para este estado
+                      const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
+                      if (!stateFileEntry) return null;
+                      
+                      const fileUrl = stateFileEntry.split(':')[1];
+                      return (
+                        <div key={state} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <span className="font-medium">{state}</span>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                              <FileDown className="h-4 w-4 mr-1" /> Baixar
+                            </a>
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Arquivo principal da licença (manter para compatibilidade) */}
               {selectedLicense.licenseFileUrl && (
                 <div className="pt-4">
                   <Button asChild className="w-full">
                     <a href={selectedLicense.licenseFileUrl} target="_blank" rel="noopener noreferrer">
-                      Download da Licença
+                      Download da Licença Completa
                     </a>
                   </Button>
                 </div>

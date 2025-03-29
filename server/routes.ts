@@ -9,6 +9,7 @@ import {
   insertLicenseRequestSchema, 
   insertDraftLicenseSchema, 
   updateLicenseStatusSchema,
+  updateLicenseStateSchema,
   LicenseStatus
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -510,6 +511,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating license status:', error);
       res.status(500).json({ message: 'Erro ao atualizar status da licença' });
+    }
+  });
+  
+  // Endpoint específico para atualizar o status de um estado específico em uma licença
+  app.patch('/api/admin/licenses/:id/state-status', requireAdmin, upload.single('stateFile'), async (req, res) => {
+    try {
+      const licenseId = parseInt(req.params.id);
+      
+      // Validar dados do status do estado
+      const stateStatusData = {
+        licenseId,
+        state: req.body.state,
+        status: req.body.status,
+        comments: req.body.comments,
+      };
+      
+      try {
+        updateLicenseStateSchema.parse(stateStatusData);
+      } catch (error: any) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      // Verificar se a licença existe
+      const existingLicense = await storage.getLicenseRequestById(licenseId);
+      if (!existingLicense) {
+        return res.status(404).json({ message: 'Licença não encontrada' });
+      }
+      
+      // Verificar se o estado está incluído na lista de estados da licença
+      if (!existingLicense.states.includes(stateStatusData.state)) {
+        return res.status(400).json({ message: 'Estado não incluído na solicitação da licença' });
+      }
+      
+      // Adicionar arquivo se fornecido
+      let file = null;
+      if (req.file) {
+        file = req.file;
+      }
+      
+      // Atualizar status do estado da licença
+      const updatedLicense = await storage.updateLicenseStateStatus({
+        ...stateStatusData,
+        file,
+      });
+      
+      res.json(updatedLicense);
+    } catch (error) {
+      console.error('Error updating license state status:', error);
+      res.status(500).json({ message: 'Erro ao atualizar status do estado da licença' });
     }
   });
 

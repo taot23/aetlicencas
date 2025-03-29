@@ -78,7 +78,9 @@ export const licenseRequests = pgTable("license_requests", {
   additionalPlates: text("additional_plates").array(), // Lista de placas adicionais 
   additionalPlatesDocuments: text("additional_plates_documents").array(), // URLs dos documentos das placas adicionais
   states: text("states").array().notNull(),
-  status: text("status").default("pending_registration").notNull(), // From licenseStatusEnum
+  status: text("status").default("pending_registration").notNull(), // Status principal (legado)
+  stateStatuses: text("state_statuses").array(), // Array com formato "ESTADO:STATUS" (ex: "SP:approved")
+  stateFiles: text("state_files").array(), // Array com formato "ESTADO:URL" (ex: "SP:http://...pdf")
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isDraft: boolean("is_draft").default(true).notNull(),
@@ -117,7 +119,19 @@ export const updateLicenseStatusSchema = createInsertSchema(licenseRequests)
   .extend({
     licenseFile: z.any().optional(),
     validUntil: z.string().optional(),
+    state: z.string().optional(), // Estado específico sendo atualizado
+    stateStatus: z.enum(licenseStatusEnum.options).optional(), // Status para o estado específico
+    stateFile: z.any().optional(), // Arquivo para o estado específico
   });
+
+// Schema para quando todos os estados forem setados, atualizar o status geral
+export const updateLicenseStateSchema = z.object({
+  licenseId: z.number(),
+  state: z.string(),
+  status: licenseStatusEnum,
+  file: z.any().optional(),
+  comments: z.string().optional(),
+});
 
 // Type definitions
 export type User = typeof users.$inferSelect;
@@ -130,6 +144,7 @@ export type LicenseRequest = typeof licenseRequests.$inferSelect;
 export type InsertLicenseRequest = z.infer<typeof insertLicenseRequestSchema>;
 export type InsertDraftLicense = z.infer<typeof insertDraftLicenseSchema>;
 export type UpdateLicenseStatus = z.infer<typeof updateLicenseStatusSchema>;
+export type UpdateLicenseState = z.infer<typeof updateLicenseStateSchema>;
 
 export const brazilianStates = [
   { code: "SP", name: "São Paulo" },
