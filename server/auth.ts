@@ -6,6 +6,13 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+
+// Export hashPassword function to be used in routes.ts
+export async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 import createMemoryStore from "memorystore";
 
 declare global {
@@ -16,12 +23,6 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 const MemoryStore = createMemoryStore(session);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
 
 async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");

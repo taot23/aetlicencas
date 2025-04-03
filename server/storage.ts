@@ -37,6 +37,9 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  updateUser(id: number, userData: Partial<User>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
   
   // Vehicle methods
   getVehicleById(id: number): Promise<Vehicle | undefined>;
@@ -118,10 +121,35 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...userData, 
       id,
-      isAdmin: userData.isAdmin || false
+      isAdmin: userData.isAdmin || false,
+      createdAt: new Date().toISOString()
     };
     this.users.set(id, user);
     return user;
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error("Usuário não encontrado");
+    }
+    
+    const updatedUser = { ...user, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error("Usuário não encontrado");
+    }
+    
+    this.users.delete(id);
   }
 
   // Vehicle methods

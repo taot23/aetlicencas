@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { v4 as uuidv4 } from "uuid";
 import { 
   insertUserSchema, 
@@ -469,6 +469,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching all license requests:', error);
       res.status(500).json({ message: 'Erro ao buscar todas as solicitações de licenças' });
+    }
+  });
+  
+  // Rota para admin check
+  app.get('/api/admin/check', requireAuth, (req, res) => {
+    const user = req.user!;
+    
+    if (user.isAdmin) {
+      res.json({ message: "Acesso de administrador confirmado" });
+    } else {
+      res.status(403).json({ message: "Acesso negado" });
+    }
+  });
+  
+  // Rota para listagem de usuários (transportadores)
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      res.status(500).json({ message: "Erro ao buscar usuários" });
+    }
+  });
+  
+  // Rota para criação de usuários (transportadores)
+  app.post('/api/admin/users', requireAdmin, async (req, res) => {
+    try {
+      const { fullName, email, password, isAdmin } = req.body;
+      
+      // Verificar se já existe um usuário com este e-mail
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Este e-mail já está em uso" });
+      }
+      
+      // Criar o usuário
+      const hashedPassword = await hashPassword(password);
+      const newUser = await storage.createUser({
+        fullName,
+        email,
+        password: hashedPassword,
+        phone: "",
+        isAdmin: !!isAdmin
+      });
+      
+      // Remover a senha do objeto retornado
+      const { password: _, ...userWithoutPassword } = newUser;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erro ao criar usuário:", error);
+      res.status(500).json({ message: "Erro ao criar usuário" });
+    }
+  });
+  
+  // Rota para atualização de usuários (transportadores)
+  app.patch('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "ID de usuário inválido" });
+    }
+    
+    try {
+      // Verificar se o usuário existe
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      const { fullName, email, password, isAdmin } = req.body;
+      
+      // Verificar se o e-mail já está em uso por outro usuário
+      if (email !== existingUser.email) {
+        const userWithEmail = await storage.getUserByEmail(email);
+        if (userWithEmail && userWithEmail.id !== userId) {
+          return res.status(400).json({ message: "Este e-mail já está em uso por outro usuário" });
+        }
+      }
+      
+      // Preparar os dados para atualização
+      const updateData: any = {
+        fullName,
+        email,
+        isAdmin: !!isAdmin
+      };
+      
+      // Se foi fornecida uma nova senha, hash ela
+      if (password) {
+        updateData.password = await hashPassword(password);
+      }
+      
+      // Atualizar o usuário
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      // Remover a senha do objeto retornado
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+  
+  // Rota para exclusão de usuários (transportadores)
+  app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "ID de usuário inválido" });
+    }
+    
+    // Impedir que o administrador exclua a si mesmo
+    if (userId === req.user!.id) {
+      return res.status(400).json({ message: "Você não pode excluir sua própria conta" });
+    }
+    
+    try {
+      // Verificar se o usuário existe
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Excluir o usuário
+      await storage.deleteUser(userId);
+      
+      res.json({ message: "Usuário excluído com sucesso" });
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      res.status(500).json({ message: "Erro ao excluir usuário" });
     }
   });
 

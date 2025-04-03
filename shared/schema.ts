@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   phone: text("phone").notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
