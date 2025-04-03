@@ -72,6 +72,16 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
   };
 
   const handleDocumentPreview = (vehicle: Vehicle) => {
+    // Verificar se o veículo realmente tem o CRLV disponível
+    if (!vehicle.crlvUrl) {
+      toast({
+        title: "Documento indisponível",
+        description: "O CRLV deste veículo não está disponível no momento.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedVehicle(vehicle);
     setPreviewDialogOpen(true);
   };
@@ -294,48 +304,27 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
           </DialogHeader>
           
           {selectedVehicle?.crlvUrl ? (
-            selectedVehicle.crlvUrl.endsWith('.pdf') ? (
-              <div className="aspect-video">
-                <object 
-                  data={selectedVehicle.crlvUrl || '#'} 
-                  className="w-full h-[500px]" 
-                  type="application/pdf"
-                  aria-label={`CRLV do veículo ${selectedVehicle.plate}`}
-                >
-                  <div className="py-10 text-center text-gray-500">
-                    <p>Não foi possível carregar o PDF.</p>
-                    <Button asChild className="mt-4">
-                      <a 
-                        href={selectedVehicle.crlvUrl || '#'} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        onClick={(e) => {
-                          if (!selectedVehicle.crlvUrl) {
-                            e.preventDefault();
-                            alert('Arquivo não disponível no momento.');
-                          }
-                        }}
-                      >
-                        Baixar PDF
-                      </a>
-                    </Button>
-                  </div>
-                </object>
+            <div className="aspect-video">
+              <div className="w-full h-[500px] flex flex-col items-center justify-center text-gray-500 bg-gray-50 rounded border p-6">
+                <FileText className="h-16 w-16 text-gray-400 mb-4" />
+                <p className="mb-4">O sistema não consegue exibir o documento diretamente.</p>
+                <Button asChild>
+                  <a 
+                    href={selectedVehicle.crlvUrl || '#'} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (!selectedVehicle.crlvUrl) {
+                        e.preventDefault();
+                        alert('Arquivo não disponível no momento.');
+                      }
+                    }}
+                  >
+                    Abrir documento em nova aba
+                  </a>
+                </Button>
               </div>
-            ) : (
-              <div className="flex justify-center">
-                <img 
-                  src={selectedVehicle.crlvUrl || '#'} 
-                  alt={`CRLV do veículo ${selectedVehicle.plate}`}
-                  className="max-h-[500px] object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
-                    e.currentTarget.alt = 'Imagem não disponível';
-                    e.currentTarget.classList.add('p-10', 'bg-gray-100', 'text-gray-500');
-                  }}
-                />
-              </div>
-            )
+            </div>
           ) : (
             <div className="py-12 text-center text-gray-500">
               <AlertCircle className="h-12 w-12 mx-auto mb-4" />
