@@ -219,7 +219,17 @@ export default function IssuedLicensesPage() {
                       <TableCell className="text-right">
                         {license.licenseFileUrl && (
                           <Button variant="ghost" size="icon" asChild className="mr-2">
-                            <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                            <a 
+                              href={license.licenseFileUrl || '#'} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                if (!license.licenseFileUrl) {
+                                  e.preventDefault();
+                                  alert('Arquivo não disponível no momento.');
+                                }
+                              }}
+                            >
                               <FileDown className="h-4 w-4" />
                             </a>
                           </Button>
@@ -262,7 +272,17 @@ export default function IssuedLicensesPage() {
                     <div className="flex space-x-1">
                       {license.licenseFileUrl && (
                         <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0" aria-label="Download">
-                          <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                          <a 
+                            href={license.licenseFileUrl || '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              if (!license.licenseFileUrl) {
+                                e.preventDefault();
+                                alert('Arquivo não disponível no momento.');
+                              }
+                            }}
+                          >
                             <FileDown className="h-4 w-4" />
                           </a>
                         </Button>
@@ -457,7 +477,17 @@ export default function IssuedLicensesPage() {
                           
                           {stateFileEntry && (
                             <Button variant="outline" size="sm" asChild>
-                              <a href={stateFileEntry.split(':')[1]} target="_blank" rel="noopener noreferrer">
+                              <a 
+                                href={stateFileEntry?.split?.(':')?.[1] || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  if (!stateFileEntry?.split?.(':')?.[1]) {
+                                    e.preventDefault();
+                                    alert('Arquivo não disponível no momento.');
+                                  }
+                                }}
+                              >
                                 <FileDown className="h-4 w-4 mr-1" /> Baixar
                               </a>
                             </Button>
@@ -473,7 +503,17 @@ export default function IssuedLicensesPage() {
               {selectedLicense.licenseFileUrl && (
                 <div className="pt-4">
                   <Button asChild className="w-full">
-                    <a href={selectedLicense.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                    <a 
+                      href={selectedLicense.licenseFileUrl || '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        if (!selectedLicense.licenseFileUrl) {
+                          e.preventDefault();
+                          alert('Arquivo não disponível no momento.');
+                        }
+                      }}
+                    >
                       Download da Licença Completa
                     </a>
                   </Button>
