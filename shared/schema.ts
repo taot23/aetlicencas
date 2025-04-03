@@ -2,6 +2,17 @@ import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzl
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Define enum para os tipos de role/perfil de usuário
+export const userRoleEnum = z.enum([
+  "admin", // Administrador (acesso completo)
+  "operational", // Operacional (gerenciamento de licenças e veículos)
+  "supervisor", // Supervisor (papel intermediário)
+  "manager", // Gerente (papel com permissões estendidas)
+  "user" // Usuário transportador padrão
+]);
+
+export type UserRole = z.infer<typeof userRoleEnum>;
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -9,7 +20,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
   phone: text("phone").notNull(),
-  isAdmin: boolean("is_admin").default(false).notNull(),
+  role: text("role").default("user").notNull(), // Novo campo: role como string (enum)
+  isAdmin: boolean("is_admin").default(false).notNull(), // Mantido para compatibilidade
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -18,6 +30,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   fullName: true,
   phone: true,
+}).extend({
+  role: userRoleEnum.optional().default("user"),
 });
 
 // Vehicle model

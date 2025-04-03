@@ -26,11 +26,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { User } from "@shared/schema";
+import { User, UserRole } from "@shared/schema";
 import { format } from "date-fns";
-import { UserRound, Plus, Search, UserPlus, Mail, Key } from "lucide-react";
+import { UserRound, Plus, Search, UserPlus, Mail, Key, Users } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -44,13 +45,24 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Import do enum de roles
+import { userRoleEnum } from "@shared/schema";
 
 // Schema para criar/editar transportadores
 const transporterSchema = z.object({
   fullName: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
-  isAdmin: z.boolean().default(false)
+  isAdmin: z.boolean().default(false),
+  role: userRoleEnum.default("user")
 });
 
 type TransporterFormValues = z.infer<typeof transporterSchema>;
@@ -67,7 +79,8 @@ export default function AdminTransporters() {
       fullName: "",
       email: "",
       password: "",
-      isAdmin: false
+      isAdmin: false,
+      role: "user"
     }
   });
 
@@ -195,11 +208,17 @@ export default function AdminTransporters() {
 
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
+    // Garantimos que o role seja um valor válido do enum de roles
+    const role = user.role && ["admin", "operational", "supervisor", "manager", "user"].includes(user.role)
+      ? user.role  // É seguro usar o valor diretamente quando validado
+      : "user";    // Valor padrão caso o role não seja válido
+      
     form.reset({
       fullName: user.fullName,
       email: user.email,
       password: "",
-      isAdmin: user.isAdmin || false
+      isAdmin: user.isAdmin || false,
+      role
     });
     setIsDialogOpen(true);
   };
@@ -209,7 +228,8 @@ export default function AdminTransporters() {
       fullName: "",
       email: "",
       password: "",
-      isAdmin: false
+      isAdmin: false,
+      role: "user"
     });
   };
 
@@ -279,6 +299,7 @@ export default function AdminTransporters() {
                     <TableRow>
                       <TableHead>Nome</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Perfil</TableHead>
                       <TableHead>Admin</TableHead>
                       <TableHead>Data de Cadastro</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
@@ -289,6 +310,18 @@ export default function AdminTransporters() {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.fullName}</TableCell>
                         <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={user.role === "admin" ? "destructive" : 
+                            user.role === "operational" ? "warning" : 
+                            user.role === "supervisor" ? "default" : 
+                            user.role === "manager" ? "blue" : "outline"}
+                          >
+                            {user.role === "admin" ? "Administrador" : 
+                             user.role === "operational" ? "Operacional" : 
+                             user.role === "supervisor" ? "Supervisor" : 
+                             user.role === "manager" ? "Gerente" : "Usuário"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{user.isAdmin ? "Sim" : "Não"}</TableCell>
                         <TableCell>
                           {user.createdAt && format(new Date(user.createdAt), "dd/MM/yyyy")}
@@ -329,6 +362,16 @@ export default function AdminTransporters() {
                       <div className="flex flex-col space-y-2">
                         <div className="flex justify-between items-center">
                           <h3 className="font-semibold text-lg">{user.fullName}</h3>
+                          <Badge variant={user.role === "admin" ? "destructive" : 
+                            user.role === "operational" ? "warning" : 
+                            user.role === "supervisor" ? "default" : 
+                            user.role === "manager" ? "blue" : "outline"}
+                          >
+                            {user.role === "admin" ? "Administrador" : 
+                             user.role === "operational" ? "Operacional" : 
+                             user.role === "supervisor" ? "Supervisor" : 
+                             user.role === "manager" ? "Gerente" : "Usuário"}
+                          </Badge>
                         </div>
                         <p className="text-sm text-gray-500">{user.email}</p>
                         <div className="flex justify-between text-sm my-1">
@@ -445,6 +488,37 @@ export default function AdminTransporters() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Perfil de Usuário</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Users className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                        <Select 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="pl-10">
+                            <SelectValue placeholder="Selecione um perfil" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">Usuário (Transportador)</SelectItem>
+                            <SelectItem value="operational">Operacional</SelectItem>
+                            <SelectItem value="supervisor">Supervisor</SelectItem>
+                            <SelectItem value="manager">Gerente</SelectItem>
+                            <SelectItem value="admin">Administrador</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <FormField
                 control={form.control}
                 name="isAdmin"
