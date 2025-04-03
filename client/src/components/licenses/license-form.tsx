@@ -163,15 +163,16 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
     // Adjust length from meters to centimeters for storage
     const dataToSubmit = {
       ...values,
-      length: Math.round(values.length * 100), // Convert to centimeters
+      length: Math.round((values.length || 0) * 100), // Convert to centimeters
     };
     
     if (values.isDraft) {
-      saveAsDraftMutation.mutate(dataToSubmit);
+      // Cast to appropriate types to satisfy TypeScript
+      saveAsDraftMutation.mutate(dataToSubmit as any);
     } else {
       // Remove isDraft from payload when submitting a license request
       const { isDraft, ...requestData } = dataToSubmit;
-      submitRequestMutation.mutate(requestData);
+      submitRequestMutation.mutate(requestData as any);
     }
   };
 
@@ -189,7 +190,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-3xl mx-auto">
         <FormField
           control={form.control}
           name="type"
@@ -698,8 +699,13 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
           )}
         />
 
-        <div className="flex justify-end space-x-4 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex flex-col sm:flex-row justify-end gap-4 sm:space-x-4 pt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            className="w-full sm:w-auto order-3 sm:order-1"
+          >
             Cancelar
           </Button>
           <Button
@@ -707,6 +713,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
             variant="outline"
             onClick={handleSaveDraft}
             disabled={isProcessing}
+            className="w-full sm:w-auto order-2"
           >
             {saveAsDraftMutation.isPending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Rascunho
@@ -715,6 +722,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
             type="button"
             onClick={handleSubmitRequest}
             disabled={isProcessing}
+            className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto order-1 sm:order-3"
           >
             {submitRequestMutation.isPending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             Enviar Pedido
