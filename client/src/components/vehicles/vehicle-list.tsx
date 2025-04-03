@@ -82,8 +82,14 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
       return;
     }
     
-    setSelectedVehicle(vehicle);
-    setPreviewDialogOpen(true);
+    if (isMobile) {
+      // Em dispositivos móveis, abrir diretamente em nova aba
+      window.open(vehicle.crlvUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // Em desktop, abrir o modal
+      setSelectedVehicle(vehicle);
+      setPreviewDialogOpen(true);
+    }
   };
 
   const getVehicleTypeLabel = (type: string) => {
@@ -109,6 +115,30 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
         return <Badge>{status}</Badge>;
     }
   };
+
+  // Diálogo de confirmação de exclusão - aparece em qualquer visualização (móvel ou desktop)
+  const DeleteConfirmDialog = () => (
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir Veículo</AlertDialogTitle>
+          <AlertDialogDescription>
+            Você tem certeza que deseja excluir o veículo {selectedVehicle?.plate}?
+            Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmDelete}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 
   if (isMobile) {
     return (
@@ -186,6 +216,9 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
             <p>Nenhum veículo cadastrado. Clique em "Cadastrar Veículo" para adicionar.</p>
           </div>
         )}
+
+        {/* Modal de confirmação de exclusão - versão móvel */}
+        <DeleteConfirmDialog />
       </>
     );
   }
@@ -276,26 +309,8 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
         )}
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Veículo</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você tem certeza que deseja excluir o veículo {selectedVehicle?.plate}?
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Modal de confirmação de exclusão - versão desktop */}
+      <DeleteConfirmDialog />
 
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
         <DialogContent className="max-w-3xl">
