@@ -94,8 +94,8 @@ export default function IssuedLicensesPage() {
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="flex flex-wrap gap-4">
-          <div className="w-full md:w-auto flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="sm:col-span-2 lg:col-span-1">
             <label htmlFor="issued-search" className="block text-sm font-medium text-gray-700 mb-1">
               Pesquisar
             </label>
@@ -115,7 +115,7 @@ export default function IssuedLicensesPage() {
             </div>
           </div>
           
-          <div className="w-full md:w-auto">
+          <div>
             <label htmlFor="date-from" className="block text-sm font-medium text-gray-700 mb-1">
               Data Inicial
             </label>
@@ -127,7 +127,7 @@ export default function IssuedLicensesPage() {
             />
           </div>
           
-          <div className="w-full md:w-auto">
+          <div>
             <label htmlFor="date-to" className="block text-sm font-medium text-gray-700 mb-1">
               Data Final
             </label>
@@ -139,7 +139,7 @@ export default function IssuedLicensesPage() {
             />
           </div>
           
-          <div className="w-full md:w-auto">
+          <div>
             <label htmlFor="state-filter" className="block text-sm font-medium text-gray-700 mb-1">
               Estado
             </label>
@@ -167,56 +167,101 @@ export default function IssuedLicensesPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nº do Pedido</TableHead>
-                <TableHead>Tipo de Conjunto</TableHead>
-                <TableHead>Placa Principal</TableHead>
-                <TableHead>Estados</TableHead>
-                <TableHead>Data Liberação</TableHead>
-                <TableHead>Validade</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+        {/* Versão desktop - tabela */}
+        <div className="hidden md:block">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">
-                    Carregando licenças...
-                  </TableCell>
+                  <TableHead>Nº do Pedido</TableHead>
+                  <TableHead>Tipo de Conjunto</TableHead>
+                  <TableHead>Placa Principal</TableHead>
+                  <TableHead>Estados</TableHead>
+                  <TableHead>Data Liberação</TableHead>
+                  <TableHead>Validade</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ) : paginatedLicenses.length > 0 ? (
-                paginatedLicenses.map((license) => (
-                  <TableRow key={license.id}>
-                    <TableCell className="font-medium">{license.requestNumber}</TableCell>
-                    <TableCell>
-                      {license.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
-                      {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
-                      {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
-                      {license.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
-                      {license.type === "flatbed" && "Prancha"}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10">
+                      Carregando licenças...
                     </TableCell>
-                    <TableCell>{license.mainVehiclePlate}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {license.states.map(state => (
-                          <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            {state}
-                          </span>
-                        ))}
-                      </div>
+                  </TableRow>
+                ) : paginatedLicenses.length > 0 ? (
+                  paginatedLicenses.map((license) => (
+                    <TableRow key={license.id}>
+                      <TableCell className="font-medium">{license.requestNumber}</TableCell>
+                      <TableCell>
+                        {license.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
+                        {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
+                        {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
+                        {license.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
+                        {license.type === "flatbed" && "Prancha"}
+                      </TableCell>
+                      <TableCell>{license.mainVehiclePlate}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {license.states.map(state => (
+                            <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              {state}
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        {license.validUntil && format(new Date(license.validUntil), "dd/MM/yyyy")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {license.licenseFileUrl && (
+                          <Button variant="ghost" size="icon" asChild className="mr-2">
+                            <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                              <FileDown className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => viewLicenseDetails(license)}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10">
+                      Nenhuma licença emitida encontrada.
                     </TableCell>
-                    <TableCell>
-                      {license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      {license.validUntil && format(new Date(license.validUntil), "dd/MM/yyyy")}
-                    </TableCell>
-                    <TableCell className="text-right">
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+        
+        {/* Versão mobile - cards */}
+        <div className="md:hidden">
+          {isLoading ? (
+            <div className="py-10 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-blue-500 border-r-transparent"></div>
+              <p className="mt-2 text-gray-600">Carregando licenças...</p>
+            </div>
+          ) : paginatedLicenses.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {paginatedLicenses.map((license) => (
+                <div key={license.id} className="p-4">
+                  <div className="flex justify-between mb-1">
+                    <span className="font-medium text-gray-900">{license.requestNumber}</span>
+                    <div className="flex space-x-1">
                       {license.licenseFileUrl && (
-                        <Button variant="ghost" size="icon" asChild className="mr-2">
+                        <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0" aria-label="Download">
                           <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
                             <FileDown className="h-4 w-4" />
                           </a>
@@ -224,28 +269,64 @@ export default function IssuedLicensesPage() {
                       )}
                       <Button 
                         variant="ghost" 
-                        size="icon" 
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        aria-label="Ver detalhes"
                         onClick={() => viewLicenseDetails(license)}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">
-                    Nenhuma licença emitida encontrada.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
+                    <div>
+                      <span className="text-xs text-gray-500">Tipo:</span>
+                      <div>
+                        {license.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
+                        {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
+                        {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
+                        {license.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
+                        {license.type === "flatbed" && "Prancha"}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Placa:</span>
+                      <div>{license.mainVehiclePlate}</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Liberação:</span>
+                      <div>{license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Validade:</span>
+                      <div>{license.validUntil && format(new Date(license.validUntil), "dd/MM/yyyy")}</div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <span className="text-xs text-gray-500">Estados:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {license.states.map(state => (
+                        <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          {state}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-10 text-center text-gray-500">
+              Nenhuma licença emitida encontrada.
+            </div>
+          )}
         </div>
 
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+          <div className="px-4 sm:px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 text-center sm:text-left">
               Mostrando <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-medium">
                 {Math.min(currentPage * itemsPerPage, filteredLicenses.length)}
               </span> de <span className="font-medium">{filteredLicenses.length}</span> licenças
@@ -290,7 +371,7 @@ export default function IssuedLicensesPage() {
 
       {selectedLicense && (
         <Dialog open={!!selectedLicense} onOpenChange={(open) => !open && setSelectedLicense(null)}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Detalhes da Licença</DialogTitle>
             </DialogHeader>
