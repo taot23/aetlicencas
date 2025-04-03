@@ -296,18 +296,43 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
           {selectedVehicle?.crlvUrl ? (
             selectedVehicle.crlvUrl.endsWith('.pdf') ? (
               <div className="aspect-video">
-                <iframe 
-                  src={selectedVehicle.crlvUrl} 
+                <object 
+                  data={selectedVehicle.crlvUrl || '#'} 
                   className="w-full h-[500px]" 
-                  title={`CRLV do veículo ${selectedVehicle.plate}`}
-                />
+                  type="application/pdf"
+                  aria-label={`CRLV do veículo ${selectedVehicle.plate}`}
+                >
+                  <div className="py-10 text-center text-gray-500">
+                    <p>Não foi possível carregar o PDF.</p>
+                    <Button asChild className="mt-4">
+                      <a 
+                        href={selectedVehicle.crlvUrl || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => {
+                          if (!selectedVehicle.crlvUrl) {
+                            e.preventDefault();
+                            alert('Arquivo não disponível no momento.');
+                          }
+                        }}
+                      >
+                        Baixar PDF
+                      </a>
+                    </Button>
+                  </div>
+                </object>
               </div>
             ) : (
               <div className="flex justify-center">
                 <img 
-                  src={selectedVehicle.crlvUrl} 
+                  src={selectedVehicle.crlvUrl || '#'} 
                   alt={`CRLV do veículo ${selectedVehicle.plate}`}
                   className="max-h-[500px] object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                    e.currentTarget.alt = 'Imagem não disponível';
+                    e.currentTarget.classList.add('p-10', 'bg-gray-100', 'text-gray-500');
+                  }}
                 />
               </div>
             )
@@ -322,10 +347,16 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
             <div className="flex justify-center mt-4">
               <Button asChild>
                 <a 
-                  href={selectedVehicle.crlvUrl} 
+                  href={selectedVehicle.crlvUrl || '#'} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto"
+                  onClick={(e) => {
+                    if (!selectedVehicle.crlvUrl) {
+                      e.preventDefault();
+                      alert('Arquivo não disponível no momento.');
+                    }
+                  }}
                 >
                   Abrir em Nova Aba
                 </a>
