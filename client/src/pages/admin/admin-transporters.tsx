@@ -271,53 +271,99 @@ export default function AdminTransporters() {
               <p className="mt-2 text-gray-600">Carregando transportadores...</p>
             </div>
           ) : filteredUsers && filteredUsers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Admin</TableHead>
-                    <TableHead>Data de Cadastro</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.fullName}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.isAdmin ? "Sim" : "Não"}</TableCell>
-                      <TableCell>
-                        {user.createdAt && format(new Date(user.createdAt), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openEditDialog(user)}
-                          className="mr-2"
-                        >
-                          Editar
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => {
-                            if (window.confirm("Tem certeza que deseja excluir este transportador?")) {
-                              deleteTransporterMutation.mutate(user.id);
-                            }
-                          }}
-                        >
-                          Excluir
-                        </Button>
-                      </TableCell>
+            <>
+              {/* Versão para desktop */}
+              <div className="overflow-x-auto hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Admin</TableHead>
+                      <TableHead>Data de Cadastro</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.fullName}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.isAdmin ? "Sim" : "Não"}</TableCell>
+                        <TableCell>
+                          {user.createdAt && format(new Date(user.createdAt), "dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openEditDialog(user)}
+                            className="mr-2"
+                          >
+                            Editar
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm("Tem certeza que deseja excluir este transportador?")) {
+                                deleteTransporterMutation.mutate(user.id);
+                              }
+                            }}
+                          >
+                            Excluir
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Versão para mobile (cards) */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
+                {filteredUsers.map((user) => (
+                  <Card key={user.id} className="mb-2">
+                    <CardContent className="pt-4">
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-semibold text-lg">{user.fullName}</h3>
+                        </div>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                        <div className="flex justify-between text-sm my-1">
+                          <span className="text-gray-600">Admin: {user.isAdmin ? "Sim" : "Não"}</span>
+                          <span className="text-gray-600">
+                            {user.createdAt && format(new Date(user.createdAt), "dd/MM/yyyy")}
+                          </span>
+                        </div>
+                        <div className="flex justify-end space-x-2 mt-2 pt-2 border-t border-gray-100">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openEditDialog(user)}
+                          >
+                            Editar
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm("Tem certeza que deseja excluir este transportador?")) {
+                                deleteTransporterMutation.mutate(user.id);
+                              }
+                            }}
+                          >
+                            Excluir
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="text-center py-10">
               <UserRound className="h-12 w-12 mx-auto text-gray-400 mb-4" />
