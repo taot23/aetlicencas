@@ -677,11 +677,11 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                         >
                           <FormControl>
                             <Checkbox
-                              checked={field.value?.includes(state.code)}
+                              checked={(field.value || []).includes(state.code)}
                               onCheckedChange={(checked) => {
                                 return checked
-                                  ? field.onChange([...field.value, state.code])
-                                  : field.onChange(field.value?.filter((value) => value !== state.code));
+                                  ? field.onChange([...(field.value || []), state.code])
+                                  : field.onChange((field.value || []).filter((value) => value !== state.code));
                               }}
                             />
                           </FormControl>

@@ -218,7 +218,7 @@ export default function IssuedLicensesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         {license.licenseFileUrl && (
-                          <Button variant="ghost" size="icon" asChild className="mr-2">
+                          <Button variant="ghost" size="icon" asChild className="mr-2 flex items-center justify-center">
                             <a 
                               href={license.licenseFileUrl || '#'} 
                               target="_blank" 
@@ -236,7 +236,8 @@ export default function IssuedLicensesPage() {
                         )}
                         <Button 
                           variant="ghost" 
-                          size="icon" 
+                          size="icon"
+                          className="flex items-center justify-center"
                           onClick={() => viewLicenseDetails(license)}
                         >
                           <ExternalLink className="h-4 w-4" />
@@ -271,7 +272,7 @@ export default function IssuedLicensesPage() {
                     <span className="font-medium text-gray-900">{license.requestNumber}</span>
                     <div className="flex space-x-1">
                       {license.licenseFileUrl && (
-                        <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0" aria-label="Download">
+                        <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 flex items-center justify-center" aria-label="Download">
                           <a 
                             href={license.licenseFileUrl || '#'} 
                             target="_blank" 
@@ -290,7 +291,7 @@ export default function IssuedLicensesPage() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 flex items-center justify-center"
                         aria-label="Ver detalhes"
                         onClick={() => viewLicenseDetails(license)}
                       >
