@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AdminLayoutProps {
@@ -24,7 +24,40 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     });
   };
 
-  const MenuLinks = () => (
+  const MobileMenuLinks = () => (
+    <>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/admin">
+          <span className={`text-sm font-medium block py-2 ${location === "/admin" ? "text-blue-600" : "text-gray-600"}`}>
+            Painel de Controle
+          </span>
+        </Link>
+      </div>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/admin/transporters">
+          <span className={`text-sm font-medium block py-2 ${location === "/admin/transporters" ? "text-blue-600" : "text-gray-600"}`}>
+            Cadastro Transportador
+          </span>
+        </Link>
+      </div>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/admin/licenses">
+          <span className={`text-sm font-medium block py-2 ${location === "/admin/licenses" ? "text-blue-600" : "text-gray-600"}`}>
+            Gerenciar Licenças
+          </span>
+        </Link>
+      </div>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/">
+          <span className="text-sm font-medium block py-2 text-gray-600">
+            Voltar ao Sistema
+          </span>
+        </Link>
+      </div>
+    </>
+  );
+  
+  const DesktopMenuLinks = () => (
     <>
       <Link href="/admin">
         <a className={`text-sm font-medium ${location === "/admin" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
@@ -67,9 +100,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       <Menu className="h-6 w-6" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-[250px] pt-10">
-                    <div className="flex flex-col space-y-6 mt-6">
-                      <MenuLinks />
+                  <SheetContent side="right" className="w-[250px]">
+                    <SheetHeader>
+                      <SheetTitle>Menu</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex flex-col mt-6">
+                      <MobileMenuLinks />
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -91,7 +127,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="bg-white border-b hidden md:block">
         <div className="container mx-auto px-4">
           <nav className="flex items-center space-x-6 h-12">
-            <MenuLinks />
+            <DesktopMenuLinks />
           </nav>
         </div>
       </div>
