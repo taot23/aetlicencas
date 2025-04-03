@@ -539,6 +539,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Dashboard Admin
+  app.get('/api/admin/dashboard/stats', requireAdmin, async (req, res) => {
+    try {
+      // Como é admin, vamos pegar as estatísticas gerais, não específicas de um usuário
+      const stats = await storage.getDashboardStats(0); // 0 = all users
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin dashboard stats:', error);
+      res.status(500).json({ message: 'Erro ao buscar estatísticas do dashboard administrativo' });
+    }
+  });
+
+  app.get('/api/admin/dashboard/vehicle-stats', requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getVehicleStats(0); // 0 = all users
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin vehicle stats:', error);
+      res.status(500).json({ message: 'Erro ao buscar estatísticas de veículos administrativo' });
+    }
+  });
+
+  app.get('/api/admin/dashboard/state-stats', requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getStateStats(0); // 0 = all users
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin state stats:', error);
+      res.status(500).json({ message: 'Erro ao buscar estatísticas por estado administrativo' });
+    }
+  });
+  
   // Rota para verificar acesso operacional
   app.get('/api/staff/check-operational', requireAuth, (req, res) => {
     const user = req.user!;

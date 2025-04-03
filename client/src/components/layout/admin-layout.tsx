@@ -48,6 +48,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </Link>
       </div>
       <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/admin/users">
+          <span className={`text-sm font-medium block py-2 ${location === "/admin/users" ? "text-blue-600" : "text-gray-600"}`}>
+            Usuários
+          </span>
+        </Link>
+      </div>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
         <Link href="/">
           <span className="text-sm font-medium block py-2 text-gray-600">
             Voltar ao Sistema
@@ -72,6 +79,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Link href="/admin/licenses">
         <a className={`text-sm font-medium ${location === "/admin/licenses" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Gerenciar Licenças
+        </a>
+      </Link>
+      <Link href="/admin/users">
+        <a className={`text-sm font-medium ${location === "/admin/users" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+          Usuários
         </a>
       </Link>
       <Link href="/">

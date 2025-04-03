@@ -12,6 +12,7 @@ import IssuedLicensesPage from "@/pages/issued-licenses-page";
 import AdminDashboardPage from "@/pages/admin/admin-dashboard";
 import AdminLicensesPage from "@/pages/admin/admin-licenses";
 import AdminTransportersPage from "@/pages/admin/admin-transporters";
+import AdminUsersPage from "@/pages/admin/admin-users";
 import { ProtectedRoute, AdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -24,6 +25,7 @@ function Router() {
       <AdminRoute path="/admin" component={AdminDashboardPage} />
       <AdminRoute path="/admin/licenses" component={AdminLicensesPage} />
       <AdminRoute path="/admin/transporters" component={AdminTransportersPage} />
+      <AdminRoute path="/admin/users" component={AdminUsersPage} />
       
       {/* Sistema de Controle de Licenças - Rotas do usuário */}
       <ProtectedRoute path="/" component={DashboardPage} />
