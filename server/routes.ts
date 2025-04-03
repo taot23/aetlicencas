@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -120,6 +121,9 @@ const requireAdmin = (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+
+  // Servir arquivos estáticos da pasta uploads
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Dashboard Stats
   app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
