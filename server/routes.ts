@@ -11,7 +11,8 @@ import {
   insertDraftLicenseSchema, 
   updateLicenseStatusSchema,
   updateLicenseStateSchema,
-  LicenseStatus
+  LicenseStatus,
+  userRoleEnum
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
@@ -113,6 +114,60 @@ const requireAdmin = (req: any, res: any, next: any) => {
   
   if (!req.user.isAdmin) {
     return res.status(403).json({ message: "Acesso negado" });
+  }
+  
+  next();
+};
+
+// Middleware para usuários com papel Operacional
+const requireOperational = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  // Verifica se o usuário tem papel Operacional
+  if (req.user.role !== 'operational' && req.user.role !== 'supervisor' && !req.user.isAdmin) {
+    return res.status(403).json({ 
+      message: "Acesso negado. Apenas usuários com perfil Operacional ou Supervisor podem acessar." 
+    });
+  }
+  
+  next();
+};
+
+// Middleware para usuários com papel Supervisor
+const requireSupervisor = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  // Verifica se o usuário tem papel Supervisor
+  if (req.user.role !== 'supervisor' && !req.user.isAdmin) {
+    return res.status(403).json({ 
+      message: "Acesso negado. Apenas usuários com perfil Supervisor podem acessar." 
+    });
+  }
+  
+  next();
+};
+
+// Middleware para verificar se o usuário é dono do recurso ou tem papel de staff
+const requireOwnerOrStaff = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  // Os perfis que podem acessar recursos de outros usuários
+  const isStaff = ['operational', 'supervisor'].includes(req.user.role) || req.user.isAdmin;
+  
+  // Se o usuário não é staff, verifica se é o dono do recurso
+  if (!isStaff) {
+    const resourceUserId = parseInt(req.params.userId);
+    if (req.user.id !== resourceUserId) {
+      return res.status(403).json({ 
+        message: "Acesso negado. Você só pode acessar seus próprios dados." 
+      });
+    }
   }
   
   next();
@@ -462,7 +517,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoints
-  app.get('/api/admin/licenses', requireAdmin, async (req, res) => {
+  // Endpoint para buscar todas as licenças - acessível para Admin, Operacional e Supervisor
+  app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
       const licenses = await storage.getAllLicenseRequests();
       res.json(licenses);
@@ -483,6 +539,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para verificar acesso operacional
+  app.get('/api/staff/check-operational', requireAuth, (req, res) => {
+    const user = req.user!;
+    
+    if (user.role === 'operational' || user.role === 'supervisor' || user.isAdmin) {
+      res.json({ 
+        message: "Acesso de staff confirmado",
+        role: user.role
+      });
+    } else {
+      res.status(403).json({ message: "Acesso negado" });
+    }
+  });
+  
+  // Rota para verificar acesso supervisor
+  app.get('/api/staff/check-supervisor', requireAuth, (req, res) => {
+    const user = req.user!;
+    
+    if (user.role === 'supervisor' || user.isAdmin) {
+      res.json({ 
+        message: "Acesso de supervisor confirmado",
+        role: user.role
+      });
+    } else {
+      res.status(403).json({ message: "Acesso negado" });
+    }
+  });
+  
+  // Rota para listar os perfis de usuário disponíveis
+  app.get('/api/roles', requireAuth, (req, res) => {
+    // Lista os valores definidos no enum
+    const roleValues = ["user", "operational", "supervisor", "admin", "manager"];
+    res.json({ roles: roleValues });
+  });
+  
   // Rota para listagem de usuários (transportadores)
   app.get('/api/admin/users', requireAdmin, async (req, res) => {
     try {
@@ -497,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para criação de usuários (transportadores)
   app.post('/api/admin/users', requireAdmin, async (req, res) => {
     try {
-      const { fullName, email, password, isAdmin } = req.body;
+      const { fullName, email, password, isAdmin, role = "user" } = req.body;
       
       // Verificar se já existe um usuário com este e-mail
       const existingUser = await storage.getUserByEmail(email);
@@ -512,6 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         password: hashedPassword,
         phone: "",
+        role: userRoleEnum.parse(role), // Garantir que o role seja válido
         isAdmin: !!isAdmin
       });
       
@@ -539,7 +631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
       
-      const { fullName, email, password, isAdmin } = req.body;
+      const { fullName, email, password, isAdmin, role } = req.body;
       
       // Verificar se o e-mail já está em uso por outro usuário
       if (email !== existingUser.email) {
@@ -555,6 +647,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         isAdmin: !!isAdmin
       };
+      
+      // Se o perfil for fornecido, atualizar
+      if (role) {
+        try {
+          updateData.role = userRoleEnum.parse(role);
+        } catch (error) {
+          return res.status(400).json({ message: "Tipo de perfil inválido" });
+        }
+      }
       
       // Se foi fornecida uma nova senha, hash ela
       if (password) {
@@ -603,7 +704,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/licenses/:id/status', requireAdmin, upload.single('licenseFile'), async (req, res) => {
+  // Rota para atualizar o status de uma licença - acessível para Admin, Operacional e Supervisor
+app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('licenseFile'), async (req, res) => {
     try {
       const licenseId = parseInt(req.params.id);
       const statusData = { 
@@ -650,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint específico para atualizar o status de um estado específico em uma licença
-  app.patch('/api/admin/licenses/:id/state-status', requireAdmin, upload.single('stateFile'), async (req, res) => {
+  app.patch('/api/admin/licenses/:id/state-status', requireOperational, upload.single('stateFile'), async (req, res) => {
     try {
       const licenseId = parseInt(req.params.id);
       

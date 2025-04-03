@@ -9,9 +9,9 @@ import VehiclesPage from "@/pages/vehicles-page";
 import RequestLicensePage from "@/pages/request-license-page";
 import TrackLicensePage from "@/pages/track-license-page";
 import IssuedLicensesPage from "@/pages/issued-licenses-page";
-import AdminDashboard from "@/pages/admin/admin-dashboard";
-import AdminLicenses from "@/pages/admin/admin-licenses";
-import AdminTransporters from "@/pages/admin/admin-transporters";
+import AdminDashboardPage from "@/pages/admin/admin-dashboard";
+import AdminLicensesPage from "@/pages/admin/admin-licenses";
+import AdminTransportersPage from "@/pages/admin/admin-transporters";
 import { ProtectedRoute, AdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -21,9 +21,9 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       
       {/* Portal Admin - Rotas separadas */}
-      <AdminRoute path="/admin" component={AdminDashboard} />
-      <AdminRoute path="/admin/licenses" component={AdminLicenses} />
-      <AdminRoute path="/admin/transporters" component={AdminTransporters} />
+      <AdminRoute path="/admin" component={AdminDashboardPage} />
+      <AdminRoute path="/admin/licenses" component={AdminLicensesPage} />
+      <AdminRoute path="/admin/transporters" component={AdminTransportersPage} />
       
       {/* Sistema de Controle de Licenças - Rotas do usuário */}
       <ProtectedRoute path="/" component={DashboardPage} />
