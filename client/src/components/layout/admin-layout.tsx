@@ -67,29 +67,29 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const DesktopMenuLinks = () => (
     <>
       <Link href="/admin">
-        <a className={`text-sm font-medium ${location === "/admin" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+        <span className={`text-sm font-medium cursor-pointer ${location === "/admin" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Painel de Controle
-        </a>
+        </span>
       </Link>
       <Link href="/admin/transporters">
-        <a className={`text-sm font-medium ${location === "/admin/transporters" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+        <span className={`text-sm font-medium cursor-pointer ${location === "/admin/transporters" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Cadastro Transportador
-        </a>
+        </span>
       </Link>
       <Link href="/admin/licenses">
-        <a className={`text-sm font-medium ${location === "/admin/licenses" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+        <span className={`text-sm font-medium cursor-pointer ${location === "/admin/licenses" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Gerenciar Licenças
-        </a>
+        </span>
       </Link>
       <Link href="/admin/users">
-        <a className={`text-sm font-medium ${location === "/admin/users" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+        <span className={`text-sm font-medium cursor-pointer ${location === "/admin/users" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Usuários
-        </a>
+        </span>
       </Link>
       <Link href="/">
-        <a className="text-sm font-medium text-gray-600 hover:text-blue-600">
+        <span className="text-sm font-medium cursor-pointer text-gray-600 hover:text-blue-600">
           Voltar ao Sistema
-        </a>
+        </span>
       </Link>
     </>
   );

@@ -158,6 +158,11 @@ export class MemStorage implements IStorage {
   }
 
   async getVehiclesByUserId(userId: number): Promise<Vehicle[]> {
+    // Retorna todos os veículos quando userId=0 (caso especial para admin)
+    if (userId === 0) {
+      return Array.from(this.vehicles.values());
+    }
+    
     return Array.from(this.vehicles.values()).filter(
       (vehicle) => vehicle.userId === userId
     );
@@ -197,18 +202,50 @@ export class MemStorage implements IStorage {
   }
 
   async getLicenseRequestsByUserId(userId: number): Promise<LicenseRequest[]> {
+    // Retorna todas as licenças quando userId=0 (caso especial para admin)
+    if (userId === 0) {
+      return Array.from(this.licenseRequests.values()).filter(
+        (license) => !license.isDraft
+      );
+    }
+    
     return Array.from(this.licenseRequests.values()).filter(
       (license) => license.userId === userId && !license.isDraft
     );
   }
 
   async getLicenseDraftsByUserId(userId: number): Promise<LicenseRequest[]> {
+    // Retorna todos os rascunhos quando userId=0 (caso especial para admin)
+    if (userId === 0) {
+      return Array.from(this.licenseRequests.values()).filter(
+        (license) => license.isDraft
+      );
+    }
+    
     return Array.from(this.licenseRequests.values()).filter(
       (license) => license.userId === userId && license.isDraft
     );
   }
 
   async getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]> {
+    // Caso especial para admin (userId=0)
+    if (userId === 0) {
+      return Array.from(this.licenseRequests.values()).filter(
+        (license) => {
+          // Incluir todas as licenças aprovadas
+          if (license.status === 'approved') return true;
+          
+          // Ou incluir licenças que tenham pelo menos um estado com status 'approved'
+          if (license.stateStatuses && license.stateStatuses.some(ss => ss.includes(':approved'))) {
+            return true;
+          }
+          
+          return false;
+        }
+      );
+    }
+    
+    // Caso normal para usuários
     return Array.from(this.licenseRequests.values()).filter(
       (license) => {
         // Incluir licenças com status geral 'approved'

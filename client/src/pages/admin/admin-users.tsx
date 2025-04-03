@@ -211,14 +211,29 @@ export default function AdminUsersPage() {
     return matchesSearch && user.role === activeTab;
   });
 
-  // Formatar data
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(date);
+  // Formatar data com tratamento de erros
+  const formatDate = (dateString: string | Date) => {
+    try {
+      let date;
+      if (typeof dateString === 'string') {
+        date = new Date(dateString);
+      } else {
+        date = dateString;
+      }
+      
+      if (isNaN(date.getTime())) {
+        return "Data inválida";
+      }
+      
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(date);
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data indisponível";
+    }
   };
 
   return (
