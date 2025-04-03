@@ -106,7 +106,11 @@ export default function AdminPage() {
       return await res.json();
     },
     onSuccess: (data) => {
+      // Garantir que a cache seja invalidada para atualizar a lista de licenças
       queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses/issued"] });
+      
       // Atualiza a licença selecionada com os novos dados
       setSelectedLicense(data);
       setSelectedState("");
@@ -118,6 +122,11 @@ export default function AdminPage() {
         title: "Status do estado atualizado",
         description: "O status do estado foi atualizado com sucesso",
       });
+      
+      // Forçar recarregamento da lista após 500ms para garantir atualização
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
+      }, 500);
     },
     onError: (error: Error) => {
       toast({

@@ -204,10 +204,18 @@ export default function TrackLicensePage() {
                               <StatusBadge status={stateStatus} />
                             </div>
                             
-                            {!stateFileEntry && (
-                              <span className="text-xs text-gray-500 italic">Nenhum arquivo disponível</span>
-                            )}
-                          </div>
+                            {stateStatus === "approved" ? (
+                                <span className="text-xs text-green-600 font-medium">
+                                  {selectedLicense.requestNumber} - "{state}"
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-500 italic">Status: {stateStatus} - Aguardando liberação</span>
+                              )}
+                              
+                              {!stateFileEntry && (
+                                <span className="text-xs text-gray-500 italic mt-1">Nenhum arquivo disponível</span>
+                              )}
+                            </div>
                           
                           {stateFileEntry && stateStatus === "approved" && (
                             <Button variant="outline" size="sm" asChild>

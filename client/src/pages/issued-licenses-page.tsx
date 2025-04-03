@@ -48,8 +48,9 @@ export default function IssuedLicensesPage() {
   });
 
   const filteredLicenses = issuedLicenses?.filter(license => {
-    // Only include approved licenses
-    if (license.status !== "approved") return false;
+    // Permitir licenças com status geral approved ou com pelo menos um estado com status approved
+    const hasApprovedState = license.stateStatuses?.some(ss => ss.includes(':approved')) || false;
+    if (license.status !== "approved" && !hasApprovedState) return false;
 
     const matchesSearch = !searchTerm || 
       license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,7 +75,7 @@ export default function IssuedLicensesPage() {
     return matchesSearch && matchesDateFrom && matchesDateTo && matchesState;
   }) || [];
 
-  // Pagination
+  // Paginação
   const totalPages = Math.ceil(filteredLicenses.length / itemsPerPage);
   const paginatedLicenses = filteredLicenses.slice(
     (currentPage - 1) * itemsPerPage,
@@ -347,9 +348,10 @@ export default function IssuedLicensesPage() {
                       // Procura o arquivo para este estado
                       const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
                       const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
+                      const isApproved = stateStatus === "approved";
                       
                       return (
-                        <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
+                        <div key={state} className={`flex justify-between items-center p-3 rounded border ${isApproved ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
                           <div className="flex flex-col">
                             <div className="flex items-center mb-1">
                               <span className="font-medium text-gray-800">{state}</span>
@@ -357,8 +359,18 @@ export default function IssuedLicensesPage() {
                               <StatusBadge status={stateStatus as LicenseStatus} />
                             </div>
                             
+                            {stateStatus === "approved" ? (
+                              <span className="text-xs text-green-600 font-medium">
+                                {selectedLicense.requestNumber} - "{state}"
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-700">
+                                {selectedLicense.requestNumber} - "{state}"
+                              </span>
+                            )}
+                            
                             {!stateFileEntry && (
-                              <span className="text-xs text-gray-500 italic">Nenhum arquivo disponível</span>
+                              <span className="text-xs text-gray-500 italic mt-1">Nenhum arquivo disponível</span>
                             )}
                           </div>
                           

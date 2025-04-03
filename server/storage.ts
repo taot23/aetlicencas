@@ -9,7 +9,7 @@ import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
 
-// Define dashboard stats type
+// Define o tipo de estatísticas do painel
 export interface DashboardStats {
   issuedLicenses: number;
   pendingLicenses: number;
@@ -31,9 +31,9 @@ export interface ChartData {
   value: number;
 }
 
-// Storage interface
+// Interface de armazenamento
 export interface IStorage {
-  // User methods
+  // Métodos de usuário
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -68,7 +68,7 @@ export interface IStorage {
   sessionStore: session.SessionStore;
 }
 
-// Memory storage implementation
+// Implementação de armazenamento em memória
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private vehicles: Map<number, Vehicle>;
@@ -86,15 +86,15 @@ export class MemStorage implements IStorage {
     this.currentVehicleId = 1;
     this.currentLicenseId = 1;
     this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
+      checkPeriod: 86400000, // remove entradas expiradas a cada 24h
     });
     
-    // Create admin user - actual password authentication handled by special case in auth.ts
+    // Cria usuário administrador - autenticação de senha tratada por caso especial em auth.ts
     const id = this.currentUserId++;
     const adminUser: User = {
       id,
       email: "admin@sistema.com",
-      password: "admin-special-password", // This is just a placeholder as actual check is in auth.ts
+      password: "admin-special-password", // Este é apenas um marcador, verificação real está em auth.ts
       fullName: "Administrador",
       phone: "(11) 99999-9999",
       isAdmin: true
@@ -102,7 +102,7 @@ export class MemStorage implements IStorage {
     this.users.set(id, adminUser);
   }
 
-  // User methods
+  // Métodos de usuário
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
@@ -182,7 +182,17 @@ export class MemStorage implements IStorage {
 
   async getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]> {
     return Array.from(this.licenseRequests.values()).filter(
-      (license) => license.userId === userId && license.status === 'approved'
+      (license) => {
+        // Incluir licenças com status geral 'approved'
+        if (license.userId === userId && license.status === 'approved') return true;
+        
+        // Ou incluir licenças que tenham pelo menos um estado com status 'approved'
+        if (license.userId === userId && license.stateStatuses && license.stateStatuses.some(ss => ss.includes(':approved'))) {
+          return true;
+        }
+        
+        return false;
+      }
     );
   }
 
