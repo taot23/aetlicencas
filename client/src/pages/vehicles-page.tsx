@@ -67,16 +67,16 @@ export default function VehiclesPage() {
 
   return (
     <MainLayout>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Veículos Cadastrados</h1>
-        <Button onClick={handleAddVehicle}>
+        <Button onClick={handleAddVehicle} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Cadastrar Veículo
         </Button>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="flex flex-wrap gap-4">
-          <div className="w-full md:w-64">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="w-full">
             <label htmlFor="vehicle-search" className="block text-sm font-medium text-gray-700 mb-1">
               Pesquisar
             </label>
@@ -96,7 +96,7 @@ export default function VehiclesPage() {
             </div>
           </div>
           
-          <div className="w-full md:w-auto flex-1">
+          <div className="w-full">
             <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-1">
               Tipo de Veículo
             </label>
@@ -115,7 +115,7 @@ export default function VehiclesPage() {
             </Select>
           </div>
           
-          <div className="w-full md:w-auto">
+          <div className="w-full">
             <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
               Status
             </label>

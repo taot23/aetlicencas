@@ -3,6 +3,7 @@ import { Vehicle } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { 
@@ -33,6 +34,7 @@ interface VehicleListProps {
 
 export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleListProps) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
@@ -98,6 +100,87 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
     }
   };
 
+  if (isMobile) {
+    return (
+      <>
+        {isLoading ? (
+          <div className="py-10 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-blue-500 border-r-transparent"></div>
+            <p className="mt-2 text-gray-600">Carregando veículos...</p>
+          </div>
+        ) : vehicles.length > 0 ? (
+          <div className="space-y-4">
+            {vehicles.map((vehicle) => (
+              <div key={vehicle.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex flex-col">
+                    <div className="font-semibold text-lg">{vehicle.plate}</div>
+                    <div className="text-sm text-gray-600">{getVehicleTypeLabel(vehicle.type)}</div>
+                  </div>
+                  {getStatusBadge(vehicle.status)}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Tara:</span> {vehicle.tare.toLocaleString()} kg
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Ano CRLV:</span> {vehicle.crlvYear}
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex justify-between items-center">
+                  <div>
+                    {vehicle.crlvUrl ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDocumentPreview(vehicle)}
+                      >
+                        <FileText className="mr-1 h-4 w-4" /> Ver CRLV
+                      </Button>
+                    ) : (
+                      <span className="text-gray-500 text-sm">CRLV não disponível</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(vehicle)}
+                      className="text-blue-600 border-blue-200"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" /> Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(vehicle)}
+                      className="text-red-600 border-red-200"
+                    >
+                      <Trash className="h-4 w-4 mr-1" /> Excluir
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            <div className="bg-white p-4 rounded-lg border text-center text-gray-600 text-sm">
+              Mostrando <span className="font-medium">{vehicles.length}</span> veículos
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg p-8 shadow text-center text-gray-500">
+            <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+            <p>Nenhum veículo cadastrado. Clique em "Cadastrar Veículo" para adicionar.</p>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Versão Desktop - Tabela
   return (
     <>
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -235,18 +318,20 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
             </div>
           )}
           
-          <div className="flex justify-center mt-4">
-            <Button asChild>
-              <a 
-                href={selectedVehicle?.crlvUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto"
-              >
-                Abrir em Nova Aba
-              </a>
-            </Button>
-          </div>
+          {selectedVehicle?.crlvUrl && (
+            <div className="flex justify-center mt-4">
+              <Button asChild>
+                <a 
+                  href={selectedVehicle.crlvUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  Abrir em Nova Aba
+                </a>
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -13,14 +13,14 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
+        <div className="flex items-center w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
             <input 
               type="text" 
               placeholder="Pesquisar..." 
-              className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <span className="absolute left-3 top-2.5 text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
