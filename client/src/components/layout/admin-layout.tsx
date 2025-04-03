@@ -126,7 +126,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main navigation - visible only on larger screens */}
       <div className="bg-white border-b hidden md:block">
         <div className="container mx-auto px-4">
-          <nav className="flex items-center space-x-6 h-12">
+          <nav className="flex items-center justify-end space-x-6 h-12">
             <DesktopMenuLinks />
           </nav>
         </div>
