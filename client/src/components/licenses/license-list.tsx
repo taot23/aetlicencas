@@ -18,6 +18,7 @@ import {
 import { Pencil, Trash, Send, ExternalLink, Download, FileText } from "lucide-react";
 import { StatusBadge } from "./status-badge";
 import { format } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LicenseListProps {
   licenses: LicenseRequest[];
@@ -182,6 +183,123 @@ export function LicenseList({
     }
   };
 
+  const isMobile = useIsMobile();
+
+  // Render mobile view with cards
+  if (isMobile) {
+    return (
+      <>
+        {isLoading ? (
+          <div className="py-10 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-blue-500 border-r-transparent"></div>
+            <p className="mt-2 text-gray-600">Carregando...</p>
+          </div>
+        ) : licenses.length > 0 ? (
+          <div className="space-y-4 p-4">
+            {licenses.map((license) => (
+              <div key={license.id} className="bg-white shadow rounded-lg p-4 border border-gray-100">
+                <div className="flex justify-between mb-2">
+                  <div className="font-medium text-lg">{license.requestNumber}</div>
+                  {!isDraftList && <StatusBadge status={license.status} />}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div>
+                    <span className="text-sm text-gray-500 block">Tipo:</span>
+                    <span>{getLicenseTypeLabel(license.type)}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500 block">Placa Principal:</span>
+                    <span>{license.mainVehiclePlate}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-sm text-gray-500 block">Estados:</span>
+                    <span>{license.states.join(", ")}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-sm text-gray-500 block">
+                      {isDraftList ? "Última Modificação:" : "Data Solicitação:"}
+                    </span>
+                    <span>
+                      {isDraftList 
+                        ? (license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy HH:mm"))
+                        : (license.createdAt && format(new Date(license.createdAt), "dd/MM/yyyy"))}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-2 mt-4 border-t pt-4">
+                  {isDraftList ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit && onEdit(license)}
+                        className="text-blue-600 border-blue-200"
+                      >
+                        <Pencil className="h-4 w-4 mr-1" /> Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSubmitDraft(license)}
+                        className="text-green-600 border-green-200"
+                        disabled={submitMutation.isPending}
+                      >
+                        <Send className="h-4 w-4 mr-1" /> Enviar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteClick(license)}
+                        className="text-red-600 border-red-200"
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash className="h-4 w-4 mr-1" /> Excluir
+                      </Button>
+                    </>
+                  ) : (
+                    license.status === "approved" && license.licenseFileUrl ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="text-blue-600 border-blue-200"
+                      >
+                        <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-1" /> Download
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onView && onView(license)}
+                        className={license.status === "rejected" ? "text-red-600 border-red-200" : "text-blue-600 border-blue-200"}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
+                      </Button>
+                    )
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-10 text-center text-gray-500">
+            <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+            <p>
+              {isDraftList 
+                ? "Nenhum rascunho de licença encontrado."
+                : "Nenhuma licença encontrada."}
+            </p>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Render desktop view with table
   return (
     <>
       <div className="overflow-x-auto">

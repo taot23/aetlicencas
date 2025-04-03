@@ -42,9 +42,9 @@ export default function RequestLicensePage() {
 
   return (
     <MainLayout>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Solicitar Licença</h1>
-        <Button onClick={handleNewRequest}>
+        <Button onClick={handleNewRequest} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Solicitar AET
         </Button>
       </div>
