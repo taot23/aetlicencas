@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock } from "lucide-react";
+import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,9 +23,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { LicenseRequest } from "@shared/schema";
+import { LicenseRequest, brazilianStates as brazilianStatesObjects } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+// Lista simplificada de estados brasileiros para uso como strings
+const brazilianStates = ["SP", "MG", "MT", "PE", "TO", "MS", "PR", "ES", "DNIT", "RS", "BA", "PA", "SC", "DF", "MA", "GO", "RJ", "CE", "AL", "SE"];
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -46,6 +50,17 @@ const updateStatusSchema = z.object({
   comments: z.string().optional(),
 });
 
+// Schema para atualização de status por estado
+const updateStateStatusSchema = z.object({
+  state: z.string({
+    required_error: "O estado é obrigatório",
+  }),
+  status: z.string({
+    required_error: "O status é obrigatório",
+  }),
+  comments: z.string().optional(),
+});
+
 export default function AdminLicensesPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,11 +68,23 @@ export default function AdminLicensesPage() {
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [licenseDetailsOpen, setLicenseDetailsOpen] = useState(false);
+  const [stateStatusDialogOpen, setStateStatusDialogOpen] = useState(false);
+  const [selectedState, setSelectedState] = useState("");
 
   // Form para atualização de status
   const statusForm = useForm<z.infer<typeof updateStatusSchema>>({
     resolver: zodResolver(updateStatusSchema),
     defaultValues: {
+      status: "",
+      comments: "",
+    },
+  });
+  
+  // Form para atualização de status por estado
+  const stateStatusForm = useForm<z.infer<typeof updateStateStatusSchema>>({
+    resolver: zodResolver(updateStateStatusSchema),
+    defaultValues: {
+      state: "",
       status: "",
       comments: "",
     },
@@ -98,6 +125,37 @@ export default function AdminLicensesPage() {
       });
     },
   });
+  
+  // Atualizar status por estado da licença
+  const updateStateStatusMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: z.infer<typeof updateStateStatusSchema> }) => {
+      const formData = new FormData();
+      formData.append("state", data.state);
+      formData.append("status", data.status);
+      if (data.comments) {
+        formData.append("comments", data.comments);
+      }
+      
+      const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/state-status`, formData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status do estado atualizado",
+        description: "Status do estado atualizado com sucesso!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
+      setStateStatusDialogOpen(false);
+      stateStatusForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar status do estado",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Filtrar licenças por termo de busca e por status
   const filteredLicenses = licenses.filter(license => {
@@ -126,6 +184,41 @@ export default function AdminLicensesPage() {
   const onSubmitStatus = (data: z.infer<typeof updateStatusSchema>) => {
     if (!selectedLicense) return;
     updateStatusMutation.mutate({ 
+      id: selectedLicense.id,
+      data
+    });
+  };
+  
+  const handleStateStatusUpdate = (license: LicenseRequest, state: string) => {
+    setSelectedLicense(license);
+    setSelectedState(state);
+    
+    // Determinar o status atual deste estado
+    let currentStateStatus = "pending";
+    
+    // Parse dos stateStatuses (que são armazenados como "ESTADO:STATUS")
+    if (license.stateStatuses && license.stateStatuses.length > 0) {
+      const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+      if (stateStatusEntry) {
+        const [_, status] = stateStatusEntry.split(':');
+        if (status) {
+          currentStateStatus = status;
+        }
+      }
+    }
+    
+    stateStatusForm.reset({
+      state: state,
+      status: currentStateStatus,
+      comments: "",
+    });
+    
+    setStateStatusDialogOpen(true);
+  };
+  
+  const onSubmitStateStatus = (data: z.infer<typeof updateStateStatusSchema>) => {
+    if (!selectedLicense) return;
+    updateStateStatusMutation.mutate({ 
       id: selectedLicense.id,
       data
     });
@@ -494,11 +587,105 @@ export default function AdminLicensesPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Diálogo para atualizar status por estado */}
+      <Dialog open={stateStatusDialogOpen} onOpenChange={setStateStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Atualizar Status por Estado</DialogTitle>
+            <DialogDescription>
+              Atualize o status de licença para o estado {selectedState}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...stateStatusForm}>
+            <form onSubmit={stateStatusForm.handleSubmit(onSubmitStateStatus)} className="space-y-4">
+              <FormField
+                control={stateStatusForm.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {brazilianStates.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={stateStatusForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {statusOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={stateStatusForm.control}
+                name="comments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Comentários (opcional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Adicione comentários sobre a atualização do status" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={updateStateStatusMutation.isPending}
+                >
+                  {updateStateStatusMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Atualizar Status do Estado
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {/* Diálogo para ver detalhes da licença */}
       <Dialog open={licenseDetailsOpen} onOpenChange={setLicenseDetailsOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Detalhes da Licença</DialogTitle>
+            <DialogDescription>
+              Visualize e gerencie os detalhes da licença
+            </DialogDescription>
           </DialogHeader>
           {selectedLicense && (
             <div className="space-y-4">
@@ -536,8 +723,8 @@ export default function AdminLicensesPage() {
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
                   <p>
-                    {selectedLicense.additionalVehiclePlates && selectedLicense.additionalVehiclePlates.length > 0
-                      ? selectedLicense.additionalVehiclePlates.join(", ")
+                    {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
+                      ? selectedLicense.additionalPlates.join(", ")
                       : "Nenhum veículo adicional"}
                   </p>
                 </div>
@@ -554,21 +741,45 @@ export default function AdminLicensesPage() {
                 </div>
               </div>
 
-              {selectedLicense.stateStatus && (
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Status por Estado</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-1">
-                    {Object.entries(selectedLicense.stateStatus).map(([state, status]) => (
-                      <div key={state} className="border rounded p-2 flex items-center justify-between">
-                        <span className="font-medium">{state}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status as string)}`}>
-                          {getStatusLabel(status as string)}
-                        </span>
+              {/* Status por estado */}
+              <div>
+                <h3 className="font-medium text-sm text-gray-500">Status por Estado</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-1">
+                  {selectedLicense.states.map((state) => {
+                    // Encontrar o status atual deste estado
+                    let stateStatus = "pending";
+                    if (selectedLicense.stateStatuses && selectedLicense.stateStatuses.length > 0) {
+                      const stateStatusEntry = selectedLicense.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                      if (stateStatusEntry) {
+                        const [_, status] = stateStatusEntry.split(':');
+                        if (status) {
+                          stateStatus = status;
+                        }
+                      }
+                    }
+                    
+                    return (
+                      <div key={state} className="border rounded p-3 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{state}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(stateStatus)}`}>
+                            {getStatusLabel(stateStatus)}
+                          </span>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="w-full mt-1"
+                          onClick={() => handleStateStatusUpdate(selectedLicense, state)}
+                        >
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Atualizar Status
+                        </Button>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
+              </div>
 
               {selectedLicense.comments && (
                 <div>
