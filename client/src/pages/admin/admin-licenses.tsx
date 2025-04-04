@@ -430,7 +430,7 @@ export default function AdminLicensesPage() {
                                     size="sm"
                                     onClick={() => handleViewDetails(license)}
                                   >
-                                    Ver detalhes
+                                    Visualizar
                                   </Button>
                                   <Button
                                     variant="default"
@@ -499,7 +499,7 @@ export default function AdminLicensesPage() {
                                   className="flex-1"
                                   onClick={() => handleViewDetails(license)}
                                 >
-                                  Ver detalhes
+                                  Visualizar
                                 </Button>
                                 <Button
                                   variant="default"
@@ -684,7 +684,7 @@ export default function AdminLicensesPage() {
           <DialogHeader>
             <DialogTitle>Detalhes da Licença</DialogTitle>
             <DialogDescription>
-              Visualize e gerencie os detalhes da licença
+              Visualize todos os detalhes da licença
             </DialogDescription>
           </DialogHeader>
           {selectedLicense && (
@@ -807,10 +807,10 @@ export default function AdminLicensesPage() {
 
               <DialogFooter>
                 <Button 
-                  variant="default" 
-                  onClick={() => handleStatusUpdate(selectedLicense)}
+                  variant="outline" 
+                  onClick={() => setLicenseDetailsOpen(false)}
                 >
-                  Editar
+                  Fechar
                 </Button>
               </DialogFooter>
             </div>
