@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin } from "lucide-react";
 import {
   Table,
@@ -48,6 +49,7 @@ const updateStatusSchema = z.object({
     required_error: "O status é obrigatório",
   }),
   comments: z.string().optional(),
+  licenseFile: z.any().optional(),
 });
 
 // Schema para atualização de status por estado
@@ -60,6 +62,8 @@ const updateStateStatusSchema = z.object({
   }),
   comments: z.string().optional(),
 });
+
+// Constantes e funções auxiliares para status
 
 export default function AdminLicensesPage() {
   const { toast } = useToast();
@@ -77,6 +81,7 @@ export default function AdminLicensesPage() {
     defaultValues: {
       status: "",
       comments: "",
+      licenseFile: undefined,
     },
   });
   
@@ -103,6 +108,9 @@ export default function AdminLicensesPage() {
       formData.append("status", data.status);
       if (data.comments) {
         formData.append("comments", data.comments);
+      }
+      if (data.licenseFile && data.status === "released") {
+        formData.append("licenseFile", data.licenseFile);
       }
       
       const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/status`, formData);
@@ -172,6 +180,7 @@ export default function AdminLicensesPage() {
     statusForm.reset({
       status: license.status,
       comments: "",
+      licenseFile: undefined,
     });
     setStatusDialogOpen(true);
   };
@@ -297,15 +306,14 @@ export default function AdminLicensesPage() {
     }
   };
 
-  // Opções de status para o select
+  // Opções de status para o select com descrições detalhadas
   const statusOptions = [
-    { value: "pending", label: "Pendente Cadastro" },
-    { value: "in_progress", label: "Cadastro em Andamento" },
-    { value: "approved", label: "Aprovado" },
-    { value: "rejected", label: "Reprovado" },
-    { value: "analyzing", label: "Análise do Órgão" },
-    { value: "pending_release", label: "Pendente Liberação" },
-    { value: "released", label: "Liberada" },
+    { value: "pending", label: "Pendente Cadastro", description: "Status inicial do pedido" },
+    { value: "in_progress", label: "Cadastro em Andamento", description: "Em fase de edição pelo usuário" },
+    { value: "rejected", label: "Reprovado", description: "Com justificativa de pendências" },
+    { value: "analyzing", label: "Análise do Órgão", description: "Em avaliação oficial" },
+    { value: "pending_release", label: "Pendente Liberação", description: "Aguardando aprovação final" },
+    { value: "released", label: "Liberada", description: "Licença aprovada com documento disponível" },
   ];
 
   // Obter o ícone do status
@@ -527,9 +535,23 @@ export default function AdminLicensesPage() {
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Licença</DialogTitle>
+            <DialogTitle>Editar Status da Licença</DialogTitle>
+            <DialogDescription>
+              Selecione um novo status para esta licença conforme o fluxo do processo
+            </DialogDescription>
           </DialogHeader>
           <Form {...statusForm}>
+            <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <h4 className="font-medium text-sm mb-2">Guia de Fluxo de Status:</h4>
+              <ul className="text-sm space-y-1">
+                <li><span className="font-semibold">Pendente Cadastro:</span> Status inicial do pedido</li>
+                <li><span className="font-semibold">Cadastro em Andamento:</span> Em fase de edição pelo usuário</li>
+                <li><span className="font-semibold">Reprovado:</span> Com justificativa de pendências</li>
+                <li><span className="font-semibold">Análise do Órgão:</span> Em avaliação oficial</li>
+                <li><span className="font-semibold">Pendente Liberação:</span> Aguardando aprovação final</li>
+                <li><span className="font-semibold">Liberada:</span> Licença aprovada com documento disponível</li>
+              </ul>
+            </div>
             <form onSubmit={statusForm.handleSubmit(onSubmitStatus)} className="space-y-4">
               <FormField
                 control={statusForm.control}
@@ -571,6 +593,29 @@ export default function AdminLicensesPage() {
                   </FormItem>
                 )}
               />
+              
+              {statusForm.watch("status") === "approved" && (
+                <div className="space-y-2">
+                  <Label htmlFor="licenseFile">Documento da Licença (PDF)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      id="licenseFile" 
+                      type="file" 
+                      accept=".pdf" 
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          // Usando a função register para atualizar os valores do formulário para campos personalizados
+                          statusForm.setValue("licenseFile" as any, e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Ao selecionar status "Liberada", é necessário anexar o documento da licença
+                    que ficará disponível para download pelo cliente.
+                  </p>
+                </div>
+              )}
               <DialogFooter>
                 <Button 
                   type="submit" 
@@ -597,6 +642,17 @@ export default function AdminLicensesPage() {
             </DialogDescription>
           </DialogHeader>
           <Form {...stateStatusForm}>
+            <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <h4 className="font-medium text-sm mb-2">Guia de Fluxo de Status:</h4>
+              <ul className="text-sm space-y-1">
+                <li><span className="font-semibold">Pendente Cadastro:</span> Status inicial do pedido</li>
+                <li><span className="font-semibold">Cadastro em Andamento:</span> Em fase de edição pelo usuário</li>
+                <li><span className="font-semibold">Reprovado:</span> Com justificativa de pendências</li>
+                <li><span className="font-semibold">Análise do Órgão:</span> Em avaliação oficial</li>
+                <li><span className="font-semibold">Pendente Liberação:</span> Aguardando aprovação final</li>
+                <li><span className="font-semibold">Liberada:</span> Licença aprovada com documento disponível</li>
+              </ul>
+            </div>
             <form onSubmit={stateStatusForm.handleSubmit(onSubmitStateStatus)} className="space-y-4">
               <FormField
                 control={stateStatusForm.control}
@@ -689,6 +745,35 @@ export default function AdminLicensesPage() {
           </DialogHeader>
           {selectedLicense && (
             <div className="space-y-4">
+              <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
+                <div className="relative flex items-center justify-between mt-3">
+                  {/* Linha de conexão */}
+                  <div className="absolute left-0 right-0 h-0.5 bg-gray-200"></div>
+                  
+                  {/* Etapas */}
+                  {statusOptions.map((option, index) => {
+                    const isCompleted = 
+                      statusOptions.findIndex(opt => opt.value === selectedLicense.status) >= index;
+                    const isCurrent = option.value === selectedLicense.status;
+                    
+                    return (
+                      <div key={option.value} className="relative flex flex-col items-center z-10">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center
+                          ${isCurrent ? 'bg-blue-500 text-white' : 
+                            isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          {isCompleted && !isCurrent ? 
+                            <CheckCircle className="h-4 w-4" /> : 
+                            <span className="text-xs">{index + 1}</span>
+                          }
+                        </div>
+                        <span className="text-xs text-center mt-1 max-w-[60px]">{option.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
@@ -762,9 +847,14 @@ export default function AdminLicensesPage() {
                       <div key={state} className="border rounded p-3 flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{state}</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(stateStatus)}`}>
-                            {getStatusLabel(stateStatus)}
-                          </span>
+                          <div className="group relative">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(stateStatus)}`}>
+                              {getStatusLabel(stateStatus)}
+                            </span>
+                            <div className="invisible group-hover:visible absolute z-50 w-48 p-2 bg-black text-white text-xs rounded shadow-lg right-0 mt-1">
+                              {statusOptions.find(opt => opt.value === stateStatus)?.description || 'Status pendente de atualização'}
+                            </div>
+                          </div>
                         </div>
                         <Button 
                           size="sm" 
