@@ -437,7 +437,7 @@ export default function AdminLicensesPage() {
                                     size="sm"
                                     onClick={() => handleStatusUpdate(license)}
                                   >
-                                    Atualizar status
+                                    Editar
                                   </Button>
                                 </div>
                               </TableCell>
@@ -507,7 +507,7 @@ export default function AdminLicensesPage() {
                                   className="flex-1"
                                   onClick={() => handleStatusUpdate(license)}
                                 >
-                                  Atualizar status
+                                  Editar
                                 </Button>
                               </div>
                             </div>
@@ -527,7 +527,7 @@ export default function AdminLicensesPage() {
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Atualizar Status</DialogTitle>
+            <DialogTitle>Editar Licença</DialogTitle>
           </DialogHeader>
           <Form {...statusForm}>
             <form onSubmit={statusForm.handleSubmit(onSubmitStatus)} className="space-y-4">
@@ -579,7 +579,7 @@ export default function AdminLicensesPage() {
                   {updateStatusMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Atualizar Status
+                  Salvar
                 </Button>
               </DialogFooter>
             </form>
@@ -591,9 +591,9 @@ export default function AdminLicensesPage() {
       <Dialog open={stateStatusDialogOpen} onOpenChange={setStateStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Atualizar Status por Estado</DialogTitle>
+            <DialogTitle>Editar Status do Estado {selectedState}</DialogTitle>
             <DialogDescription>
-              Atualize o status de licença para o estado {selectedState}
+              Atualize as informações da licença para este estado
             </DialogDescription>
           </DialogHeader>
           <Form {...stateStatusForm}>
@@ -670,7 +670,7 @@ export default function AdminLicensesPage() {
                   {updateStateStatusMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Atualizar Status do Estado
+                  Salvar
                 </Button>
               </DialogFooter>
             </form>
@@ -773,7 +773,7 @@ export default function AdminLicensesPage() {
                           onClick={() => handleStateStatusUpdate(selectedLicense, state)}
                         >
                           <MapPin className="h-3 w-3 mr-1" />
-                          Atualizar Status
+                          Editar
                         </Button>
                       </div>
                     );
@@ -810,7 +810,7 @@ export default function AdminLicensesPage() {
                   variant="default" 
                   onClick={() => handleStatusUpdate(selectedLicense)}
                 >
-                  Atualizar Status
+                  Editar
                 </Button>
               </DialogFooter>
             </div>
