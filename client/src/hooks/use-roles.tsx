@@ -1,5 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export type UserRole = "user" | "operational" | "supervisor" | "admin" | "manager";
@@ -22,31 +20,12 @@ export const roleColors: Record<UserRole, string> = {
   manager: "pink"
 };
 
+// Lista estática de roles
+const defaultRoles: UserRole[] = ["user", "operational", "supervisor", "admin", "manager"];
+
 export function useRoles() {
   const { toast } = useToast();
   
-  const { 
-    data: roles = [],
-    isLoading,
-    error 
-  } = useQuery<string[]>({
-    queryKey: ["/api/roles"],
-    queryFn: async () => {
-      try {
-        const response = await getQueryFn()("/api/roles");
-        return response.roles || [];
-      } catch (error) {
-        console.error("Erro ao carregar perfis:", error);
-        toast({
-          title: "Erro ao carregar perfis",
-          description: "Não foi possível obter a lista de perfis disponíveis",
-          variant: "destructive",
-        });
-        return [];
-      }
-    },
-  });
-
   // Retorna o nome descritivo do perfil
   const getRoleLabel = (role: string): string => {
     return roleDescriptions[role as UserRole] || role;
@@ -58,9 +37,8 @@ export function useRoles() {
   };
 
   return {
-    roles,
-    isLoading,
-    error,
+    roles: defaultRoles,
+    isLoading: false,
     getRoleLabel,
     getRoleColor,
   };

@@ -212,19 +212,27 @@ export default function AdminUsersPage() {
   });
 
   // Formatar data com tratamento de erros
-  const formatDate = (dateString: string | Date) => {
+  const formatDate = (dateString: string | Date | undefined | null) => {
     try {
+      // Se a data for undefined ou null, retornar mensagem padrão
+      if (!dateString) {
+        return "Data não disponível";
+      }
+      
       let date;
       if (typeof dateString === 'string') {
+        // Tentar converter a string para um objeto Date
         date = new Date(dateString);
       } else {
         date = dateString;
       }
       
-      if (isNaN(date.getTime())) {
+      // Verificar se a data é válida
+      if (!date || isNaN(date.getTime())) {
         return "Data inválida";
       }
       
+      // Formatar a data usando o formato brasileiro (dia/mês/ano)
       return new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
         month: '2-digit',
