@@ -62,6 +62,7 @@ const updateStateStatusSchema = z.object({
     required_error: "O status é obrigatório",
   }),
   comments: z.string().optional(),
+  validUntil: z.string().optional(),
   licenseFile: z
     .any()
     .optional()
@@ -75,6 +76,15 @@ const updateStateStatusSchema = z.object({
         message: "Apenas arquivos PDF são permitidos para a licença",
       }
     ),
+}).superRefine((data, ctx) => {
+  // Se o status for "approved", validade é obrigatória
+  if (data.status === "approved" && !data.validUntil) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "A data de validade é obrigatória quando o status é Liberada",
+      path: ["validUntil"]
+    });
+  }
 });
 
 // Constantes e funções auxiliares para status
@@ -116,6 +126,11 @@ export default function AdminLicensesPage() {
       formData.append("status", data.status);
       if (data.comments) {
         formData.append("comments", data.comments);
+      }
+      
+      // Incluir data de validade se o status for "approved" (Liberada)
+      if (data.validUntil && data.status === "approved") {
+        formData.append("validUntil", data.validUntil);
       }
       
       // Incluir arquivo da licença se o status for "approved" (Liberada)
@@ -193,14 +208,25 @@ export default function AdminLicensesPage() {
   const onSubmitStateStatus = (data: z.infer<typeof updateStateStatusSchema>) => {
     if (!selectedLicense) return;
     
-    // Validação adicional para o status "approved": exigir arquivo PDF
-    if (data.status === "approved" && !data.licenseFile) {
-      toast({
-        title: "Erro de validação",
-        description: "Para o status 'Liberada' é obrigatório anexar um documento PDF da licença.",
-        variant: "destructive",
-      });
-      return;
+    // Validação adicional para o status "approved": exigir arquivo PDF e data de validade
+    if (data.status === "approved") {
+      if (!data.licenseFile) {
+        toast({
+          title: "Erro de validação",
+          description: "Para o status 'Liberada' é obrigatório anexar um documento PDF da licença.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.validUntil) {
+        toast({
+          title: "Erro de validação",
+          description: "Para o status 'Liberada' é obrigatório definir uma data de validade.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
     updateStateStatusMutation.mutate({ 
@@ -582,33 +608,58 @@ export default function AdminLicensesPage() {
               
               {/* Campo de upload de arquivo PDF para status "Liberada" */}
               {stateStatusForm.watch("status") === "approved" && (
-                <FormField
-                  control={stateStatusForm.control}
-                  name="licenseFile"
-                  render={({ field: { value, onChange, ...field } }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Documento da Licença (PDF) {" "}
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="file"
-                          accept=".pdf,application/pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onChange(file);
-                          }}
-                          {...field}
-                        />
-                      </FormControl>
-                      <p className="text-sm text-muted-foreground">
-                        Para status "Liberada" é obrigatório anexar o documento da licença em formato PDF.
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <>
+                  <FormField
+                    control={stateStatusForm.control}
+                    name="validUntil"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Data de Validade <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            min={new Date().toISOString().split('T')[0]}
+                          />
+                        </FormControl>
+                        <p className="text-sm text-muted-foreground">
+                          Para status "Liberada" é obrigatório definir uma data de validade para a licença.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={stateStatusForm.control}
+                    name="licenseFile"
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Documento da Licença (PDF) {" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              onChange(file);
+                            }}
+                            {...field}
+                          />
+                        </FormControl>
+                        <p className="text-sm text-muted-foreground">
+                          Para status "Liberada" é obrigatório anexar o documento da licença em formato PDF.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
               <DialogFooter>
                 <Button 

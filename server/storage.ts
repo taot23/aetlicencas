@@ -402,7 +402,7 @@ export class MemStorage implements IStorage {
   
   // Método específico para atualizar apenas o status de um estado
   async updateLicenseStateStatus(data: UpdateLicenseState): Promise<LicenseRequest> {
-    const { licenseId, state, status, file, comments } = data;
+    const { licenseId, state, status, file, comments, validUntil } = data;
     
     const license = this.licenseRequests.get(licenseId);
     if (!license) {
@@ -419,8 +419,13 @@ export class MemStorage implements IStorage {
       stateStatuses.splice(stateStatusIndex, 1);
     }
     
-    // Adiciona novo status
-    stateStatuses.push(`${state}:${status}`);
+    // Se for status "approved" e tiver data de validade, incluir no status
+    if (status === "approved" && validUntil) {
+      stateStatuses.push(`${state}:${status}:${validUntil}`);
+    } else {
+      // Adiciona novo status normal
+      stateStatuses.push(`${state}:${status}`);
+    }
     
     // Se tiver arquivo, adiciona ou atualiza
     if (file) {

@@ -794,6 +794,7 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         state: req.body.state,
         status: req.body.status,
         comments: req.body.comments,
+        validUntil: req.body.validUntil,
       };
       
       try {

@@ -146,6 +146,7 @@ export const updateLicenseStateSchema = z.object({
   status: licenseStatusEnum,
   file: z.any().optional(),
   comments: z.string().optional(),
+  validUntil: z.string().optional(),
 });
 
 // Type definitions
