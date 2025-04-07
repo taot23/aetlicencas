@@ -119,7 +119,7 @@ export default function AdminLicensesPage() {
       
       // Incluir arquivo da licença se o status for "released" (Liberada)
       if (data.licenseFile && data.status === "released") {
-        formData.append("licenseFile", data.licenseFile);
+        formData.append("stateFile", data.licenseFile);
       }
       
       const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/state-status`, formData);
