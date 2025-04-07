@@ -263,16 +263,20 @@ export default function AdminLicensesPage() {
   const getStatusLabel = (status: string): string => {
     switch (status) {
       case "pending":
-        return "Pendente Cadastro";
+      case "pending_registration":
+        return "Pedido em Cadastramento";
       case "in_progress":
+      case "registration_in_progress":
         return "Cadastro em Andamento";
       case "approved":
-        return "Aprovado";
+        return "Liberada";
       case "rejected":
         return "Reprovado";
       case "analyzing":
+      case "under_review":
         return "Análise do Órgão";
       case "pending_release":
+      case "pending_approval":
         return "Pendente Liberação";
       case "released":
         return "Liberada";
@@ -283,7 +287,7 @@ export default function AdminLicensesPage() {
 
   // Opções de status para o select com descrições detalhadas
   const statusOptions = [
-    { value: "pending_registration", label: "Pendente Cadastro", description: "Status inicial do pedido" },
+    { value: "pending_registration", label: "Pedido em Cadastramento", description: "Status inicial do pedido" },
     { value: "registration_in_progress", label: "Cadastro em Andamento", description: "Em fase de edição pelo usuário" },
     { value: "rejected", label: "Reprovado", description: "Com justificativa de pendências" },
     { value: "under_review", label: "Análise do Órgão", description: "Em avaliação oficial" },
@@ -505,7 +509,7 @@ export default function AdminLicensesPage() {
             <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
               <h4 className="font-medium text-sm mb-2">Guia de Fluxo de Status:</h4>
               <ul className="text-sm space-y-1">
-                <li><span className="font-semibold">Pendente Cadastro:</span> Status inicial do pedido</li>
+                <li><span className="font-semibold">Pedido em Cadastramento:</span> Status inicial do pedido</li>
                 <li><span className="font-semibold">Cadastro em Andamento:</span> Em fase de edição pelo usuário</li>
                 <li><span className="font-semibold">Reprovado:</span> Com justificativa de pendências</li>
                 <li><span className="font-semibold">Análise do Órgão:</span> Em avaliação oficial</li>
