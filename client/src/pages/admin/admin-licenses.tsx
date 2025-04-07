@@ -27,7 +27,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { LicenseRequest, brazilianStates as brazilianStatesObjects } from "@shared/schema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Lista simplificada de estados brasileiros para uso como strings
 const brazilianStates = ["SP", "MG", "MT", "PE", "TO", "MS", "PR", "ES", "DNIT", "RS", "BA", "PA", "SC", "DF", "MA", "GO", "RJ", "CE", "AL", "SE"];
@@ -61,6 +61,19 @@ const updateStateStatusSchema = z.object({
     required_error: "O status é obrigatório",
   }),
   comments: z.string().optional(),
+  licenseFile: z
+    .any()
+    .optional()
+    .refine(
+      (file) => {
+        if (!file) return true;
+        return file instanceof File && 
+          (file as File).type === "application/pdf";
+      },
+      {
+        message: "Apenas arquivos PDF são permitidos para a licença",
+      }
+    ),
 });
 
 // Constantes e funções auxiliares para status
@@ -102,6 +115,11 @@ export default function AdminLicensesPage() {
       formData.append("status", data.status);
       if (data.comments) {
         formData.append("comments", data.comments);
+      }
+      
+      // Incluir arquivo da licença se o status for "released" (Liberada)
+      if (data.licenseFile && data.status === "released") {
+        formData.append("licenseFile", data.licenseFile);
       }
       
       const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/state-status`, formData);
@@ -173,6 +191,17 @@ export default function AdminLicensesPage() {
   
   const onSubmitStateStatus = (data: z.infer<typeof updateStateStatusSchema>) => {
     if (!selectedLicense) return;
+    
+    // Validação adicional para o status "released": exigir arquivo PDF
+    if (data.status === "released" && !data.licenseFile) {
+      toast({
+        title: "Erro de validação",
+        description: "Para o status 'Liberada' é obrigatório anexar um documento PDF da licença.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     updateStateStatusMutation.mutate({ 
       id: selectedLicense.id,
       data
@@ -384,7 +413,7 @@ export default function AdminLicensesPage() {
                                     size="sm"
                                     onClick={() => handleViewDetails(license)}
                                   >
-                                    Visualizar
+                                    Editar
                                   </Button>
                                 </div>
                               </TableCell>
@@ -445,7 +474,7 @@ export default function AdminLicensesPage() {
                                   size="sm"
                                   onClick={() => handleViewDetails(license)}
                                 >
-                                  Visualizar
+                                  Editar
                                 </Button>
                               </div>
                             </div>
@@ -549,6 +578,37 @@ export default function AdminLicensesPage() {
                   </FormItem>
                 )}
               />
+              
+              {/* Campo de upload de arquivo PDF para status "Liberada" */}
+              {stateStatusForm.watch("status") === "released" && (
+                <FormField
+                  control={stateStatusForm.control}
+                  name="licenseFile"
+                  render={({ field: { value, onChange, ...field } }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Documento da Licença (PDF) {" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept=".pdf,application/pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            onChange(file);
+                          }}
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-sm text-muted-foreground">
+                        Para status "Liberada" é obrigatório anexar o documento da licença em formato PDF.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <DialogFooter>
                 <Button 
                   type="submit" 
