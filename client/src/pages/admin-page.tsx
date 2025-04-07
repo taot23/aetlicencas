@@ -222,7 +222,7 @@ export default function AdminPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all_status">Todos os status</SelectItem>
-                    <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
+                    <SelectItem value="pending_registration">Pedido em Cadastramento</SelectItem>
                     <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
                     <SelectItem value="rejected">Reprovado</SelectItem>
                     <SelectItem value="under_review">Análise do Órgão</SelectItem>
@@ -449,7 +449,7 @@ export default function AdminPage() {
                                   <SelectValue placeholder="Selecione o status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
+                                  <SelectItem value="pending_registration">Pedido em Cadastramento</SelectItem>
                                   <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
                                   <SelectItem value="rejected">Reprovado</SelectItem>
                                   <SelectItem value="under_review">Análise do Órgão</SelectItem>

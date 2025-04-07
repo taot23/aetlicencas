@@ -56,7 +56,7 @@ export const insertVehicleSchema = createInsertSchema(vehicles)
 
 // Enums for license status
 export const licenseStatusEnum = z.enum([
-  "pending_registration", // Pendente Cadastro
+  "pending_registration", // Pedido em Cadastramento
   "registration_in_progress", // Cadastro em Andamento
   "rejected", // Reprovado - Pendência de Documentação
   "under_review", // Análise do Órgão

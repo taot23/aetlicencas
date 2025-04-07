@@ -94,7 +94,7 @@ export default function TrackLicensePage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_status">Todos os status</SelectItem>
-                <SelectItem value="pending_registration">Pendente Cadastro</SelectItem>
+                <SelectItem value="pending_registration">Pedido em Cadastramento</SelectItem>
                 <SelectItem value="registration_in_progress">Cadastro em Andamento</SelectItem>
                 <SelectItem value="rejected">Reprovado</SelectItem>
                 <SelectItem value="under_review">Análise do Órgão</SelectItem>
