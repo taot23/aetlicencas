@@ -67,8 +67,8 @@ const updateStateStatusSchema = z.object({
     .refine(
       (file) => {
         if (!file) return true;
-        return file instanceof File && 
-          (file as File).type === "application/pdf";
+        return file && typeof file === 'object' && 'type' in file && 
+          file.type === "application/pdf";
       },
       {
         message: "Apenas arquivos PDF são permitidos para a licença",
