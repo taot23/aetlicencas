@@ -16,12 +16,15 @@ import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { format } from "date-fns";
+import { getLicenseTypeLabel } from "@/lib/utils";
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
+  
+
 
   const { data: licenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses"],
@@ -138,7 +141,7 @@ export default function TrackLicensePage() {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Tipo de Conjunto</h3>
-                <p className="text-gray-900">{selectedLicense.type}</p>
+                <p className="text-gray-900">{getLicenseTypeLabel(selectedLicense.type)}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Placa Principal</h3>

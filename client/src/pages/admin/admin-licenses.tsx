@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import { getLicenseTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -284,6 +285,8 @@ export default function AdminLicensesPage() {
         return status;
     }
   };
+  
+
 
   // Opções de status para o select com descrições detalhadas
   const statusOptions = [
@@ -386,10 +389,7 @@ export default function AdminLicensesPage() {
                             <TableRow key={license.id}>
                               <TableCell className="font-medium">{license.requestNumber}</TableCell>
                               <TableCell>
-                                {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
-                                {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
-                                {license.type === "rodotrain" && "Rodotrem"}
-                                {license.type === "flatbed" && "Prancha"}
+                                {getLicenseTypeLabel(license.type)}
                               </TableCell>
                               <TableCell>{license.mainVehiclePlate}</TableCell>
                               <TableCell>
@@ -443,10 +443,7 @@ export default function AdminLicensesPage() {
                                 <div>
                                   <h3 className="font-medium text-lg">{license.requestNumber}</h3>
                                   <p className="text-sm text-gray-500">
-                                    {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
-                                    {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
-                                    {license.type === "rodotrain" && "Rodotrem"}
-                                    {license.type === "flatbed" && "Prancha"}
+                                    {getLicenseTypeLabel(license.type)}
                                   </p>
                                 </div>
                                 <div className="flex items-center">
@@ -686,10 +683,7 @@ export default function AdminLicensesPage() {
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
                   <p>
-                    {selectedLicense.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
-                    {selectedLicense.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
-                    {selectedLicense.type === "rodotrain" && "Rodotrem"}
-                    {selectedLicense.type === "flatbed" && "Prancha"}
+                    {getLicenseTypeLabel(selectedLicense.type)}
                   </p>
                 </div>
                 <div>
