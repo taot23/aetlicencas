@@ -202,15 +202,28 @@ export class MemStorage implements IStorage {
   }
 
   async getLicenseRequestsByUserId(userId: number): Promise<LicenseRequest[]> {
+    // Função helper para verificar se todos os estados de uma licença estão "liberada"
+    const allStatesApproved = (license: LicenseRequest): boolean => {
+      if (!license.stateStatuses || license.stateStatuses.length === 0) {
+        return false;
+      }
+      
+      // Verificar se todos os estados da licença têm status 'approved'
+      return license.states.every(state => {
+        const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+        return stateStatus === 'approved';
+      });
+    };
+    
     // Retorna todas as licenças quando userId=0 (caso especial para admin)
     if (userId === 0) {
       return Array.from(this.licenseRequests.values()).filter(
-        (license) => !license.isDraft
+        (license) => !license.isDraft && !allStatesApproved(license)
       );
     }
     
     return Array.from(this.licenseRequests.values()).filter(
-      (license) => license.userId === userId && !license.isDraft
+      (license) => license.userId === userId && !license.isDraft && !allStatesApproved(license)
     );
   }
 
@@ -228,11 +241,27 @@ export class MemStorage implements IStorage {
   }
 
   async getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]> {
+    // Função helper para verificar se todos os estados de uma licença estão "liberada"
+    const allStatesApproved = (license: LicenseRequest): boolean => {
+      if (!license.stateStatuses || license.stateStatuses.length === 0) {
+        return false;
+      }
+      
+      // Verificar se todos os estados da licença têm status 'approved'
+      return license.states.every(state => {
+        const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+        return stateStatus === 'approved';
+      });
+    };
+    
     // Caso especial para admin (userId=0)
     if (userId === 0) {
       return Array.from(this.licenseRequests.values()).filter(
         (license) => {
-          // Incluir todas as licenças aprovadas
+          // Incluir licenças onde todos os estados estão aprovados
+          if (allStatesApproved(license)) return true;
+          
+          // Ou incluir licenças com status geral 'approved'
           if (license.status === 'approved') return true;
           
           // Ou incluir licenças que tenham pelo menos um estado com status 'approved'
@@ -248,11 +277,16 @@ export class MemStorage implements IStorage {
     // Caso normal para usuários
     return Array.from(this.licenseRequests.values()).filter(
       (license) => {
-        // Incluir licenças com status geral 'approved'
-        if (license.userId === userId && license.status === 'approved') return true;
+        if (license.userId !== userId) return false;
+        
+        // Incluir licenças onde todos os estados estão aprovados
+        if (allStatesApproved(license)) return true;
+        
+        // Ou incluir licenças com status geral 'approved'
+        if (license.status === 'approved') return true;
         
         // Ou incluir licenças que tenham pelo menos um estado com status 'approved'
-        if (license.userId === userId && license.stateStatuses && license.stateStatuses.some(ss => ss.includes(':approved'))) {
+        if (license.stateStatuses && license.stateStatuses.some(ss => ss.includes(':approved'))) {
           return true;
         }
         
