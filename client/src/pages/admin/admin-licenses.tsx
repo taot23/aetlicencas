@@ -70,20 +70,11 @@ export default function AdminLicensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeStatus, setActiveStatus] = useState("all");
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [licenseDetailsOpen, setLicenseDetailsOpen] = useState(false);
   const [stateStatusDialogOpen, setStateStatusDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState("");
 
-  // Form para atualização de status
-  const statusForm = useForm<z.infer<typeof updateStatusSchema>>({
-    resolver: zodResolver(updateStatusSchema),
-    defaultValues: {
-      status: "",
-      comments: "",
-      licenseFile: undefined,
-    },
-  });
+  // Form removido para atualização de status geral
   
   // Form para atualização de status por estado
   const stateStatusForm = useForm<z.infer<typeof updateStateStatusSchema>>({
@@ -101,38 +92,7 @@ export default function AdminLicensesPage() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  // Atualizar status da licença
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: z.infer<typeof updateStatusSchema> }) => {
-      const formData = new FormData();
-      formData.append("status", data.status);
-      if (data.comments) {
-        formData.append("comments", data.comments);
-      }
-      if (data.licenseFile && data.status === "released") {
-        formData.append("licenseFile", data.licenseFile);
-      }
-      
-      const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/status`, formData);
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Status atualizado",
-        description: "Status da licença atualizado com sucesso!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
-      setStatusDialogOpen(false);
-      statusForm.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar status",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  // Mutação para atualização de status geral foi removida - agora só usamos atualização por estado
   
   // Atualizar status por estado da licença
   const updateStateStatusMutation = useMutation({
@@ -175,28 +135,14 @@ export default function AdminLicensesPage() {
     return matchesSearch && license.status === activeStatus;
   });
 
-  const handleStatusUpdate = (license: LicenseRequest) => {
-    setSelectedLicense(license);
-    statusForm.reset({
-      status: license.status,
-      comments: "",
-      licenseFile: undefined,
-    });
-    setStatusDialogOpen(true);
-  };
+  // Função removida pois o status agora só será editado por estado individual
 
   const handleViewDetails = (license: LicenseRequest) => {
     setSelectedLicense(license);
     setLicenseDetailsOpen(true);
   };
 
-  const onSubmitStatus = (data: z.infer<typeof updateStatusSchema>) => {
-    if (!selectedLicense) return;
-    updateStatusMutation.mutate({ 
-      id: selectedLicense.id,
-      data
-    });
-  };
+  // Função removida pois o status agora só é editado por estado individual
   
   const handleStateStatusUpdate = (license: LicenseRequest, state: string) => {
     setSelectedLicense(license);
@@ -440,13 +386,6 @@ export default function AdminLicensesPage() {
                                   >
                                     Visualizar
                                   </Button>
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => handleStatusUpdate(license)}
-                                  >
-                                    Editar
-                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -500,22 +439,13 @@ export default function AdminLicensesPage() {
                                 </div>
                               </div>
 
-                              <div className="flex gap-2 mt-3">
+                              <div className="flex justify-center mt-3">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="flex-1"
                                   onClick={() => handleViewDetails(license)}
                                 >
                                   Visualizar
-                                </Button>
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  className="flex-1"
-                                  onClick={() => handleStatusUpdate(license)}
-                                >
-                                  Editar
                                 </Button>
                               </div>
                             </div>
@@ -531,106 +461,7 @@ export default function AdminLicensesPage() {
         </div>
       </div>
 
-      {/* Diálogo para atualizar status */}
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Status da Licença</DialogTitle>
-            <DialogDescription>
-              Selecione um novo status para esta licença conforme o fluxo do processo
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...statusForm}>
-            <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-              <h4 className="font-medium text-sm mb-2">Guia de Fluxo de Status:</h4>
-              <ul className="text-sm space-y-1">
-                <li><span className="font-semibold">Pendente Cadastro:</span> Status inicial do pedido</li>
-                <li><span className="font-semibold">Cadastro em Andamento:</span> Em fase de edição pelo usuário</li>
-                <li><span className="font-semibold">Reprovado:</span> Com justificativa de pendências</li>
-                <li><span className="font-semibold">Análise do Órgão:</span> Em avaliação oficial</li>
-                <li><span className="font-semibold">Pendente Liberação:</span> Aguardando aprovação final</li>
-                <li><span className="font-semibold">Liberada:</span> Licença aprovada com documento disponível</li>
-              </ul>
-            </div>
-            <form onSubmit={statusForm.handleSubmit(onSubmitStatus)} className="space-y-4">
-              <FormField
-                control={statusForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {statusOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={statusForm.control}
-                name="comments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comentários (opcional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Adicione comentários sobre a atualização do status" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {statusForm.watch("status") === "approved" && (
-                <div className="space-y-2">
-                  <Label htmlFor="licenseFile">Documento da Licença (PDF)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      id="licenseFile" 
-                      type="file" 
-                      accept=".pdf" 
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          // Usando a função register para atualizar os valores do formulário para campos personalizados
-                          statusForm.setValue("licenseFile" as any, e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Ao selecionar status "Liberada", é necessário anexar o documento da licença
-                    que ficará disponível para download pelo cliente.
-                  </p>
-                </div>
-              )}
-              <DialogFooter>
-                <Button 
-                  type="submit" 
-                  disabled={updateStatusMutation.isPending}
-                >
-                  {updateStatusMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Salvar
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* O diálogo para atualizar status foi removido pois o status agora só é editado por estado individual */}
 
       {/* Diálogo para atualizar status por estado */}
       <Dialog open={stateStatusDialogOpen} onOpenChange={setStateStatusDialogOpen}>
