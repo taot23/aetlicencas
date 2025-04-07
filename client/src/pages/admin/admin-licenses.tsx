@@ -117,8 +117,8 @@ export default function AdminLicensesPage() {
         formData.append("comments", data.comments);
       }
       
-      // Incluir arquivo da licença se o status for "released" (Liberada)
-      if (data.licenseFile && data.status === "released") {
+      // Incluir arquivo da licença se o status for "approved" (Liberada)
+      if (data.licenseFile && data.status === "approved") {
         formData.append("stateFile", data.licenseFile);
       }
       
@@ -192,8 +192,8 @@ export default function AdminLicensesPage() {
   const onSubmitStateStatus = (data: z.infer<typeof updateStateStatusSchema>) => {
     if (!selectedLicense) return;
     
-    // Validação adicional para o status "released": exigir arquivo PDF
-    if (data.status === "released" && !data.licenseFile) {
+    // Validação adicional para o status "approved": exigir arquivo PDF
+    if (data.status === "approved" && !data.licenseFile) {
       toast({
         title: "Erro de validação",
         description: "Para o status 'Liberada' é obrigatório anexar um documento PDF da licença.",
@@ -283,12 +283,12 @@ export default function AdminLicensesPage() {
 
   // Opções de status para o select com descrições detalhadas
   const statusOptions = [
-    { value: "pending", label: "Pendente Cadastro", description: "Status inicial do pedido" },
-    { value: "in_progress", label: "Cadastro em Andamento", description: "Em fase de edição pelo usuário" },
+    { value: "pending_registration", label: "Pendente Cadastro", description: "Status inicial do pedido" },
+    { value: "registration_in_progress", label: "Cadastro em Andamento", description: "Em fase de edição pelo usuário" },
     { value: "rejected", label: "Reprovado", description: "Com justificativa de pendências" },
-    { value: "analyzing", label: "Análise do Órgão", description: "Em avaliação oficial" },
-    { value: "pending_release", label: "Pendente Liberação", description: "Aguardando aprovação final" },
-    { value: "released", label: "Liberada", description: "Licença aprovada com documento disponível" },
+    { value: "under_review", label: "Análise do Órgão", description: "Em avaliação oficial" },
+    { value: "pending_approval", label: "Pendente Liberação", description: "Aguardando aprovação final" },
+    { value: "approved", label: "Liberada", description: "Licença aprovada com documento disponível" },
   ];
 
   // Obter o ícone do status
@@ -580,7 +580,7 @@ export default function AdminLicensesPage() {
               />
               
               {/* Campo de upload de arquivo PDF para status "Liberada" */}
-              {stateStatusForm.watch("status") === "released" && (
+              {stateStatusForm.watch("status") === "approved" && (
                 <FormField
                   control={stateStatusForm.control}
                   name="licenseFile"
