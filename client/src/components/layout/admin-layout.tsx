@@ -41,6 +41,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </Link>
       </div>
       <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/admin/transporters">
+          <span className={`text-sm font-medium block py-2 ${location === "/admin/transporters" ? "text-blue-600" : "text-gray-600"}`}>
+            Cadastro Transportador
+          </span>
+        </Link>
+      </div>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
         <Link href="/admin/users">
           <span className={`text-sm font-medium block py-2 ${location === "/admin/users" ? "text-blue-600" : "text-gray-600"}`}>
             Usuários
@@ -67,6 +74,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Link href="/admin/licenses">
         <span className={`text-sm font-medium cursor-pointer ${location === "/admin/licenses" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Gerenciar Licenças
+        </span>
+      </Link>
+      <Link href="/admin/transporters">
+        <span className={`text-sm font-medium cursor-pointer ${location === "/admin/transporters" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+          Cadastro Transportador
         </span>
       </Link>
       <Link href="/admin/users">
