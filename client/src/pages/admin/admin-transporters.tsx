@@ -180,7 +180,9 @@ export default function AdminTransporters() {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Usuário:</span>
                     <span className="text-sm">
-                      {transporter.userId ? "Vinculado" : "Não vinculado"}
+                      {transporter.userId ? 
+                        `ID: ${transporter.userId} - ${users.find((u: any) => u.id === transporter.userId)?.fullName || "Usuário"}` : 
+                        "Não vinculado"}
                     </span>
                   </div>
                 </div>
@@ -211,7 +213,9 @@ export default function AdminTransporters() {
               <TableCell>{transporter.email}</TableCell>
               <TableCell>{transporter.contact1Name}</TableCell>
               <TableCell>
-                {transporter.userId ? "Vinculado" : "Não vinculado"}
+                {transporter.userId ? 
+                  `ID: ${transporter.userId} - ${users.find((u: any) => u.id === transporter.userId)?.fullName || "Usuário"}` : 
+                  "Não vinculado"}
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -312,7 +316,7 @@ export default function AdminTransporters() {
                     <option value="">Nenhum (remover vínculo)</option>
                     {users.map((user: any) => (
                       <option key={user.id} value={user.id}>
-                        {user.fullName} ({user.email})
+                        ID: {user.id} - {user.fullName} ({user.email})
                       </option>
                     ))}
                   </select>

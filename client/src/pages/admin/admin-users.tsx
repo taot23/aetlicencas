@@ -1,168 +1,74 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { useRoles } from "@/hooks/use-roles";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MoreHorizontal, Plus, Search, User, UserPlus } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Plus, MoreVertical, Edit, Trash, User as UserIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { Form } from "@/components/ui/form";
+import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
+import { getRoleColor, getRoleLabel } from "@/lib/role-utils";
 
-// Define o esquema para criar novos usuários
-const createUserSchema = z.object({
-  email: z.string().email({ message: "Email inválido" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  fullName: z.string().min(3, { message: "Nome completo é obrigatório" }),
-  phone: z.string().min(10, { message: "Telefone deve ter pelo menos 10 dígitos" }),
-  role: z.string({ required_error: "Perfil é obrigatório" }),
+// Schema para validação do formulário
+const userFormSchema = z.object({
+  fullName: z.string().min(3, "Nome completo deve ter pelo menos 3 caracteres"),
+  email: z.string().email("Informe um email válido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  phone: z.string().min(8, "Telefone deve ter pelo menos 8 caracteres"),
+  role: z.string()
 });
 
-type User = {
+type UserFormValues = z.infer<typeof userFormSchema>;
+
+interface User {
   id: number;
   email: string;
   fullName: string;
   phone: string;
   role: string;
+  isAdmin: boolean;
   createdAt: string;
-};
+}
 
-export default function AdminUsersPage() {
+export default function AdminUsers() {
   const { toast } = useToast();
-  const { roles, getRoleLabel, getRoleColor } = useRoles();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
 
-  // Formulário para criação de usuário
-  const form = useForm<z.infer<typeof createUserSchema>>({
-    resolver: zodResolver(createUserSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      fullName: "",
-      phone: "",
-      role: "user",
-    },
-  });
-
-  // Formulário para edição de usuário
-  const editForm = useForm<z.infer<typeof createUserSchema>>({
-    resolver: zodResolver(createUserSchema.omit({ password: true }).partial()),
-    defaultValues: {
-      email: "",
-      fullName: "",
-      phone: "",
-      role: "",
-    },
-  });
-
-  // Buscar todos os usuários
-  const { data: users = [], isLoading } = useQuery<User[]>({
+  // Fetch users
+  const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/admin/users"],
-    queryFn: getQueryFn({ on401: "throw" }),
-  });
-
-  // Criar novo usuário
-  const createUserMutation = useMutation({
-    mutationFn: async (userData: z.infer<typeof createUserSchema>) => {
-      const response = await apiRequest("POST", "/api/admin/users", userData);
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/users");
       return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Usuário criado",
-        description: "Usuário criado com sucesso!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      setCreateDialogOpen(false);
-      form.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao criar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    }
   });
 
-  // Atualizar usuário
-  const updateUserMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: Partial<z.infer<typeof createUserSchema>> }) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${id}`, data);
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Usuário atualizado",
-        description: "Usuário atualizado com sucesso!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      setEditDialogOpen(false);
-      setSelectedUser(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Excluir usuário
+  // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/admin/users/${id}`);
+    mutationFn: async (userId: number) => {
+      await apiRequest("DELETE", `/api/admin/users/${userId}`);
     },
     onSuccess: () => {
       toast({
         title: "Usuário excluído",
-        description: "Usuário excluído com sucesso!",
+        description: "O usuário foi excluído com sucesso",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
@@ -172,434 +78,363 @@ export default function AdminUsersPage() {
         description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
 
-  const onSubmitCreate = (data: z.infer<typeof createUserSchema>) => {
-    createUserMutation.mutate(data);
-  };
+  // User form for create/edit
+  const UserForm = ({ user, onSuccess }: { user?: User, onSuccess?: () => void }) => {
+    const form = useForm<UserFormValues>({
+      resolver: zodResolver(userFormSchema),
+      defaultValues: user ? {
+        fullName: user.fullName,
+        email: user.email,
+        password: "",
+        phone: user.phone,
+        role: user.role
+      } : {
+        fullName: "",
+        email: "",
+        password: "",
+        phone: "",
+        role: "user"
+      }
+    });
 
-  const onSubmitEdit = (data: z.infer<typeof createUserSchema>) => {
-    if (!selectedUser) return;
-    updateUserMutation.mutate({ id: selectedUser.id, data });
+    // Create user mutation
+    const createUserMutation = useMutation({
+      mutationFn: async (data: UserFormValues) => {
+        const response = await apiRequest("POST", "/api/admin/users", data);
+        return await response.json();
+      },
+      onSuccess: () => {
+        toast({
+          title: "Usuário criado",
+          description: "O usuário foi criado com sucesso",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+        onSuccess?.();
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Erro ao criar usuário",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+
+    // Update user mutation
+    const updateUserMutation = useMutation({
+      mutationFn: async (data: UserFormValues) => {
+        if (!user) throw new Error("Usuário não encontrado");
+        const response = await apiRequest("PATCH", `/api/admin/users/${user.id}`, data);
+        return await response.json();
+      },
+      onSuccess: () => {
+        toast({
+          title: "Usuário atualizado",
+          description: "O usuário foi atualizado com sucesso",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+        onSuccess?.();
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Erro ao atualizar usuário",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+
+    const onSubmit = (data: UserFormValues) => {
+      if (user) {
+        updateUserMutation.mutate(data);
+      } else {
+        createUserMutation.mutate(data);
+      }
+    };
+
+    const isPending = createUserMutation.isPending || updateUserMutation.isPending;
+
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome completo" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@exemplo.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{user ? "Nova senha (deixe em branco para manter)" : "Senha"}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(00) 00000-0000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Função</FormLabel>
+                <FormControl>
+                  <select 
+                    className="w-full p-2 border rounded" 
+                    {...field}
+                  >
+                    <option value="user">Transportador</option>
+                    <option value="operational">Operacional</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="manager">Gerente</option>
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end mt-6">
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  <span className="ml-2">Processando...</span>
+                </>
+              ) : user ? (
+                "Atualizar Usuário"
+              ) : (
+                "Cadastrar Usuário"
+              )}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    );
   };
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
-    editForm.reset({
-      email: user.email,
-      fullName: user.fullName,
-      phone: user.phone,
-      role: user.role,
-    });
-    setEditDialogOpen(true);
+    setIsEditDialogOpen(true);
   };
 
-  const handleDeleteUser = (user: User) => {
-    if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.fullName}?`)) {
-      deleteUserMutation.mutate(user.id);
+  const handleDeleteUser = (userId: number) => {
+    if (confirm("Tem certeza que deseja excluir este usuário?")) {
+      deleteUserMutation.mutate(userId);
     }
   };
 
-  // Filtrar usuários por termo de busca e por perfil (se ativo)
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (activeTab === "all") return matchesSearch;
-    return matchesSearch && user.role === activeTab;
-  });
-
-  // Formatar data com tratamento de erros
-  const formatDate = (dateString: string | Date | undefined | null) => {
-    try {
-      // Se a data for undefined ou null, retornar mensagem padrão
-      if (!dateString) {
-        return "Data não disponível";
-      }
-      
-      let date;
-      if (typeof dateString === 'string') {
-        // Tentar converter a string para um objeto Date
-        date = new Date(dateString);
-      } else {
-        date = dateString;
-      }
-      
-      // Verificar se a data é válida
-      if (!date || isNaN(date.getTime())) {
-        return "Data inválida";
-      }
-      
-      // Formatar a data usando o formato brasileiro (dia/mês/ano)
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }).format(date);
-    } catch (error) {
-      console.error("Erro ao formatar data:", error);
-      return "Data indisponível";
+  const renderUsersList = () => {
+    if (isLoading) {
+      return <SkeletonTable columns={5} rows={5} />;
     }
+
+    if (users.length === 0) {
+      return (
+        <Alert className="my-4">
+          <AlertDescription>
+            Nenhum usuário cadastrado. Clique no botão "Novo" para adicionar.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    if (isMobile) {
+      return (
+        <div className="space-y-4">
+          {users.filter((user: User) => !user.isAdmin).map((user: User) => (
+            <Card key={user.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4 bg-gray-50 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-medium">{user.fullName}</h3>
+                    <p className="text-xs text-gray-500">ID: {user.id}</p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                        <Edit size={16} className="mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-red-600">
+                        <Trash size={16} className="mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Email:</span>
+                    <span className="text-sm">{user.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Telefone:</span>
+                    <span className="text-sm">{user.phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Função:</span>
+                    <Badge variant="outline" className={`bg-${getRoleColor(user.role)}-50 text-${getRoleColor(user.role)}-700 border-${getRoleColor(user.role)}-200`}>
+                      {getRoleLabel(user.role)}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Nome</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Telefone</TableHead>
+            <TableHead>Função</TableHead>
+            <TableHead className="w-[100px]">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.filter((user: User) => !user.isAdmin).map((user: User) => (
+            <TableRow key={user.id}>
+              <TableCell>{user.id}</TableCell>
+              <TableCell className="font-medium">{user.fullName}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.phone}</TableCell>
+              <TableCell>
+                <Badge variant="outline" className={`bg-${getRoleColor(user.role)}-50 text-${getRoleColor(user.role)}-700 border-${getRoleColor(user.role)}-200`}>
+                  {getRoleLabel(user.role)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                      <Edit size={16} className="mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-red-600">
+                      <Trash size={16} className="mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
   };
 
   return (
     <AdminLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
-            <p className="text-muted-foreground">
-              Gerencie todos os usuários do sistema.
-            </p>
-          </div>
-          
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+      <div className="container mx-auto py-6 max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Gerenciar Usuários</h1>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="mt-4 md:mt-0" size="sm">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Novo Usuário
+              <Button size="sm">
+                <Plus size={16} className="mr-2" />
+                Novo
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
               <DialogHeader>
-                <DialogTitle>Criar Novo Usuário</DialogTitle>
+                <DialogTitle>Novo Usuário</DialogTitle>
               </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmitCreate)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome Completo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nome completo do usuário" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="email@exemplo.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Senha</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="******" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="(00) 00000-0000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Perfil</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione um perfil" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {roles.map((role) => (
-                              <SelectItem key={role} value={role}>
-                                {getRoleLabel(role)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter>
-                    <Button 
-                      type="submit" 
-                      disabled={createUserMutation.isPending}
-                      className="w-full"
-                    >
-                      {createUserMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Criar Usuário
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
+              <UserForm 
+                onSuccess={() => {
+                  setIsCreateDialogOpen(false);
+                }} 
+              />
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="flex flex-col space-y-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-                <div className="relative w-full md:w-96">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    placeholder="Buscar por nome ou email..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList>
-                    <TabsTrigger value="all">Todos</TabsTrigger>
-                    {roles.map((role) => (
-                      <TabsTrigger key={role} value={role}>
-                        {getRoleLabel(role)}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              </div>
+        {/* Lista de usuários */}
+        {renderUsersList()}
 
-              {isLoading ? (
-                <div className="flex justify-center items-center h-60">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <>
-                  {/* Visão Desktop */}
-                  <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Telefone</TableHead>
-                          <TableHead>Perfil</TableHead>
-                          <TableHead>Data de Cadastro</TableHead>
-                          <TableHead className="text-right">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-6">
-                              Nenhum usuário encontrado
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredUsers.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell className="font-medium">{user.fullName}</TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>{user.phone}</TableCell>
-                              <TableCell>
-                                <span 
-                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}
-                                >
-                                  {getRoleLabel(user.role)}
-                                </span>
-                              </TableCell>
-                              <TableCell>{formatDate(user.createdAt)}</TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                      Editar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDeleteUser(user)}
-                                      className="text-red-600"
-                                    >
-                                      Excluir
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Visão Mobile (Cards) */}
-                  <div className="grid grid-cols-1 gap-4 md:hidden">
-                    {filteredUsers.length === 0 ? (
-                      <div className="text-center py-6 text-gray-500">
-                        Nenhum usuário encontrado
-                      </div>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <Card key={user.id} className="overflow-hidden">
-                          <CardContent className="p-0">
-                            <div className="p-4">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="font-medium text-base">{user.fullName}</h3>
-                                  <p className="text-sm text-gray-600 mt-1">{user.email}</p>
-                                  <p className="text-sm text-gray-500 mt-1">{user.phone}</p>
-                                  <div className="mt-2">
-                                    <span 
-                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}
-                                    >
-                                      {getRoleLabel(user.role)}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-gray-400 mt-2">
-                                    Cadastrado em: {formatDate(user.createdAt)}
-                                  </p>
-                                </div>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                      Editar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDeleteUser(user)}
-                                      className="text-red-600"
-                                    >
-                                      Excluir
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    )}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Modal de edição de usuário */}
+        {selectedUser && (
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Editar Usuário</DialogTitle>
+              </DialogHeader>
+              <UserForm 
+                user={selectedUser} 
+                onSuccess={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedUser(null);
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
-
-      {/* Diálogo de Edição */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Usuário</DialogTitle>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome completo do usuário" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(00) 00000-0000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editForm.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Perfil</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um perfil" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role} value={role}>
-                            {getRoleLabel(role)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button 
-                  type="submit" 
-                  disabled={updateUserMutation.isPending}
-                  className="w-full"
-                >
-                  {updateUserMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Atualizar Usuário
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 }

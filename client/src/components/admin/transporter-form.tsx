@@ -267,7 +267,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                     <SelectItem value="none">Nenhum</SelectItem>
                     {users.map((user: any) => (
                       <SelectItem key={user.id} value={String(user.id)}>
-                        {user.fullName} ({user.email})
+                        ID: {user.id} - {user.fullName} ({user.email})
                       </SelectItem>
                     ))}
                   </SelectContent>
