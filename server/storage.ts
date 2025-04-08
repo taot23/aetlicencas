@@ -50,7 +50,7 @@ export interface IStorage {
   createTransporter(transporter: InsertTransporter): Promise<Transporter>;
   updateTransporter(id: number, transporter: Partial<Transporter>): Promise<Transporter>;
   deleteTransporter(id: number): Promise<void>;
-  linkTransporterToUser(transporterId: number, userId: number): Promise<Transporter>;
+  linkTransporterToUser(transporterId: number, userId: number | null): Promise<Transporter>;
   
   // Vehicle methods
   getVehicleById(id: number): Promise<Vehicle | undefined>;
@@ -221,15 +221,18 @@ export class MemStorage implements IStorage {
     this.transporters.delete(id);
   }
   
-  async linkTransporterToUser(transporterId: number, userId: number): Promise<Transporter> {
+  async linkTransporterToUser(transporterId: number, userId: number | null): Promise<Transporter> {
     const transporter = await this.getTransporterById(transporterId);
     if (!transporter) {
       throw new Error("Transportador não encontrado");
     }
     
-    const user = await this.getUser(userId);
-    if (!user) {
-      throw new Error("Usuário não encontrado");
+    // Se userId for null, estamos apenas removendo a vinculação
+    if (userId !== null) {
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error("Usuário não encontrado");
+      }
     }
     
     const updatedTransporter = { ...transporter, userId };

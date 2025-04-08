@@ -865,23 +865,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transporterId = parseInt(req.params.id);
       const { userId } = req.body;
       
-      if (!userId) {
-        return res.status(400).json({ message: "ID do usuário é obrigatório" });
-      }
-      
       // Verificar se o transportador existe
       const transporter = await storage.getTransporterById(transporterId);
       if (!transporter) {
         return res.status(404).json({ message: "Transportador não encontrado" });
       }
       
-      // Verificar se o usuário existe
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
+      if (userId !== null) {
+        // Verificar se o usuário existe
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
       }
       
-      // Vincular transportador ao usuário
+      // Vincular transportador ao usuário (ou desvincular se userId for null)
       const updatedTransporter = await storage.linkTransporterToUser(transporterId, userId);
       
       res.json(updatedTransporter);
