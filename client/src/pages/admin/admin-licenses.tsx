@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X } from "lucide-react";
+import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -641,20 +641,41 @@ export default function AdminLicensesPage() {
                       render={({ field: { value, onChange, ...field } }) => (
                         <FormItem>
                           <FormLabel>
-                            Documento da Licença <span className="text-red-500">*</span>
+                            Upload Licença <span className="text-red-500">*</span>
                           </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept=".pdf,application/pdf"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                onChange(file);
-                              }}
-                              {...field}
-                              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                            />
-                          </FormControl>
+                          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="licenseFile"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+                                >
+                                  <span>Carregar arquivo</span>
+                                  <input
+                                    id="licenseFile"
+                                    type="file"
+                                    className="sr-only"
+                                    accept=".pdf,application/pdf"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      onChange(file);
+                                    }}
+                                    {...field}
+                                  />
+                                </label>
+                                <p className="pl-1">ou arraste e solte</p>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                PDF até 10MB
+                              </p>
+                              {value && (
+                                <p className="text-sm text-green-600">
+                                  Arquivo selecionado: {value.name}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                           <p className="text-xs text-muted-foreground mt-1">
                             Arquivo PDF obrigatório
                           </p>
