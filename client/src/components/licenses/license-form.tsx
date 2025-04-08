@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -77,6 +78,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
       isDraft: draft.isDraft,
+      comments: draft.comments || "",
     } : {
       type: "",
       mainVehiclePlate: "",
@@ -90,6 +92,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       states: [],
       additionalPlatesDocuments: [],
       isDraft: true,
+      comments: "",
     },
   });
 
@@ -694,6 +697,27 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                   />
                 ))}
               </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="comments"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observações</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Adicione observações relevantes para este pedido de licença"
+                  className="min-h-[120px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Inclua quaisquer informações adicionais ou detalhes específicos para esta solicitação.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
