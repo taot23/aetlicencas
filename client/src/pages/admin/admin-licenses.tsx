@@ -521,7 +521,7 @@ export default function AdminLicensesPage() {
 
       {/* Diálogo para atualizar status por estado */}
       <Dialog open={stateStatusDialogOpen} onOpenChange={setStateStatusDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-md mx-auto overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Editar Status do Estado {selectedState}</DialogTitle>
             <DialogDescription>
@@ -610,7 +610,7 @@ export default function AdminLicensesPage() {
               {stateStatusForm.watch("status") === "approved" && (
                 <div className="space-y-4">
                   <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Licença Liberada</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={stateStatusForm.control}
                       name="validUntil"
@@ -652,7 +652,7 @@ export default function AdminLicensesPage() {
                                 onChange(file);
                               }}
                               {...field}
-                              className="w-full text-sm"
+                              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                             />
                           </FormControl>
                           <p className="text-xs text-muted-foreground mt-1">
@@ -665,25 +665,27 @@ export default function AdminLicensesPage() {
                   </div>
                 </div>
               )}
-              <DialogFooter className="mt-6 flex justify-end gap-2">
+              <div className="mt-6 flex flex-col sm:flex-row justify-end gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setStateStatusDialogOpen(false)}
                   disabled={updateStateStatusMutation.isPending}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={updateStateStatusMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
                 >
                   {updateStateStatusMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Salvar
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </Form>
         </DialogContent>
