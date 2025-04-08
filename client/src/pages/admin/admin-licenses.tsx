@@ -853,10 +853,10 @@ export default function AdminLicensesPage() {
                 )}
               </div>
 
-              <div className="flex justify-center mt-6">
+              <div className="flex justify-center items-center mt-6 px-4">
                 <Button 
                   onClick={() => setLicenseDetailsOpen(false)}
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+                  className="mx-auto min-w-32 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Fechar detalhes
