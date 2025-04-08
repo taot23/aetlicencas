@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin } from "lucide-react";
+import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -693,18 +693,18 @@ export default function AdminLicensesPage() {
 
       {/* Diálogo para ver detalhes da licença */}
       <Dialog open={licenseDetailsOpen} onOpenChange={setLicenseDetailsOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Licença</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-xl">Detalhes da Licença</DialogTitle>
             <DialogDescription>
               Visualize todos os detalhes da licença
             </DialogDescription>
           </DialogHeader>
           {selectedLicense && (
             <div className="space-y-4">
-              <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200 overflow-x-auto">
                 <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
-                <div className="relative flex items-center justify-between mt-3">
+                <div className="relative flex items-center justify-between mt-3 min-w-[500px]">
                   {/* Linha de conexão */}
                   <div className="absolute left-0 right-0 h-0.5 bg-gray-200"></div>
                   
@@ -724,19 +724,19 @@ export default function AdminLicensesPage() {
                             <span className="text-xs">{index + 1}</span>
                           }
                         </div>
-                        <span className="text-xs text-center mt-1 max-w-[60px]">{option.label}</span>
+                        <span className="text-xs text-center mt-1 max-w-[70px] whitespace-normal">{option.label}</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md">
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
-                  <p className="font-medium">{selectedLicense.requestNumber}</p>
+                  <p className="font-medium text-base">{selectedLicense.requestNumber}</p>
                 </div>
-                <div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Status</h3>
                   <div className="flex items-center mt-1">
                     {getStatusIcon(selectedLicense.status)}
@@ -745,23 +745,23 @@ export default function AdminLicensesPage() {
                     </span>
                   </div>
                 </div>
-                <div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
-                  <p>
+                  <p className="text-base">
                     {getLicenseTypeLabel(selectedLicense.type)}
                   </p>
                 </div>
-                <div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
-                  <p>{formatDate(selectedLicense.createdAt)}</p>
+                  <p className="text-base">{formatDate(selectedLicense.createdAt)}</p>
                 </div>
-                <div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Veículo Principal</h3>
-                  <p>{selectedLicense.mainVehiclePlate}</p>
+                  <p className="text-base">{selectedLicense.mainVehiclePlate}</p>
                 </div>
-                <div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
-                  <p>
+                  <p className="text-base truncate">
                     {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
                       ? selectedLicense.additionalPlates.join(", ")
                       : "Nenhum veículo adicional"}
@@ -769,11 +769,11 @@ export default function AdminLicensesPage() {
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-medium text-sm text-gray-500">Estados</h3>
-                <div className="flex flex-wrap gap-1 mt-1">
+              <div className="p-3 bg-gray-50 rounded-md">
+                <h3 className="font-medium text-sm text-gray-500 mb-2">Estados Solicitados</h3>
+                <div className="flex flex-wrap gap-2">
                   {selectedLicense.states.map((state, idx) => (
-                    <Badge key={idx} variant="outline">
+                    <Badge key={idx} variant="outline" className="px-3 py-1 text-sm bg-white">
                       {state}
                     </Badge>
                   ))}
@@ -782,8 +782,8 @@ export default function AdminLicensesPage() {
 
               {/* Status por estado */}
               <div>
-                <h3 className="font-medium text-sm text-gray-500">Status por Estado</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-1">
+                <h3 className="font-medium text-sm text-gray-500 mb-2">Status por Estado</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {selectedLicense.states.map((state) => {
                     // Encontrar o status atual deste estado
                     let stateStatus = "pending";
@@ -798,7 +798,7 @@ export default function AdminLicensesPage() {
                     }
                     
                     return (
-                      <div key={state} className="border rounded p-3 flex flex-col gap-2">
+                      <div key={state} className="border rounded p-2 sm:p-3 flex flex-col gap-1 sm:gap-2">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{state}</span>
                           <div className="group relative">
@@ -825,38 +825,43 @@ export default function AdminLicensesPage() {
                 </div>
               </div>
 
-              {selectedLicense.comments && (
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Comentários</h3>
-                  <p className="text-sm mt-1 p-3 bg-gray-50 rounded border">
-                    {selectedLicense.comments}
-                  </p>
-                </div>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {selectedLicense.comments && (
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <h3 className="font-medium text-sm text-gray-500 mb-2">Comentários</h3>
+                    <div className="bg-white p-3 rounded border text-sm max-h-28 overflow-y-auto">
+                      {selectedLicense.comments}
+                    </div>
+                  </div>
+                )}
 
-              {selectedLicense.licenseFileUrl && (
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Documento da Licença</h3>
-                  <a 
-                    href={selectedLicense.licenseFileUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center mt-1 text-blue-600 hover:text-blue-800"
-                  >
-                    <FileText className="h-4 w-4 mr-1" />
-                    Ver documento
-                  </a>
-                </div>
-              )}
+                {selectedLicense.licenseFileUrl && (
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <h3 className="font-medium text-sm text-gray-500 mb-2">Documento da Licença</h3>
+                    <div className="bg-white p-3 rounded border">
+                      <a 
+                        href={selectedLicense.licenseFileUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                      >
+                        <FileText className="h-5 w-5 mr-2" />
+                        Ver documento
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              <DialogFooter>
+              <div className="flex justify-center mt-6">
                 <Button 
-                  variant="outline" 
                   onClick={() => setLicenseDetailsOpen(false)}
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  Fechar
+                  <X className="h-4 w-4 mr-2" />
+                  Fechar detalhes
                 </Button>
-              </DialogFooter>
+              </div>
             </div>
           )}
         </DialogContent>
