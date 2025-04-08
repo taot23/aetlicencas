@@ -608,58 +608,62 @@ export default function AdminLicensesPage() {
               
               {/* Campo de upload de arquivo PDF para status "Liberada" */}
               {stateStatusForm.watch("status") === "approved" && (
-                <>
-                  <FormField
-                    control={stateStatusForm.control}
-                    name="validUntil"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Data de Validade <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            min={new Date().toISOString().split('T')[0]}
-                          />
-                        </FormControl>
-                        <p className="text-sm text-muted-foreground">
-                          Para status "Liberada" é obrigatório definir uma data de validade para a licença.
-                        </p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={stateStatusForm.control}
-                    name="licenseFile"
-                    render={({ field: { value, onChange, ...field } }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Documento da Licença (PDF) {" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept=".pdf,application/pdf"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              onChange(file);
-                            }}
-                            {...field}
-                          />
-                        </FormControl>
-                        <p className="text-sm text-muted-foreground">
-                          Para status "Liberada" é obrigatório anexar o documento da licença em formato PDF.
-                        </p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
+                <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Licença Liberada</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={stateStatusForm.control}
+                      name="validUntil"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Data de Validade <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              min={new Date().toISOString().split('T')[0]}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Data obrigatória para liberação
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={stateStatusForm.control}
+                      name="licenseFile"
+                      render={({ field: { value, onChange, ...field } }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Documento da Licença <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                onChange(file);
+                              }}
+                              {...field}
+                              className="w-full text-sm"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Arquivo PDF obrigatório
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               )}
               <DialogFooter>
                 <Button 
