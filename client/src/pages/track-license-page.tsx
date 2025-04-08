@@ -50,7 +50,11 @@ export default function TrackLicensePage() {
         // Mostra apenas licenças que não estão completamente aprovadas
         return !allStatesApproved;
       });
-    }
+    },
+    // Desabilita o cache para garantir que sempre temos os dados mais recentes
+    staleTime: 0,
+    // Recarrega os dados quando a página recebe foco
+    refetchOnWindowFocus: true
   });
 
   const filteredLicenses = licenses?.filter(license => {

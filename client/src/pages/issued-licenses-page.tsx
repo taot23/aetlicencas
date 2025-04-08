@@ -34,7 +34,7 @@ export default function IssuedLicensesPage() {
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const itemsPerPage = 10;
 
-  const { data: issuedLicenses, isLoading } = useQuery<LicenseRequest[]>({
+  const { data: issuedLicenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses/issued"],
     queryFn: async () => {
       const res = await fetch("/api/licenses/issued", {
@@ -44,7 +44,11 @@ export default function IssuedLicensesPage() {
         throw new Error("Erro ao buscar licenças emitidas");
       }
       return res.json();
-    }
+    },
+    // Desabilita o cache para garantir que sempre temos os dados mais recentes
+    staleTime: 0,
+    // Recarrega os dados quando a página recebe foco
+    refetchOnWindowFocus: true
   });
 
   const filteredLicenses = issuedLicenses?.filter(license => {
