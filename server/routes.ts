@@ -736,6 +736,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rotas para transportadores
+  app.get('/api/admin/transporters', requireAdmin, async (req, res) => {
+    try {
+      const transporters = await storage.getAllTransporters();
+      res.json(transporters);
+    } catch (error) {
+      console.error("Erro ao buscar transportadores:", error);
+      res.status(500).json({ message: "Erro ao buscar transportadores" });
+    }
+  });
+  
+  app.post('/api/admin/transporters', requireAdmin, async (req, res) => {
+    try {
+      // Validar dados do transportador
+      try {
+        const { name, documentNumber, contact1Name, contact1Phone, contact2Name, contact2Phone, email, userId } = req.body;
+        
+        // Verificar se já existe um transportador com este documento
+        const existingTransporter = await storage.getTransporterByDocument(documentNumber);
+        if (existingTransporter) {
+          return res.status(400).json({ message: "Este CPF/CNPJ já está cadastrado" });
+        }
+        
+        // Se userId for fornecido, verificar se o usuário existe
+        if (userId) {
+          const user = await storage.getUser(userId);
+          if (!user) {
+            return res.status(400).json({ message: "Usuário não encontrado" });
+          }
+        }
+        
+        const transporter = await storage.createTransporter({
+          name,
+          documentNumber,
+          contact1Name,
+          contact1Phone,
+          contact2Name,
+          contact2Phone,
+          email,
+          userId: userId || null
+        });
+        
+        res.status(201).json(transporter);
+      } catch (error) {
+        console.error("Erro ao validar dados do transportador:", error);
+        return res.status(400).json({ message: "Dados inválidos" });
+      }
+    } catch (error) {
+      console.error("Erro ao criar transportador:", error);
+      res.status(500).json({ message: "Erro ao criar transportador" });
+    }
+  });
+  
+  app.get('/api/admin/transporters/:id', requireAdmin, async (req, res) => {
+    try {
+      const transporterId = parseInt(req.params.id);
+      
+      const transporter = await storage.getTransporterById(transporterId);
+      if (!transporter) {
+        return res.status(404).json({ message: "Transportador não encontrado" });
+      }
+      
+      res.json(transporter);
+    } catch (error) {
+      console.error("Erro ao buscar transportador:", error);
+      res.status(500).json({ message: "Erro ao buscar transportador" });
+    }
+  });
+  
+  app.patch('/api/admin/transporters/:id', requireAdmin, async (req, res) => {
+    try {
+      const transporterId = parseInt(req.params.id);
+      
+      // Verificar se o transportador existe
+      const transporter = await storage.getTransporterById(transporterId);
+      if (!transporter) {
+        return res.status(404).json({ message: "Transportador não encontrado" });
+      }
+      
+      // Se está atualizando o documento, verificar se já existe outro transportador com este documento
+      if (req.body.documentNumber && req.body.documentNumber !== transporter.documentNumber) {
+        const existingTransporter = await storage.getTransporterByDocument(req.body.documentNumber);
+        if (existingTransporter && existingTransporter.id !== transporterId) {
+          return res.status(400).json({ message: "Este CPF/CNPJ já está cadastrado para outro transportador" });
+        }
+      }
+      
+      // Se está atualizando o usuário vinculado, verificar se ele existe
+      if (req.body.userId) {
+        const user = await storage.getUser(req.body.userId);
+        if (!user) {
+          return res.status(400).json({ message: "Usuário não encontrado" });
+        }
+      }
+      
+      const updatedTransporter = await storage.updateTransporter(transporterId, req.body);
+      
+      res.json(updatedTransporter);
+    } catch (error) {
+      console.error("Erro ao atualizar transportador:", error);
+      res.status(500).json({ message: "Erro ao atualizar transportador" });
+    }
+  });
+  
+  app.delete('/api/admin/transporters/:id', requireAdmin, async (req, res) => {
+    try {
+      const transporterId = parseInt(req.params.id);
+      
+      // Verificar se o transportador existe
+      const transporter = await storage.getTransporterById(transporterId);
+      if (!transporter) {
+        return res.status(404).json({ message: "Transportador não encontrado" });
+      }
+      
+      await storage.deleteTransporter(transporterId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Erro ao excluir transportador:", error);
+      res.status(500).json({ message: "Erro ao excluir transportador" });
+    }
+  });
+  
+  // Rota para vincular transportador a usuário
+  app.post('/api/admin/transporters/:id/link', requireAdmin, async (req, res) => {
+    try {
+      const transporterId = parseInt(req.params.id);
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "ID do usuário é obrigatório" });
+      }
+      
+      // Verificar se o transportador existe
+      const transporter = await storage.getTransporterById(transporterId);
+      if (!transporter) {
+        return res.status(404).json({ message: "Transportador não encontrado" });
+      }
+      
+      // Verificar se o usuário existe
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Vincular transportador ao usuário
+      const updatedTransporter = await storage.linkTransporterToUser(transporterId, userId);
+      
+      res.json(updatedTransporter);
+    } catch (error) {
+      console.error("Erro ao vincular transportador a usuário:", error);
+      res.status(500).json({ message: "Erro ao vincular transportador a usuário" });
+    }
+  });
+  
+  // Rota para obter usuários não-admin para seleção
+  app.get('/api/admin/non-admin-users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getNonAdminUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      res.status(500).json({ message: "Erro ao buscar usuários" });
+    }
+  });
+
   // Rota para atualizar o status de uma licença - acessível para Admin, Operacional e Supervisor
 app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('licenseFile'), async (req, res) => {
     try {

@@ -13,6 +13,32 @@ export const userRoleEnum = z.enum([
 
 export type UserRole = z.infer<typeof userRoleEnum>;
 
+// Transportador model
+export const transporters = pgTable("transporters", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  documentNumber: text("document_number").notNull().unique(), // CPF ou CNPJ
+  contact1Name: text("contact1_name"),
+  contact1Phone: text("contact1_phone"),
+  contact2Name: text("contact2_name"),
+  contact2Phone: text("contact2_phone"),
+  email: text("email"),
+  userId: integer("user_id").references(() => users.id), // Referência para o usuário vinculado
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTransporterSchema = createInsertSchema(transporters).pick({
+  name: true,
+  documentNumber: true,
+  contact1Name: true,
+  contact1Phone: true,
+  contact2Name: true,
+  contact2Phone: true,
+  email: true,
+}).extend({
+  userId: z.number().optional(), // ID do usuário vinculado (opcional)
+});
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -153,6 +179,9 @@ export const updateLicenseStateSchema = z.object({
 // Type definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Transporter = typeof transporters.$inferSelect;
+export type InsertTransporter = z.infer<typeof insertTransporterSchema>;
 
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;

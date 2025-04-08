@@ -1,6 +1,7 @@
 import { 
   users, type User, type InsertUser,
   vehicles, type Vehicle, type InsertVehicle,
+  transporters, type Transporter, type InsertTransporter,
   licenseRequests, type LicenseRequest, type InsertLicenseRequest, type UpdateLicenseStatus, 
   type UpdateLicenseState, LicenseStatus, LicenseType
 } from "@shared/schema";
@@ -38,8 +39,18 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
+  getNonAdminUsers(): Promise<User[]>;
   updateUser(id: number, userData: Partial<User>): Promise<User>;
   deleteUser(id: number): Promise<void>;
+  
+  // Transportador methods
+  getTransporterById(id: number): Promise<Transporter | undefined>;
+  getTransporterByDocument(documentNumber: string): Promise<Transporter | undefined>;
+  getAllTransporters(): Promise<Transporter[]>;
+  createTransporter(transporter: InsertTransporter): Promise<Transporter>;
+  updateTransporter(id: number, transporter: Partial<Transporter>): Promise<Transporter>;
+  deleteTransporter(id: number): Promise<void>;
+  linkTransporterToUser(transporterId: number, userId: number): Promise<Transporter>;
   
   // Vehicle methods
   getVehicleById(id: number): Promise<Vehicle | undefined>;
@@ -74,18 +85,22 @@ export interface IStorage {
 // Implementação de armazenamento em memória
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
+  private transporters: Map<number, Transporter>;
   private vehicles: Map<number, Vehicle>;
   private licenseRequests: Map<number, LicenseRequest>;
   private currentUserId: number;
+  private currentTransporterId: number;
   private currentVehicleId: number;
   private currentLicenseId: number;
   public sessionStore: session.SessionStore;
 
   constructor() {
     this.users = new Map();
+    this.transporters = new Map();
     this.vehicles = new Map();
     this.licenseRequests = new Map();
     this.currentUserId = 1;
+    this.currentTransporterId = 1;
     this.currentVehicleId = 1;
     this.currentLicenseId = 1;
     this.sessionStore = new MemoryStore({
@@ -132,6 +147,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values());
   }
   
+  async getNonAdminUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => !user.isAdmin);
+  }
+  
   async updateUser(id: number, userData: Partial<User>): Promise<User> {
     const user = await this.getUser(id);
     if (!user) {
@@ -150,6 +169,72 @@ export class MemStorage implements IStorage {
     }
     
     this.users.delete(id);
+  }
+  
+  // Métodos de transportador
+  async getTransporterById(id: number): Promise<Transporter | undefined> {
+    return this.transporters.get(id);
+  }
+  
+  async getTransporterByDocument(documentNumber: string): Promise<Transporter | undefined> {
+    return Array.from(this.transporters.values()).find(
+      (transporter) => transporter.documentNumber === documentNumber
+    );
+  }
+  
+  async getAllTransporters(): Promise<Transporter[]> {
+    return Array.from(this.transporters.values());
+  }
+  
+  async createTransporter(transporterData: InsertTransporter): Promise<Transporter> {
+    const id = this.currentTransporterId++;
+    const now = new Date();
+    
+    const transporter: Transporter = {
+      ...transporterData,
+      id,
+      userId: transporterData.userId || null,
+      createdAt: now.toISOString()
+    };
+    
+    this.transporters.set(id, transporter);
+    return transporter;
+  }
+  
+  async updateTransporter(id: number, transporterData: Partial<Transporter>): Promise<Transporter> {
+    const transporter = await this.getTransporterById(id);
+    if (!transporter) {
+      throw new Error("Transportador não encontrado");
+    }
+    
+    const updatedTransporter = { ...transporter, ...transporterData };
+    this.transporters.set(id, updatedTransporter);
+    return updatedTransporter;
+  }
+  
+  async deleteTransporter(id: number): Promise<void> {
+    const transporter = await this.getTransporterById(id);
+    if (!transporter) {
+      throw new Error("Transportador não encontrado");
+    }
+    
+    this.transporters.delete(id);
+  }
+  
+  async linkTransporterToUser(transporterId: number, userId: number): Promise<Transporter> {
+    const transporter = await this.getTransporterById(transporterId);
+    if (!transporter) {
+      throw new Error("Transportador não encontrado");
+    }
+    
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("Usuário não encontrado");
+    }
+    
+    const updatedTransporter = { ...transporter, userId };
+    this.transporters.set(transporterId, updatedTransporter);
+    return updatedTransporter;
   }
 
   // Vehicle methods
