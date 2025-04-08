@@ -26,6 +26,8 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       case "released":
       case "approved":
         return "bg-green-100 text-green-800";
+      case "canceled":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -50,6 +52,8 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       case "released":
       case "approved":
         return "Liberada";
+      case "canceled":
+        return "Cancelado";
       default:
         return status;
     }

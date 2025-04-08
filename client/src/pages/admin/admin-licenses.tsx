@@ -281,6 +281,8 @@ export default function AdminLicensesPage() {
         return "bg-amber-100 text-amber-800";
       case "released":
         return "bg-emerald-100 text-emerald-800";
+      case "canceled":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -307,6 +309,8 @@ export default function AdminLicensesPage() {
         return "Pendente Liberação";
       case "released":
         return "Liberada";
+      case "canceled":
+        return "Cancelado";
       default:
         return status;
     }
@@ -322,6 +326,7 @@ export default function AdminLicensesPage() {
     { value: "under_review", label: "Análise do Órgão", description: "Em avaliação oficial" },
     { value: "pending_approval", label: "Pendente Liberação", description: "Aguardando aprovação final" },
     { value: "approved", label: "Liberada", description: "Licença aprovada com documento disponível" },
+    { value: "canceled", label: "Cancelado", description: "Licença cancelada pelo cliente ou pelo sistema" },
   ];
 
   // Obter o ícone do status
@@ -341,6 +346,8 @@ export default function AdminLicensesPage() {
         return <File className="h-4 w-4 text-amber-600 mr-1" />;
       case "released":
         return <CheckCircle className="h-4 w-4 text-emerald-600 mr-1" />;
+      case "canceled":
+        return <X className="h-4 w-4 text-gray-600 mr-1" />;
       default:
         return <File className="h-4 w-4 mr-1" />;
     }
@@ -538,6 +545,7 @@ export default function AdminLicensesPage() {
                 <li><span className="font-semibold">Análise do Órgão:</span> Em avaliação oficial</li>
                 <li><span className="font-semibold">Pendente Liberação:</span> Aguardando aprovação final</li>
                 <li><span className="font-semibold">Liberada:</span> Licença aprovada com documento disponível</li>
+                <li><span className="font-semibold">Cancelado:</span> Licença cancelada pelo cliente ou pelo sistema</li>
               </ul>
             </div>
             <form onSubmit={stateStatusForm.handleSubmit(onSubmitStateStatus)} className="space-y-4">
@@ -678,6 +686,63 @@ export default function AdminLicensesPage() {
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
                             Arquivo PDF obrigatório
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Campo de upload de arquivo PDF para status "Reprovado" */}
+              {stateStatusForm.watch("status") === "rejected" && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Licença Reprovada</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={stateStatusForm.control}
+                      name="licenseFile"
+                      render={({ field: { value, onChange, ...field } }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Upload Documento de Reprovação <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="licenseFile-rejected"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+                                >
+                                  <span>Carregar arquivo</span>
+                                  <input
+                                    id="licenseFile-rejected"
+                                    type="file"
+                                    className="sr-only"
+                                    accept=".pdf,application/pdf"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      onChange(file);
+                                    }}
+                                    {...field}
+                                  />
+                                </label>
+                                <p className="pl-1">ou arraste e solte</p>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                PDF até 10MB
+                              </p>
+                              {value && (
+                                <p className="text-sm text-green-600">
+                                  Arquivo selecionado: {value.name}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Documento com razões da reprovação
                           </p>
                           <FormMessage />
                         </FormItem>

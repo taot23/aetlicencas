@@ -62,6 +62,7 @@ export const licenseStatusEnum = z.enum([
   "under_review", // Análise do Órgão
   "pending_approval", // Pendente Liberação
   "approved", // Liberada
+  "canceled", // Cancelado
 ]);
 
 export type LicenseStatus = z.infer<typeof licenseStatusEnum>;
