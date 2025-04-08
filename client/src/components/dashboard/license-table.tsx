@@ -2,6 +2,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface License {
@@ -24,14 +26,34 @@ export function LicenseTable({ licenses, isLoading }: LicenseTableProps) {
   
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
+      <>
+        {/* Mobile skeleton */}
+        <div className="md:hidden p-4">
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={idx}>
+                      <Skeleton className="h-4 w-12 mb-2" />
+                      <Skeleton className="h-5 w-24" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+        
+        {/* Desktop skeleton */}
+        <div className="hidden md:block p-4">
+          <SkeletonTable columns={6} rows={4} />
+        </div>
+      </>
     );
   }
 

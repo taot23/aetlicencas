@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ChartData {
   name: string;
@@ -33,8 +34,11 @@ export function StatusChart({ type, isLoading }: StatusChartProps) {
   const renderChart = () => {
     if (isLoading || !chartData) {
       return (
-        <div className="flex items-center justify-center h-full">
-          <Skeleton className="h-full w-full" />
+        <div className="flex flex-col items-center justify-center h-full">
+          <LoadingSpinner size="lg" color="primary" className="mb-4" />
+          <p className="text-sm text-gray-500">
+            Carregando {type === "vehicle" ? "estatísticas de veículos" : "dados por estados"}...
+          </p>
         </div>
       );
     }
