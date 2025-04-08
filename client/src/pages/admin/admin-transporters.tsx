@@ -68,8 +68,10 @@ export default function AdminTransporters() {
   // Link transporter to user mutation
   const linkTransporterMutation = useMutation({
     mutationFn: async ({ transporterId, userId }: { transporterId: number, userId: string }) => {
-      if (!userId) throw new Error("Nenhum usuário selecionado");
-      const response = await apiRequest("POST", `/api/admin/transporters/${transporterId}/link`, { userId: parseInt(userId) });
+      // Se userId é uma string vazia, enviamos sem userId para desvincular
+      const response = await apiRequest("POST", `/api/admin/transporters/${transporterId}/link`, { 
+        userId: userId ? parseInt(userId) : null 
+      });
       return await response.json();
     },
     onSuccess: () => {

@@ -74,7 +74,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
       // Converter userId de string para número (ou undefined se não selecionado)
       const payload = {
         ...data,
-        userId: data.userId ? parseInt(data.userId) : undefined,
+        userId: data.userId && data.userId !== "none" ? parseInt(data.userId) : undefined,
       };
       
       const response = await apiRequest("POST", "/api/admin/transporters", payload);
@@ -103,10 +103,10 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
     mutationFn: async (data: TransporterFormValues) => {
       if (!transporter) throw new Error("Transportador não encontrado");
       
-      // Converter userId de string para número (ou undefined se não selecionado)
+      // Converter userId de string para número (ou null se não selecionado)
       const payload = {
         ...data,
-        userId: data.userId ? parseInt(data.userId) : null,
+        userId: data.userId && data.userId !== "none" ? parseInt(data.userId) : null,
       };
       
       const response = await apiRequest("PATCH", `/api/admin/transporters/${transporter.id}`, payload);
@@ -264,7 +264,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {users.map((user: any) => (
                       <SelectItem key={user.id} value={String(user.id)}>
                         {user.fullName} ({user.email})
