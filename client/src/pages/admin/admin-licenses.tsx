@@ -665,10 +665,18 @@ export default function AdminLicensesPage() {
                   </div>
                 </div>
               )}
-              <DialogFooter>
+              <DialogFooter className="mt-6 flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setStateStatusDialogOpen(false)}
+                  disabled={updateStateStatusMutation.isPending}
+                >
+                  Cancelar
+                </Button>
                 <Button 
                   type="submit" 
                   disabled={updateStateStatusMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {updateStateStatusMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

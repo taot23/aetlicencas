@@ -202,28 +202,15 @@ export class MemStorage implements IStorage {
   }
 
   async getLicenseRequestsByUserId(userId: number): Promise<LicenseRequest[]> {
-    // Função helper para verificar se todos os estados de uma licença estão "liberada"
-    const allStatesApproved = (license: LicenseRequest): boolean => {
-      if (!license.stateStatuses || license.stateStatuses.length === 0) {
-        return false;
-      }
-      
-      // Verificar se todos os estados da licença têm status 'approved'
-      return license.states.every(state => {
-        const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
-        return stateStatus === 'approved';
-      });
-    };
-    
     // Retorna todas as licenças quando userId=0 (caso especial para admin)
     if (userId === 0) {
       return Array.from(this.licenseRequests.values()).filter(
-        (license) => !license.isDraft && !allStatesApproved(license)
+        (license) => !license.isDraft
       );
     }
     
     return Array.from(this.licenseRequests.values()).filter(
-      (license) => license.userId === userId && !license.isDraft && !allStatesApproved(license)
+      (license) => license.userId === userId && !license.isDraft
     );
   }
 
