@@ -853,14 +853,16 @@ export default function AdminLicensesPage() {
                 )}
               </div>
 
-              <div className="flex justify-center items-center mt-6 px-4">
-                <Button 
-                  onClick={() => setLicenseDetailsOpen(false)}
-                  className="mx-auto min-w-32 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Fechar detalhes
-                </Button>
+              <div className="flex justify-center items-center mt-6 mb-2">
+                <div className="bg-gray-50 rounded-md px-8 py-3 shadow-sm w-fit mx-auto">
+                  <Button 
+                    onClick={() => setLicenseDetailsOpen(false)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Fechar detalhes
+                  </Button>
+                </div>
               </div>
             </div>
           )}
