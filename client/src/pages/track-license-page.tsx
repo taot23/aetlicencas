@@ -26,6 +26,7 @@ export default function TrackLicensePage() {
   
 
 
+  // Buscamos todas as licenças não finalizadas usando a rota /api/licenses
   const { data: licenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses"],
     queryFn: async () => {
@@ -35,7 +36,20 @@ export default function TrackLicensePage() {
       if (!res.ok) {
         throw new Error("Erro ao buscar licenças");
       }
-      return res.json();
+      
+      const data = await res.json();
+      
+      // Filtra apenas licenças que não estão totalmente aprovadas
+      return data.filter((license: LicenseRequest) => {
+        // Verifica se todos os estados têm status 'approved'
+        const allStatesApproved = license.states.every(state => {
+          const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+          return stateStatus === 'approved';
+        });
+        
+        // Mostra apenas licenças que não estão completamente aprovadas
+        return !allStatesApproved;
+      });
     }
   });
 
