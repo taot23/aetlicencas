@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Input } from "@/components/ui/input";
-import { FileDown } from "lucide-react";
+import { FileDown, CheckCircle } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { LicenseRequest } from "@shared/schema";
 import { LicenseList } from "@/components/licenses/license-list";
-import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { format } from "date-fns";
@@ -144,103 +144,143 @@ export default function TrackLicensePage() {
 
       {selectedLicense && (
         <Dialog open={!!selectedLicense} onOpenChange={(open) => !open && setSelectedLicense(null)}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>Detalhes da Licença</DialogTitle>
+              <DialogDescription>
+                Visualize os detalhes da sua solicitação
+              </DialogDescription>
             </DialogHeader>
+            
             <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Número do Pedido</h3>
-                <p className="text-gray-900">{selectedLicense.requestNumber}</p>
+              {/* Fluxo de progresso - similar ao da admin-licenses.tsx */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
+                <div className="relative flex items-center justify-between mt-3">
+                  {/* Linha de conexão */}
+                  <div className="absolute left-0 right-0 h-0.5 bg-gray-200"></div>
+                  
+                  {/* Etapas */}
+                  {[
+                    { value: "pending_registration", label: "Pedido em Cadastramento" },
+                    { value: "registration_in_progress", label: "Cadastro em Andamento" },
+                    { value: "rejected", label: "Reprovado" },
+                    { value: "under_review", label: "Análise do Órgão" },
+                    { value: "pending_approval", label: "Pendente Liberação" },
+                    { value: "approved", label: "Liberada" }
+                  ].map((option, index) => {
+                    const isCompleted = [
+                      "pending_registration",
+                      "registration_in_progress",
+                      "rejected",
+                      "under_review",
+                      "pending_approval",
+                      "approved"
+                    ].indexOf(selectedLicense.status) >= index;
+                    
+                    const isCurrent = option.value === selectedLicense.status;
+                    
+                    return (
+                      <div key={option.value} className="relative flex flex-col items-center z-10">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center
+                          ${isCurrent ? 'bg-blue-500 text-white' : 
+                            isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                          {isCompleted && !isCurrent ? 
+                            <CheckCircle className="h-4 w-4" /> : 
+                            <span className="text-xs">{index + 1}</span>
+                          }
+                        </div>
+                        <span className="text-xs text-center mt-1 max-w-[60px]">{option.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Tipo de Conjunto</h3>
-                <p className="text-gray-900">{getLicenseTypeLabel(selectedLicense.type)}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
+                  <p className="font-medium">{selectedLicense.requestNumber}</p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Status</h3>
+                  <div className="flex items-center mt-1">
+                    <StatusBadge status={selectedLicense.status} />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
+                  <p>
+                    {getLicenseTypeLabel(selectedLicense.type)}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
+                  <p>{selectedLicense.createdAt && format(new Date(selectedLicense.createdAt), "dd/MM/yyyy")}</p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Veículo Principal</h3>
+                  <p>{selectedLicense.mainVehiclePlate}</p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
+                  <p>
+                    {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
+                      ? selectedLicense.additionalPlates.join(", ")
+                      : "Nenhum veículo adicional"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Placa Principal</h3>
-                <p className="text-gray-900">{selectedLicense.mainVehiclePlate}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Status Geral</h3>
-                <StatusBadge status={selectedLicense.status} />
-              </div>
+              
+              {selectedLicense.comments && (
+                <div>
+                  <h3 className="font-medium text-sm text-gray-500">Comentários</h3>
+                  <p className="text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200 text-sm">
+                    {selectedLicense.comments}
+                  </p>
+                </div>
+              )}
               
               {/* Status por Estado */}
               {selectedLicense.states && selectedLicense.states.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Status por Estado</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="mt-6">
+                  <h3 className="font-medium text-sm text-gray-700 mb-3">Status por Estado</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {selectedLicense.states.map(state => {
                       // Procura o status para este estado
-                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || selectedLicense.status;
-                      
-                      return (
-                        <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
-                          <div className="flex flex-col">
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-800">{state}</span>
-                              <div className="mx-1 text-gray-400">•</div>
-                              <StatusBadge status={stateStatus} />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Data de Solicitação</h3>
-                <p className="text-gray-900">
-                  {selectedLicense.createdAt && format(new Date(selectedLicense.createdAt), "dd/MM/yyyy")}
-                </p>
-              </div>
-              {selectedLicense.comments && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Comentários</h3>
-                  <p className="text-gray-900">{selectedLicense.comments}</p>
-                </div>
-              )}
-              {/* Arquivos por estado quando a licença está liberada */}
-              {selectedLicense.status === "approved" && selectedLicense.states && selectedLicense.states.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Arquivos por Estado</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {selectedLicense.states.map(state => {
-                      // Procura o arquivo para este estado
+                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
                       const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
-                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || selectedLicense.status;
                       
                       return (
-                        <div key={state} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
-                          <div className="flex flex-col">
-                            <div className="flex items-center mb-1">
-                              <span className="font-medium text-gray-800">{state}</span>
-                              <div className="mx-1 text-gray-400">•</div>
-                              <StatusBadge status={stateStatus} />
+                        <div key={state} className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center">
+                                <span className="font-medium">{state}</span>
+                                <div className="ml-2">
+                                  <StatusBadge status={stateStatus} />
+                                </div>
+                              </div>
+                              
+                              {stateStatus === "approved" ? (
+                                <p className="text-xs text-green-600 font-medium mt-1">
+                                  {selectedLicense.requestNumber} - "{state}"
+                                </p>
+                              ) : (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Aguardando processamento
+                                </p>
+                              )}
                             </div>
                             
-                            {stateStatus === "approved" ? (
-                                <span className="text-xs text-green-600 font-medium">
-                                  {selectedLicense.requestNumber} - "{state}"
-                                </span>
-                              ) : (
-                                <span className="text-xs text-gray-500 italic">Status: {stateStatus} - Aguardando liberação</span>
-                              )}
-                              
-                              {!stateFileEntry && (
-                                <span className="text-xs text-gray-500 italic mt-1">Nenhum arquivo disponível</span>
-                              )}
-                            </div>
-                          
-                          {stateFileEntry && stateStatus === "approved" && (
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={stateFileEntry.split(':')[1]} target="_blank" rel="noopener noreferrer">
-                                <FileDown className="h-4 w-4 mr-1" /> Baixar
-                              </a>
-                            </Button>
-                          )}
+                            {stateFileEntry && stateStatus === "approved" && (
+                              <Button variant="outline" size="sm" asChild className="ml-2">
+                                <a href={stateFileEntry.split(':')[1]} target="_blank" rel="noopener noreferrer">
+                                  <FileDown className="h-4 w-4 mr-1" /> Baixar
+                                </a>
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
