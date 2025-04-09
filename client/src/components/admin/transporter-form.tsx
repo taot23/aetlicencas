@@ -316,7 +316,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
   const isPending = createTransporterMutation.isPending || updateTransporterMutation.isPending;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-auto px-1 pb-4">
       {/* Seleção de tipo de pessoa */}
       <div className="space-y-2">
         <Label>Tipo de Cadastro</Label>
@@ -342,11 +342,11 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
       {personType === "pj" && (
         <Form {...pjForm}>
           <form onSubmit={pjForm.handleSubmit(onSubmit)} className="space-y-6">
-            <Card>
+            <Card className="w-full overflow-hidden">
               <CardHeader>
                 <CardTitle>Dados do Transportador (Matriz)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 overflow-visible">
                 {/* CNPJ e Razão Social */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -570,11 +570,11 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
             </Card>
             
             {/* Documentos Anexos */}
-            <Card>
+            <Card className="w-full overflow-hidden">
               <CardHeader>
                 <CardTitle>Documentos Anexos</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 overflow-visible">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="socialContract">Contrato Social</Label>
@@ -618,7 +618,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
             </Card>
             
             {/* Filiais (Vincular CNPJs Adicionais) */}
-            <Card>
+            <Card className="w-full overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>FILIAIS (Vincular CNPJs Adicionais)</CardTitle>
@@ -629,7 +629,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   Adicionar Nova Filial
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-visible">
                 {subsidiaries.length === 0 ? (
                   <div className="text-center p-4 text-muted-foreground">
                     Nenhuma filial cadastrada. Clique no botão acima para adicionar.
@@ -792,11 +792,11 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
       {personType === "pf" && (
         <Form {...pfForm}>
           <form onSubmit={pfForm.handleSubmit(onSubmit)} className="space-y-6">
-            <Card>
+            <Card className="w-full overflow-hidden">
               <CardHeader>
                 <CardTitle>Dados Pessoais</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 overflow-visible">
                 {/* CPF e Nome Completo */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField

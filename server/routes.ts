@@ -185,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard Stats
   app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const stats = await storage.getDashboardStats(userId);
       res.json(stats);
     } catch (error) {
@@ -196,7 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/dashboard/vehicle-stats', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const stats = await storage.getVehicleStats(userId);
       res.json(stats);
     } catch (error) {
