@@ -316,7 +316,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
   const isPending = createTransporterMutation.isPending || updateTransporterMutation.isPending;
 
   return (
-    <div className="space-y-6 w-full max-w-6xl mx-auto overflow-x-auto px-1 pb-4 sm:px-4 md:px-6">
+    <div className="space-y-6 w-full max-w-6xl mx-auto overflow-x-visible px-1 pb-24 sm:px-4 md:px-6">
       {/* Seleção de tipo de pessoa */}
       <div className="space-y-2">
         <Label>Tipo de Cadastro</Label>
@@ -629,7 +629,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   Adicionar Nova Filial
                 </Button>
               </CardHeader>
-              <CardContent className="overflow-visible">
+              <CardContent className="overflow-visible max-h-[70vh] overflow-y-auto">
                 {subsidiaries.length === 0 ? (
                   <div className="text-center p-4 text-muted-foreground">
                     Nenhuma filial cadastrada. Clique no botão acima para adicionar.
