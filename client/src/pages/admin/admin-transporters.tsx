@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Plus, MoreVertical, Edit, Trash, Link as LinkIcon } from "lucide-react";
+import { Plus, MoreVertical, Edit, Trash } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -22,9 +22,7 @@ export default function AdminTransporters() {
   const isMobile = useIsMobile();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [selectedTransporter, setSelectedTransporter] = useState<Transporter | null>(null);
-  const [selectedUserIdForLink, setSelectedUserIdForLink] = useState<string>("");
 
   // Fetch transporters
   const { data: transporters = [], isLoading } = useQuery({
@@ -35,14 +33,7 @@ export default function AdminTransporters() {
     }
   });
 
-  // Fetch non-admin users for linking
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/admin/non-admin-users"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/non-admin-users");
-      return await response.json();
-    }
-  });
+
 
   // Delete transporter mutation
   const deleteTransporterMutation = useMutation({
@@ -65,33 +56,7 @@ export default function AdminTransporters() {
     }
   });
 
-  // Link transporter to user mutation
-  const linkTransporterMutation = useMutation({
-    mutationFn: async ({ transporterId, userId }: { transporterId: number, userId: string }) => {
-      // Se userId é uma string vazia, enviamos userId como null para desvincular
-      const response = await apiRequest("POST", `/api/admin/transporters/${transporterId}/link`, { 
-        userId: userId && userId !== "" ? parseInt(userId) : null 
-      });
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Transportador vinculado",
-        description: "O transportador foi vinculado ao usuário com sucesso",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/transporters"] });
-      setIsLinkDialogOpen(false);
-      setSelectedTransporter(null);
-      setSelectedUserIdForLink("");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao vincular transportador",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+
 
   const handleEditTransporter = (transporter: Transporter) => {
     setSelectedTransporter(transporter);
@@ -104,20 +69,7 @@ export default function AdminTransporters() {
     }
   };
 
-  const handleLinkTransporter = (transporter: Transporter) => {
-    setSelectedTransporter(transporter);
-    setSelectedUserIdForLink(transporter.userId ? String(transporter.userId) : "");
-    setIsLinkDialogOpen(true);
-  };
 
-  const handleLinkSubmit = () => {
-    if (selectedTransporter) {
-      linkTransporterMutation.mutate({ 
-        transporterId: selectedTransporter.id, 
-        userId: selectedUserIdForLink 
-      });
-    }
-  };
 
   const renderTransportersList = () => {
     if (isLoading) {
@@ -153,10 +105,6 @@ export default function AdminTransporters() {
                         <Edit size={16} className="mr-2" />
                         Editar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleLinkTransporter(transporter)}>
-                        <LinkIcon size={16} className="mr-2" />
-                        Vincular Usuário
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleDeleteTransporter(transporter.id)} className="text-red-600">
                         <Trash size={16} className="mr-2" />
                         Excluir
@@ -177,14 +125,6 @@ export default function AdminTransporters() {
                     <span className="text-sm text-gray-500">Contato:</span>
                     <span className="text-sm">{transporter.contact1Name}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Usuário:</span>
-                    <span className="text-sm">
-                      {transporter.userId ? 
-                        `ID: ${transporter.userId} - ${users.find((u: any) => u.id === transporter.userId)?.fullName || "Usuário"}` : 
-                        "Não vinculado"}
-                    </span>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -201,7 +141,6 @@ export default function AdminTransporters() {
             <TableHead>CPF/CNPJ</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Contato Principal</TableHead>
-            <TableHead>Usuário Vinculado</TableHead>
             <TableHead className="w-[100px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -213,11 +152,6 @@ export default function AdminTransporters() {
               <TableCell>{transporter.email}</TableCell>
               <TableCell>{transporter.contact1Name}</TableCell>
               <TableCell>
-                {transporter.userId ? 
-                  `ID: ${transporter.userId} - ${users.find((u: any) => u.id === transporter.userId)?.fullName || "Usuário"}` : 
-                  "Não vinculado"}
-              </TableCell>
-              <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -228,10 +162,6 @@ export default function AdminTransporters() {
                     <DropdownMenuItem onClick={() => handleEditTransporter(transporter)}>
                       <Edit size={16} className="mr-2" />
                       Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLinkTransporter(transporter)}>
-                      <LinkIcon size={16} className="mr-2" />
-                      Vincular Usuário
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDeleteTransporter(transporter.id)} className="text-red-600">
                       <Trash size={16} className="mr-2" />
@@ -293,53 +223,7 @@ export default function AdminTransporters() {
           </Dialog>
         )}
 
-        {/* Modal para vincular transportador a usuário */}
-        {selectedTransporter && (
-          <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Vincular Transportador a Usuário</DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                <p className="mb-4">
-                  Transportador: <strong>{selectedTransporter.name}</strong>
-                </p>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Selecione um usuário
-                  </label>
-                  <select 
-                    className="w-full p-2 border rounded"
-                    value={selectedUserIdForLink}
-                    onChange={(e) => setSelectedUserIdForLink(e.target.value)}
-                  >
-                    <option value="">Nenhum (remover vínculo)</option>
-                    {users.map((user: any) => (
-                      <option key={user.id} value={user.id}>
-                        ID: {user.id} - {user.fullName} ({user.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex justify-end">
-                  <Button 
-                    onClick={handleLinkSubmit}
-                    disabled={linkTransporterMutation.isPending}
-                  >
-                    {linkTransporterMutation.isPending ? (
-                      <>
-                        <LoadingSpinner size="sm" />
-                        <span className="ml-2">Processando...</span>
-                      </>
-                    ) : (
-                      "Vincular Usuário"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+
       </div>
     </AdminLayout>
   );

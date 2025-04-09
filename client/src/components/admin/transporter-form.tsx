@@ -1,8 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Transporter } from "@shared/schema";
 
@@ -11,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "../ui/loading-spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+
 
 // Form schema customizado para validação do formulário de transportador
 const transporterFormSchema = z.object({
@@ -22,7 +21,6 @@ const transporterFormSchema = z.object({
   contact2Name: z.string().optional(),
   contact2Phone: z.string().optional(),
   email: z.string().email("Email inválido"),
-  userId: z.string().optional(),
 });
 
 type TransporterFormValues = z.infer<typeof transporterFormSchema>;
@@ -35,19 +33,6 @@ interface TransporterFormProps {
 export function TransporterForm({ transporter, onSuccess }: TransporterFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedUser, setSelectedUser] = useState<string | undefined>(
-    transporter?.userId ? String(transporter.userId) : undefined
-  );
-
-  // Obter a lista de usuários não-admin para vinculação
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ["/api/admin/non-admin-users"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/non-admin-users");
-      return await response.json();
-    },
-  });
-
   // Form para criar/editar transportador
   const form = useForm<TransporterFormValues>({
     resolver: zodResolver(transporterFormSchema),
@@ -59,25 +44,15 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
       contact2Name: transporter?.contact2Name || "",
       contact2Phone: transporter?.contact2Phone || "",
       email: transporter?.email || "",
-      userId: transporter?.userId ? String(transporter.userId) : undefined,
     },
   });
 
-  // Efeito para atualizar o campo userId quando selectedUser mudar
-  useEffect(() => {
-    form.setValue("userId", selectedUser);
-  }, [selectedUser, form]);
+
 
   // Mutação para criar transportador
   const createTransporterMutation = useMutation({
     mutationFn: async (data: TransporterFormValues) => {
-      // Converter userId de string para número (ou undefined se não selecionado)
-      const payload = {
-        ...data,
-        userId: data.userId && data.userId !== "none" ? parseInt(data.userId) : undefined,
-      };
-      
-      const response = await apiRequest("POST", "/api/admin/transporters", payload);
+      const response = await apiRequest("POST", "/api/admin/transporters", data);
       return await response.json();
     },
     onSuccess: () => {
@@ -103,13 +78,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
     mutationFn: async (data: TransporterFormValues) => {
       if (!transporter) throw new Error("Transportador não encontrado");
       
-      // Converter userId de string para número (ou null se não selecionado)
-      const payload = {
-        ...data,
-        userId: data.userId && data.userId !== "none" ? parseInt(data.userId) : null,
-      };
-      
-      const response = await apiRequest("PATCH", `/api/admin/transporters/${transporter.id}`, payload);
+      const response = await apiRequest("PATCH", `/api/admin/transporters/${transporter.id}`, data);
       return await response.json();
     },
     onSuccess: () => {
@@ -242,36 +211,6 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 <FormControl>
                   <Input type="email" placeholder="email@exemplo.com" {...field} />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="userId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Usuário Vinculado (opcional)</FormLabel>
-                <Select
-                  value={selectedUser}
-                  onValueChange={(value) => setSelectedUser(value)}
-                  disabled={isLoadingUsers}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um usuário" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {users.map((user: any) => (
-                      <SelectItem key={user.id} value={String(user.id)}>
-                        ID: {user.id} - {user.fullName} ({user.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}
