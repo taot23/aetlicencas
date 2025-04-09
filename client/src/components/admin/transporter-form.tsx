@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Upload, File, FileText } from "lucide-react";
+import { Plus, Trash2, Upload, File, FileText, Search as SearchIcon } from "lucide-react";
 
 // Interface para filial
 interface Subsidiary {
@@ -60,6 +60,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
     socialContract: null,
     powerOfAttorney: null,
   });
+  const [isLoadingCnpj, setIsLoadingCnpj] = useState(false);
   
   // Formulário para pessoa jurídica
   const pjForm = useForm<InsertTransporter>({
@@ -349,20 +350,73 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
               <CardContent className="space-y-6 overflow-visible">
                 {/* CNPJ e Razão Social */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={pjForm.control}
-                    name="documentNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CNPJ Principal</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Somente números" {...field} />
-                        </FormControl>
-                        <FormDescription>Informe o CNPJ com 14 dígitos</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-4">
+                    <FormField
+                      control={pjForm.control}
+                      name="documentNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CNPJ Principal</FormLabel>
+                          <div className="flex gap-2">
+                            <FormControl>
+                              <Input placeholder="Somente números" {...field} />
+                            </FormControl>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon" 
+                              disabled={isLoadingCnpj || !field.value || field.value.length < 14}
+                              onClick={async () => {
+                                if (field.value && field.value.length === 14) {
+                                  try {
+                                    setIsLoadingCnpj(true);
+                                    const response = await fetch(`/api/cnpj/${field.value}`);
+                                    
+                                    if (!response.ok) {
+                                      throw new Error('Erro ao consultar CNPJ');
+                                    }
+                                    
+                                    const data = await response.json();
+                                    
+                                    // Preencher os campos com os dados da empresa
+                                    pjForm.setValue('name', data.razao_social);
+                                    pjForm.setValue('tradeName', data.nome_fantasia);
+                                    
+                                    // Preencher endereço
+                                    if (data.logradouro) pjForm.setValue('street', data.logradouro);
+                                    if (data.numero) pjForm.setValue('number', data.numero);
+                                    if (data.complemento) pjForm.setValue('complement', data.complemento);
+                                    if (data.bairro) pjForm.setValue('district', data.bairro);
+                                    if (data.cep) pjForm.setValue('zipCode', data.cep.replace(/\D/g, ''));
+                                    if (data.municipio) pjForm.setValue('city', data.municipio);
+                                    if (data.uf) pjForm.setValue('state', data.uf);
+                                    
+                                    toast({
+                                      title: "CNPJ consultado com sucesso",
+                                      description: "Dados preenchidos automaticamente",
+                                    });
+                                  } catch (error) {
+                                    console.error("Erro ao consultar CNPJ:", error);
+                                    toast({
+                                      title: "Erro ao consultar CNPJ",
+                                      description: "Verifique o número e tente novamente",
+                                      variant: "destructive",
+                                    });
+                                  } finally {
+                                    setIsLoadingCnpj(false);
+                                  }
+                                }
+                              }}
+                            >
+                              {isLoadingCnpj ? <LoadingSpinner size="sm" /> : <SearchIcon className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                          <FormDescription>Informe o CNPJ com 14 dígitos e clique em consultar</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

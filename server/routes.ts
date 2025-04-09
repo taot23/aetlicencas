@@ -182,6 +182,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Servir arquivos estáticos da pasta uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+  // Consulta CNPJ via Brasil API
+  app.get('/api/cnpj/:cnpj', async (req, res) => {
+    try {
+      const { cnpj } = req.params;
+      const cleanCnpj = cnpj.replace(/[^\d]/g, '');
+      
+      if (cleanCnpj.length !== 14) {
+        return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos' });
+      }
+      
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        return res.status(response.status).json(error);
+      }
+      
+      const data = await response.json();
+      return res.json(data);
+    } catch (error) {
+      console.error('Erro ao consultar CNPJ:', error);
+      return res.status(500).json({ error: 'Erro ao consultar CNPJ' });
+    }
+  });
+
   // Dashboard Stats
   app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
     try {
