@@ -316,7 +316,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
   const isPending = createTransporterMutation.isPending || updateTransporterMutation.isPending;
 
   return (
-    <div className="space-y-6 w-full max-w-6xl mx-auto overflow-x-visible px-1 pb-24 sm:px-4 md:px-6">
+    <div className="space-y-6 w-full max-w-6xl mx-auto overflow-visible px-1 pb-24 sm:px-4 md:px-6">
       {/* Seleção de tipo de pessoa */}
       <div className="space-y-2">
         <Label>Tipo de Cadastro</Label>

@@ -189,15 +189,17 @@ export default function AdminTransporters() {
                 Novo
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Novo Transportador</DialogTitle>
               </DialogHeader>
-              <TransporterForm 
-                onSuccess={() => {
-                  setIsCreateDialogOpen(false);
-                }} 
-              />
+              <div className="pb-4">
+                <TransporterForm 
+                  onSuccess={() => {
+                    setIsCreateDialogOpen(false);
+                  }} 
+                />
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -208,17 +210,19 @@ export default function AdminTransporters() {
         {/* Modal de edição de transportador */}
         {selectedTransporter && (
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Editar Transportador</DialogTitle>
               </DialogHeader>
-              <TransporterForm 
-                transporter={selectedTransporter} 
-                onSuccess={() => {
-                  setIsEditDialogOpen(false);
-                  setSelectedTransporter(null);
-                }} 
-              />
+              <div className="pb-4">
+                <TransporterForm 
+                  transporter={selectedTransporter} 
+                  onSuccess={() => {
+                    setIsEditDialogOpen(false);
+                    setSelectedTransporter(null);
+                  }} 
+                />
+              </div>
             </DialogContent>
           </Dialog>
         )}
