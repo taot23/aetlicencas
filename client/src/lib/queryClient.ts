@@ -11,9 +11,13 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: { headers?: Record<string, string> }
+  options?: { 
+    headers?: Record<string, string>;
+    isFormData?: boolean;
+  }
 ): Promise<Response> {
-  const isFormData = data instanceof FormData;
+  // Verifica se é FormData diretamente ou pela flag
+  const isFormData = data instanceof FormData || options?.isFormData === true;
   const headers = options?.headers || {};
   
   // Não definimos Content-Type para FormData, o navegador define automaticamente com o boundary correto
@@ -25,7 +29,7 @@ export async function apiRequest(
     method,
     headers,
     // Para FormData não usamos JSON.stringify
-    body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
+    body: isFormData ? (data as BodyInit) : data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 

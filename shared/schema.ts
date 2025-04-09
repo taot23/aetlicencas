@@ -13,30 +13,123 @@ export const userRoleEnum = z.enum([
 
 export type UserRole = z.infer<typeof userRoleEnum>;
 
+// Define enum para tipos de pessoa
+export const personTypeEnum = z.enum([
+  "pj", // Pessoa Jurídica
+  "pf"  // Pessoa Física
+]);
+
+export type PersonType = z.infer<typeof personTypeEnum>;
+
 // Transportador model
 export const transporters = pgTable("transporters", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  documentNumber: text("document_number").notNull().unique(), // CPF ou CNPJ
+  personType: text("person_type").notNull(), // PJ ou PF
+  
+  // Campos comuns
+  name: text("name").notNull(), // Razão Social (PJ) ou Nome Completo (PF)
+  documentNumber: text("document_number").notNull().unique(), // CNPJ ou CPF
+  email: text("email").notNull(),
+  phone: text("phone"),
+  
+  // Campos específicos PJ
+  tradeName: text("trade_name"), // Nome Fantasia
+  legalResponsible: text("legal_responsible"), // Responsável Legal
+  
+  // Campos específicos PF
+  birthDate: text("birth_date"), // Data de Nascimento para PF
+  nationality: text("nationality"), // Nacionalidade para PF
+  idNumber: text("id_number"), // RG para PF
+  idIssuer: text("id_issuer"), // Órgão Emissor do RG
+  idState: text("id_state"), // UF do RG
+  
+  // Endereço
+  street: text("street"), // Logradouro
+  number: text("number"), // Número
+  complement: text("complement"), // Complemento
+  district: text("district"), // Bairro
+  zipCode: text("zip_code"), // CEP
+  city: text("city"), // Cidade
+  state: text("state"), // UF
+  
+  // Filiais (apenas para PJ)
+  subsidiaries: json("subsidiaries").default('[]'), // Array com filiais (CNPJ, nome, endereço, etc)
+  
+  // Arquivos
+  documents: json("documents").default('[]'), // URLs dos documentos anexados
+  
+  // Campo para retro-compatibilidade
   contact1Name: text("contact1_name"),
   contact1Phone: text("contact1_phone"),
   contact2Name: text("contact2_name"),
   contact2Phone: text("contact2_phone"),
-  email: text("email"),
+  
   userId: integer("user_id").references(() => users.id), // Referência para o usuário vinculado
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertTransporterSchema = createInsertSchema(transporters).pick({
-  name: true,
-  documentNumber: true,
-  contact1Name: true,
-  contact1Phone: true,
-  contact2Name: true,
-  contact2Phone: true,
-  email: true,
-}).extend({
-  userId: z.number().optional(), // ID do usuário vinculado (opcional)
+// Esquema JSON para filiais (subsidiárias)
+export const subsidiarySchema = z.object({
+  cnpj: z.string().min(14, "CNPJ deve ter pelo menos 14 dígitos"),
+  name: z.string().min(3, "Razão social deve ter pelo menos 3 caracteres"),
+  tradeName: z.string().optional(),
+  street: z.string().optional(),
+  number: z.string().optional(),
+  complement: z.string().optional(),
+  zipCode: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  documents: z.array(z.string()).optional().default([]),
+});
+
+// Esquema JSON para documentos
+export const documentSchema = z.object({
+  type: z.string(), // "social_contract", "power_of_attorney", etc.
+  url: z.string(),
+  filename: z.string(),
+});
+
+// Schema para inserção/atualização de transportador
+export const insertTransporterSchema = z.object({
+  personType: personTypeEnum,
+  
+  // Campos comuns
+  name: z.string().min(3, "Nome/Razão Social deve ter pelo menos 3 caracteres"),
+  documentNumber: z.string().min(11, "Documento deve ter pelo menos 11 dígitos"),
+  email: z.string().email("Email inválido"),
+  phone: z.string().optional(),
+  
+  // Campos específicos PJ
+  tradeName: z.string().optional(),
+  legalResponsible: z.string().optional(),
+  
+  // Campos específicos PF
+  birthDate: z.string().optional(),
+  nationality: z.string().optional(),
+  idNumber: z.string().optional(),
+  idIssuer: z.string().optional(),
+  idState: z.string().optional(),
+  
+  // Endereço
+  street: z.string().optional(),
+  number: z.string().optional(),
+  complement: z.string().optional(),
+  district: z.string().optional(),
+  zipCode: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  
+  // Filiais (apenas para PJ)
+  subsidiaries: z.array(subsidiarySchema).optional().default([]),
+  
+  // Arquivos
+  documents: z.array(documentSchema).optional().default([]),
+  
+  // Campos para retro-compatibilidade
+  contact1Name: z.string().optional(),
+  contact1Phone: z.string().optional(),
+  contact2Name: z.string().optional(),
+  contact2Phone: z.string().optional(),
 });
 
 // User model

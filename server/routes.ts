@@ -17,14 +17,16 @@ import {
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
 import path from "path";
-import fs from "fs/promises";
+import * as fs from "fs";
 import { promisify } from "util";
 
 // Set up file storage for uploads
 const uploadDir = path.join(process.cwd(), "uploads");
-const ensureUploadDir = async () => {
+const ensureUploadDir = () => {
   try {
-    await fs.mkdir(uploadDir, { recursive: true });
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
   } catch (error) {
     console.error("Error creating upload directory:", error);
   }
@@ -251,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Add file URL if provided
-      let crlvUrl = null;
+      let crlvUrl: string | undefined = undefined;
       if (req.file) {
         crlvUrl = `/uploads/${req.file.filename}`;
       }
@@ -747,11 +749,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post('/api/admin/transporters', requireAdmin, async (req, res) => {
+  // Configuração do multer para upload de arquivos do transportador
+  const transporterStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Cria o diretório de uploads caso não exista
+      const uploadDir = './uploads/transporter';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      // Cria um nome de arquivo único
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+  });
+  
+  const transporterUpload = multer({ storage: transporterStorage });
+
+  app.post('/api/admin/transporters', requireAdmin, transporterUpload.any(), async (req, res) => {
     try {
       // Validar dados do transportador
       try {
-        const { name, documentNumber, contact1Name, contact1Phone, contact2Name, contact2Phone, email, userId } = req.body;
+        const { 
+          personType, name, documentNumber, email, phone, 
+          tradeName, legalResponsible,
+          birthDate, nationality, idNumber, idIssuer, idState,
+          street, number, complement, district, zipCode, city, state,
+          subsidiaries, 
+          contact1Name, contact1Phone, contact2Name, contact2Phone
+        } = req.body;
         
         // Verificar se já existe um transportador com este documento
         const existingTransporter = await storage.getTransporterByDocument(documentNumber);
@@ -759,29 +788,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Este CPF/CNPJ já está cadastrado" });
         }
         
-        // Se userId for fornecido, verificar se o usuário existe
-        if (userId) {
-          const user = await storage.getUser(userId);
-          if (!user) {
-            return res.status(400).json({ message: "Usuário não encontrado" });
-          }
+        // Processar arquivos enviados
+        const files = req.files as Express.Multer.File[];
+        const documents: { type: string, url: string, filename: string }[] = [];
+        
+        if (files && files.length > 0) {
+          files.forEach((file) => {
+            const fileType = file.fieldname.replace('document_', '');
+            documents.push({
+              type: fileType,
+              url: `/uploads/transporter/${file.filename}`,
+              filename: file.originalname
+            });
+          });
         }
         
-        const transporter = await storage.createTransporter({
+        // Criar transportador com os dados específicos para o tipo (PJ ou PF)
+        const transporterData: any = {
+          personType,
           name,
           documentNumber,
-          contact1Name,
-          contact1Phone,
-          contact2Name,
-          contact2Phone,
           email,
-          userId: userId || null
-        });
+          phone,
+          contact1Name: contact1Name || "",
+          contact1Phone: contact1Phone || "",
+          contact2Name: contact2Name || "",
+          contact2Phone: contact2Phone || "",
+          documents: JSON.stringify(documents)
+        };
+        
+        // Adicionar campos específicos de PJ
+        if (personType === "pj") {
+          transporterData.tradeName = tradeName;
+          transporterData.legalResponsible = legalResponsible;
+          
+          // Adicionar endereço
+          transporterData.street = street;
+          transporterData.number = number;
+          transporterData.complement = complement;
+          transporterData.district = district;
+          transporterData.zipCode = zipCode;
+          transporterData.city = city;
+          transporterData.state = state;
+          
+          // Processar subsidiárias (filiais)
+          if (subsidiaries) {
+            try {
+              const parsedSubsidiaries = JSON.parse(subsidiaries);
+              transporterData.subsidiaries = JSON.stringify(parsedSubsidiaries);
+            } catch (e) {
+              console.error("Erro ao processar subsidiárias:", e);
+              transporterData.subsidiaries = '[]';
+            }
+          } else {
+            transporterData.subsidiaries = '[]';
+          }
+        } 
+        // Adicionar campos específicos de PF
+        else if (personType === "pf") {
+          transporterData.birthDate = birthDate;
+          transporterData.nationality = nationality;
+          transporterData.idNumber = idNumber;
+          transporterData.idIssuer = idIssuer;
+          transporterData.idState = idState;
+        }
+        
+        const transporter = await storage.createTransporter(transporterData);
         
         res.status(201).json(transporter);
       } catch (error) {
         console.error("Erro ao validar dados do transportador:", error);
-        return res.status(400).json({ message: "Dados inválidos" });
+        return res.status(400).json({ message: "Dados inválidos: " + (error as Error).message });
       }
     } catch (error) {
       console.error("Erro ao criar transportador:", error);
@@ -805,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch('/api/admin/transporters/:id', requireAdmin, async (req, res) => {
+  app.patch('/api/admin/transporters/:id', requireAdmin, transporterUpload.any(), async (req, res) => {
     try {
       const transporterId = parseInt(req.params.id);
       
@@ -823,15 +900,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Se está atualizando o usuário vinculado, verificar se ele existe
-      if (req.body.userId) {
-        const user = await storage.getUser(req.body.userId);
-        if (!user) {
-          return res.status(400).json({ message: "Usuário não encontrado" });
+      // Processar arquivos enviados
+      const files = req.files as Express.Multer.File[];
+      let existingDocuments: { type: string, url: string, filename: string }[] = [];
+      
+      // Tentar carregar documentos existentes
+      try {
+        if (transporter.documents) {
+          existingDocuments = JSON.parse(transporter.documents as string);
+        }
+      } catch (e) {
+        console.error("Erro ao processar documentos existentes:", e);
+      }
+      
+      // Adicionar novos documentos
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          const fileType = file.fieldname.replace('document_', '');
+          existingDocuments.push({
+            type: fileType,
+            url: `/uploads/transporter/${file.filename}`,
+            filename: file.originalname
+          });
+        });
+      }
+      
+      // Preparar dados para atualização
+      const transporterData: any = {
+        ...req.body,
+        documents: JSON.stringify(existingDocuments)
+      };
+      
+      // Processar subsidiárias se for PJ
+      if (transporterData.personType === "pj" && transporterData.subsidiaries) {
+        try {
+          const parsedSubsidiaries = JSON.parse(transporterData.subsidiaries);
+          transporterData.subsidiaries = JSON.stringify(parsedSubsidiaries);
+        } catch (e) {
+          console.error("Erro ao processar subsidiárias:", e);
+          // Manter as subsidiárias existentes se houver erro
+          if (transporter.subsidiaries) {
+            transporterData.subsidiaries = transporter.subsidiaries;
+          } else {
+            transporterData.subsidiaries = '[]';
+          }
         }
       }
       
-      const updatedTransporter = await storage.updateTransporter(transporterId, req.body);
+      // Atualizar transportador
+      const updatedTransporter = await storage.updateTransporter(transporterId, transporterData);
       
       res.json(updatedTransporter);
     } catch (error) {
@@ -904,7 +1021,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('licenseFile'), async (req, res) => {
     try {
       const licenseId = parseInt(req.params.id);
-      const statusData = { 
+      const statusData: {
+        status: LicenseStatus;
+        comments: string;
+        validUntil?: string;
+      } = {
         status: req.body.status as LicenseStatus,
         comments: req.body.comments,
       };
@@ -929,7 +1050,7 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
       }
       
       // Add file URL if provided
-      let licenseFileUrl = existingLicense.licenseFileUrl;
+      let licenseFileUrl: string | undefined = existingLicense.licenseFileUrl;
       if (req.file) {
         licenseFileUrl = `/uploads/${req.file.filename}`;
       }
@@ -980,7 +1101,7 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
       }
       
       // Adicionar arquivo se fornecido
-      let file = null;
+      let file: Express.Multer.File | undefined = undefined;
       if (req.file) {
         file = req.file;
       }
