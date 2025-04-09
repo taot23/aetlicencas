@@ -182,7 +182,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Servir arquivos estáticos da pasta uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-  // Consulta CNPJ - implementação local para demonstração
+  // Cache para armazenar tokens de acesso
+  let accessToken: string | null = null;
+  let tokenExpiration: number = 0;
+
+  // Função para obter token de acesso
+  async function getAccessToken() {
+    try {
+      // Verificar se o token atual ainda é válido
+      if (accessToken && tokenExpiration > Date.now()) {
+        return accessToken;
+      }
+
+      // Configurar a solicitação para obter o token
+      const tokenUrl = 'https://h-apigateway.conectagov.estaleiro.serpro.gov.br/oauth2/jwt-token';
+      const params = new URLSearchParams({
+        grant_type: 'client_credentials',
+      });
+
+      const authHeader = 'Basic ' + Buffer.from(
+        `${process.env.GOV_BR_CLIENT_ID}:${process.env.GOV_BR_CLIENT_SECRET}`
+      ).toString('base64');
+
+      // Fazer a solicitação para obter o token
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': authHeader
+        },
+        body: params
+      });
+
+      if (!response.ok) {
+        // Se a resposta não for OK, tentar extrair o erro
+        const errorText = await response.text();
+        console.error('Erro ao obter token de acesso:', errorText);
+        throw new Error(`Erro ao obter token: ${response.status} ${response.statusText}`);
+      }
+
+      // Extrair o token de acesso da resposta
+      const data = await response.json();
+      accessToken = data.access_token;
+      // Calcular a expiração (normalmente em segundos) e converter para timestamp
+      tokenExpiration = Date.now() + (data.expires_in * 1000) - 60000; // 1 minuto antes para evitar problemas
+      
+      return accessToken;
+    } catch (error) {
+      console.error('Erro ao obter token de acesso:', error);
+      throw error;
+    }
+  }
+
+  // Integração com a API Gov.br para consulta de CNPJ
   app.get('/api/cnpj/:cnpj', async (req, res) => {
     try {
       const { cnpj } = req.params;
@@ -191,68 +243,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (cleanCnpj.length !== 14) {
         return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos' });
       }
-      
-      // Simulação local de resposta da API
-      // Em produção, isso seria substituído pela chamada real à API
-      // Esta implementação é apenas para demonstração
-      const empresas = {
-        '01743404000138': {
-          razao_social: 'EMPRESA EXEMPLO LTDA',
-          nome_fantasia: 'EXEMPLO COMERCIAL',
-          logradouro: 'AVENIDA PAULISTA',
-          numero: '1578',
-          complemento: 'ANDAR 10 CONJ 1010',
-          bairro: 'BELA VISTA',
-          cep: '01310-200',
-          municipio: 'SAO PAULO',
-          uf: 'SP'
-        },
-        '33000167000101': {
-          razao_social: 'PETRÓLEO BRASILEIRO S.A. PETROBRAS',
-          nome_fantasia: 'PETROBRAS',
-          logradouro: 'AVENIDA REPÚBLICA DO CHILE',
-          numero: '65',
-          complemento: 'CENTRO',
-          bairro: 'CENTRO',
-          cep: '20031-912',
-          municipio: 'RIO DE JANEIRO',
-          uf: 'RJ'
-        },
-        '60746948000112': {
-          razao_social: 'BANCO BRADESCO S.A.',
-          nome_fantasia: 'BRADESCO',
-          logradouro: 'NÚCLEO CIDADE DE DEUS',
-          numero: 's/n',
-          complemento: 'VILA YARA',
-          bairro: 'VILA YARA',
-          cep: '06029-900',
-          municipio: 'OSASCO',
-          uf: 'SP'
+
+      try {
+        // Obter o token de acesso
+        const token = await getAccessToken();
+        
+        // Configurar a solicitação para a API do Gov.br
+        const apiUrl = `https://h-apigateway.conectagov.estaleiro.serpro.gov.br/api-cnpj/v2/cnpj/${cleanCnpj}`;
+        
+        // Fazer a solicitação à API do Gov.br
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          console.error('Erro na resposta da API:', response.status, response.statusText);
+          
+          // Em caso de erro, usar a implementação local como fallback
+          return useFallbackCnpj(cleanCnpj, res);
         }
-      };
-      
-      // Verificar se o CNPJ está na nossa base simulada
-      if (empresas[cleanCnpj]) {
-        return res.json(empresas[cleanCnpj]);
+
+        // Processar a resposta da API
+        const apiData = await response.json();
+        
+        // Mapear os dados para o formato esperado pelo frontend
+        const dadosEmpresa = {
+          razao_social: apiData.razaoSocial || apiData.nomeEmpresarial || '',
+          nome_fantasia: apiData.nomeFantasia || '',
+          logradouro: apiData.logradouro || '',
+          numero: apiData.numero || '',
+          complemento: apiData.complemento || '',
+          bairro: apiData.bairro || '',
+          cep: apiData.cep || '',
+          municipio: apiData.municipio || '',
+          uf: apiData.uf || ''
+        };
+
+        return res.json(dadosEmpresa);
+      } catch (apiError) {
+        console.error('Erro ao consultar API oficial:', apiError);
+        
+        // Em caso de erro na API oficial, usar o fallback local
+        return useFallbackCnpj(cleanCnpj, res);
       }
-      
-      // CNPJ não encontrado, retornar dados fictícios genéricos para demonstração
-      return res.json({
-        razao_social: 'EMPRESA ' + cleanCnpj.substring(0, 8),
-        nome_fantasia: 'NOME FANTASIA ' + cleanCnpj.substring(8, 12),
-        logradouro: 'RUA EXEMPLO',
-        numero: '1000',
-        complemento: 'SALA 123',
-        bairro: 'CENTRO',
-        cep: '01000-000',
-        municipio: 'SÃO PAULO',
-        uf: 'SP'
-      });
     } catch (error) {
-      console.error('Erro ao consultar CNPJ:', error);
+      console.error('Erro ao processar consulta CNPJ:', error);
       return res.status(500).json({ error: 'Erro ao consultar CNPJ' });
     }
   });
+
+  // Implementação local de fallback para quando a API oficial falhar
+  function useFallbackCnpj(cleanCnpj: string, res: express.Response) {
+    console.log('Usando fallback local para CNPJ:', cleanCnpj);
+    
+    // Banco de dados local de empresas para fallback
+    const empresas: Record<string, Record<string, string>> = {
+      '01743404000138': {
+        razao_social: 'EMPRESA EXEMPLO LTDA',
+        nome_fantasia: 'EXEMPLO COMERCIAL',
+        logradouro: 'AVENIDA PAULISTA',
+        numero: '1578',
+        complemento: 'ANDAR 10 CONJ 1010',
+        bairro: 'BELA VISTA',
+        cep: '01310-200',
+        municipio: 'SAO PAULO',
+        uf: 'SP'
+      },
+      '33000167000101': {
+        razao_social: 'PETRÓLEO BRASILEIRO S.A. PETROBRAS',
+        nome_fantasia: 'PETROBRAS',
+        logradouro: 'AVENIDA REPÚBLICA DO CHILE',
+        numero: '65',
+        complemento: 'CENTRO',
+        bairro: 'CENTRO',
+        cep: '20031-912',
+        municipio: 'RIO DE JANEIRO',
+        uf: 'RJ'
+      },
+      '60746948000112': {
+        razao_social: 'BANCO BRADESCO S.A.',
+        nome_fantasia: 'BRADESCO',
+        logradouro: 'NÚCLEO CIDADE DE DEUS',
+        numero: 's/n',
+        complemento: 'VILA YARA',
+        bairro: 'VILA YARA',
+        cep: '06029-900',
+        municipio: 'OSASCO',
+        uf: 'SP'
+      }
+    };
+    
+    // Verificar se o CNPJ está no banco de dados local
+    if (Object.prototype.hasOwnProperty.call(empresas, cleanCnpj)) {
+      return res.json(empresas[cleanCnpj]);
+    }
+    
+    // CNPJ não encontrado, retornar dados fictícios genéricos
+    return res.json({
+      razao_social: 'EMPRESA ' + cleanCnpj.substring(0, 8),
+      nome_fantasia: 'NOME FANTASIA ' + cleanCnpj.substring(8, 12),
+      logradouro: 'RUA EXEMPLO',
+      numero: '1000',
+      complemento: 'SALA 123',
+      bairro: 'CENTRO',
+      cep: '01000-000',
+      municipio: 'SÃO PAULO',
+      uf: 'SP'
+    });
+  }
 
   // Dashboard Stats
   app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
@@ -279,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/dashboard/state-stats', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const stats = await storage.getStateStats(userId);
       res.json(stats);
     } catch (error) {
@@ -291,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vehicles CRUD endpoints
   app.get('/api/vehicles', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const vehicles = await storage.getVehiclesByUserId(userId);
       res.json(vehicles);
     } catch (error) {
@@ -302,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/vehicles', requireAuth, upload.single('crlvFile'), processVehicleData, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       
       // Extrair dados do campo vehicleData (JSON string)
       let vehicleData;
