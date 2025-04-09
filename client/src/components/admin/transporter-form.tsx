@@ -316,7 +316,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
   const isPending = createTransporterMutation.isPending || updateTransporterMutation.isPending;
 
   return (
-    <div className="space-y-6 max-w-full overflow-x-auto px-1 pb-4">
+    <div className="space-y-6 w-full overflow-x-auto px-1 pb-4 sm:px-2">
       {/* Seleção de tipo de pessoa */}
       <div className="space-y-2">
         <Label>Tipo de Cadastro</Label>
@@ -348,7 +348,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
               </CardHeader>
               <CardContent className="space-y-6 overflow-visible">
                 {/* CNPJ e Razão Social */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={pjForm.control}
                     name="documentNumber"
@@ -365,7 +365,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={pjForm.control}
                     name="name"
@@ -398,7 +398,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 {/* Informações de Contato */}
                 <div className="space-y-4">
                   <h3 className="text-md font-medium">Informações de Contato</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={pjForm.control}
                       name="phone"
@@ -446,7 +446,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 {/* Endereço da Matriz */}
                 <div className="space-y-4">
                   <h3 className="text-md font-medium">Endereço da Matriz</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={pjForm.control}
                       name="street"
@@ -575,7 +575,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 <CardTitle>Documentos Anexos</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 overflow-visible">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="socialContract">Contrato Social</Label>
                     <div className="flex items-center gap-2">
@@ -651,7 +651,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                           </Button>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>CNPJ Filial</Label>
                             <Input
