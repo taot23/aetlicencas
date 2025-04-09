@@ -316,7 +316,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
   const isPending = createTransporterMutation.isPending || updateTransporterMutation.isPending;
 
   return (
-    <div className="space-y-6 w-full overflow-x-auto px-1 pb-4 sm:px-2">
+    <div className="space-y-6 w-full max-w-6xl mx-auto overflow-x-auto px-1 pb-4 sm:px-4 md:px-6">
       {/* Seleção de tipo de pessoa */}
       <div className="space-y-2">
         <Label>Tipo de Cadastro</Label>
@@ -492,7 +492,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <FormField
                       control={pjForm.control}
                       name="district"
@@ -682,7 +682,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                         
                         <div className="space-y-2">
                           <h5 className="text-sm font-medium">Endereço da Filial</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>Logradouro</Label>
                               <Input
@@ -713,7 +713,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <Label>CEP</Label>
                               <Input
@@ -798,7 +798,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
               </CardHeader>
               <CardContent className="space-y-6 overflow-visible">
                 {/* CPF e Nome Completo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={pfForm.control}
                     name="documentNumber"
@@ -829,7 +829,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={pfForm.control}
                     name="birthDate"
@@ -862,7 +862,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 {/* Documentos */}
                 <div className="space-y-4">
                   <h3 className="text-md font-medium">Documentos</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <FormField
                       control={pfForm.control}
                       name="idNumber"
@@ -924,7 +924,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 {/* Contato */}
                 <div className="space-y-4">
                   <h3 className="text-md font-medium">Contato</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={pfForm.control}
                       name="phone"
@@ -958,7 +958,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                 {/* Documentos Anexos */}
                 <div className="space-y-4">
                   <h3 className="text-md font-medium">Documentos Anexos</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="rgCpfDoc">RG e CPF (frente e verso)</Label>
                       <div className="flex items-center gap-2">
