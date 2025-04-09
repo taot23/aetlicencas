@@ -114,7 +114,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
     return res.status(401).json({ message: "Não autenticado" });
   }
   
-  if (!req.user.isAdmin) {
+  if (!req.user!.isAdmin) {
     return res.status(403).json({ message: "Acesso negado" });
   }
   
@@ -128,7 +128,7 @@ const requireOperational = (req: any, res: any, next: any) => {
   }
   
   // Verifica se o usuário tem papel Operacional
-  if (req.user.role !== 'operational' && req.user.role !== 'supervisor' && !req.user.isAdmin) {
+  if (req.user!.role !== 'operational' && req.user!.role !== 'supervisor' && !req.user!.isAdmin) {
     return res.status(403).json({ 
       message: "Acesso negado. Apenas usuários com perfil Operacional ou Supervisor podem acessar." 
     });
@@ -144,7 +144,7 @@ const requireSupervisor = (req: any, res: any, next: any) => {
   }
   
   // Verifica se o usuário tem papel Supervisor
-  if (req.user.role !== 'supervisor' && !req.user.isAdmin) {
+  if (req.user!.role !== 'supervisor' && !req.user!.isAdmin) {
     return res.status(403).json({ 
       message: "Acesso negado. Apenas usuários com perfil Supervisor podem acessar." 
     });
@@ -160,12 +160,12 @@ const requireOwnerOrStaff = (req: any, res: any, next: any) => {
   }
   
   // Os perfis que podem acessar recursos de outros usuários
-  const isStaff = ['operational', 'supervisor'].includes(req.user.role) || req.user.isAdmin;
+  const isStaff = ['operational', 'supervisor'].includes(req.user!.role) || req.user!.isAdmin;
   
   // Se o usuário não é staff, verifica se é o dono do recurso
   if (!isStaff) {
     const resourceUserId = parseInt(req.params.userId);
-    if (req.user.id !== resourceUserId) {
+    if (req.user!.id !== resourceUserId) {
       return res.status(403).json({ 
         message: "Acesso negado. Você só pode acessar seus próprios dados." 
       });
@@ -262,9 +262,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (!response.ok) {
           console.error('Erro na resposta da API:', response.status, response.statusText);
-          
-          // Em caso de erro, usar a implementação local como fallback
-          return useFallbackCnpj(cleanCnpj, res);
+          return res.status(response.status).json({ 
+            error: 'Erro ao consultar CNPJ na API oficial',
+            message: response.statusText
+          });
         }
 
         // Processar a resposta da API
@@ -286,75 +287,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(dadosEmpresa);
       } catch (apiError) {
         console.error('Erro ao consultar API oficial:', apiError);
-        
-        // Em caso de erro na API oficial, usar o fallback local
-        return useFallbackCnpj(cleanCnpj, res);
+        return res.status(500).json({ 
+          error: 'Falha na comunicação com a API de CNPJ',
+          message: apiError instanceof Error ? apiError.message : 'Erro desconhecido'
+        });
       }
     } catch (error) {
       console.error('Erro ao processar consulta CNPJ:', error);
       return res.status(500).json({ error: 'Erro ao consultar CNPJ' });
     }
   });
-
-  // Implementação local de fallback para quando a API oficial falhar
-  function useFallbackCnpj(cleanCnpj: string, res: express.Response) {
-    console.log('Usando fallback local para CNPJ:', cleanCnpj);
-    
-    // Banco de dados local de empresas para fallback
-    const empresas: Record<string, Record<string, string>> = {
-      '01743404000138': {
-        razao_social: 'EMPRESA EXEMPLO LTDA',
-        nome_fantasia: 'EXEMPLO COMERCIAL',
-        logradouro: 'AVENIDA PAULISTA',
-        numero: '1578',
-        complemento: 'ANDAR 10 CONJ 1010',
-        bairro: 'BELA VISTA',
-        cep: '01310-200',
-        municipio: 'SAO PAULO',
-        uf: 'SP'
-      },
-      '33000167000101': {
-        razao_social: 'PETRÓLEO BRASILEIRO S.A. PETROBRAS',
-        nome_fantasia: 'PETROBRAS',
-        logradouro: 'AVENIDA REPÚBLICA DO CHILE',
-        numero: '65',
-        complemento: 'CENTRO',
-        bairro: 'CENTRO',
-        cep: '20031-912',
-        municipio: 'RIO DE JANEIRO',
-        uf: 'RJ'
-      },
-      '60746948000112': {
-        razao_social: 'BANCO BRADESCO S.A.',
-        nome_fantasia: 'BRADESCO',
-        logradouro: 'NÚCLEO CIDADE DE DEUS',
-        numero: 's/n',
-        complemento: 'VILA YARA',
-        bairro: 'VILA YARA',
-        cep: '06029-900',
-        municipio: 'OSASCO',
-        uf: 'SP'
-      }
-    };
-    
-    // Verificar se o CNPJ está no banco de dados local
-    if (Object.prototype.hasOwnProperty.call(empresas, cleanCnpj)) {
-      return res.json(empresas[cleanCnpj]);
-    }
-    
-    // CNPJ não encontrado, retornar dados fictícios genéricos
-    return res.json({
-      razao_social: 'EMPRESA ' + cleanCnpj.substring(0, 8),
-      nome_fantasia: 'NOME FANTASIA ' + cleanCnpj.substring(8, 12),
-      logradouro: 'RUA EXEMPLO',
-      numero: '1000',
-      complemento: 'SALA 123',
-      bairro: 'CENTRO',
-      cep: '01000-000',
-      municipio: 'SÃO PAULO',
-      uf: 'SP'
-    });
-  }
 
   // Dashboard Stats
   app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
@@ -446,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/vehicles/:id', requireAuth, upload.single('crlvFile'), processVehicleData, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const vehicleId = parseInt(req.params.id);
       
       // Check if vehicle exists and belongs to the user
@@ -492,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/vehicles/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const vehicleId = parseInt(req.params.id);
       
       // Check if vehicle exists and belongs to the user
@@ -517,7 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // License draft endpoints
   app.get('/api/licenses/drafts', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const drafts = await storage.getLicenseDraftsByUserId(userId);
       res.json(drafts);
     } catch (error) {
@@ -528,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/licenses/drafts', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const draftData = { ...req.body };
       
       // Validate draft data
@@ -556,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/licenses/drafts/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const draftId = parseInt(req.params.id);
       
       // Check if draft exists and belongs to the user
@@ -590,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/licenses/drafts/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const draftId = parseInt(req.params.id);
       
       // Check if draft exists and belongs to the user
@@ -614,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/licenses/drafts/:id/submit', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const draftId = parseInt(req.params.id);
       
       // Check if draft exists and belongs to the user
@@ -643,7 +585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // License request endpoints
   app.get('/api/licenses', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const licenses = await storage.getLicenseRequestsByUserId(userId);
       res.json(licenses);
     } catch (error) {
@@ -654,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/licenses', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const licenseData = { ...req.body };
       
       // Validate license data
@@ -683,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const issuedLicenses = await storage.getIssuedLicensesByUserId(userId);
       res.json(issuedLicenses);
     } catch (error) {
