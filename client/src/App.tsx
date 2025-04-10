@@ -1,5 +1,5 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
+import { queryClient, getQueryFn } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
@@ -16,6 +16,7 @@ import AdminTransportersPage from "@/pages/admin/admin-transporters";
 import AdminUsersPage from "@/pages/admin/admin-users";
 import { ProtectedRoute, AdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
+import { useEffect } from "react";
 
 function Router() {
   return (
@@ -41,10 +42,22 @@ function Router() {
   );
 }
 
+// Componente para pré-carregar dados importantes
+function AppInitializer() {
+  // Pré-carregar dados da sessão atual ao iniciar o aplicativo
+  queryClient.prefetchQuery({
+    queryKey: ["/api/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+  
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <AppInitializer />
         <Router />
         <Toaster />
       </AuthProvider>

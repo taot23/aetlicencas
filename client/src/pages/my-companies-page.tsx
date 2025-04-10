@@ -40,8 +40,8 @@ export default function MyCompaniesPage() {
   }, [transporters]);
 
   const handleBack = () => {
-    // Utilizar caminho absoluto e forçar atualização da página
-    window.location.href = "/";
+    // Usar o router para navegação sem recarregar a página (mais rápido)
+    navigate("/");
   };
   
   if (isLoading) {
@@ -68,9 +68,10 @@ export default function MyCompaniesPage() {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => window.location.href = "/"}
+          onClick={() => navigate("/")}
           className="ml-auto"
         >
+          <Home className="h-4 w-4 mr-2" />
           Página Inicial
         </Button>
       </div>
@@ -153,8 +154,8 @@ export default function MyCompaniesPage() {
                       className="w-full" 
                       size="sm" 
                       onClick={() => {
-                        // Navegação direta com window.location para garantir o carregamento correto
-                        window.location.href = "/request-license";
+                        // Usar navegação interna para melhor performance
+                        navigate("/request-license");
                       }}
                     >
                       <FileText className="mr-2 h-4 w-4" />

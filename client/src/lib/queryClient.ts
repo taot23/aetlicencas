@@ -59,13 +59,19 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      // Melhoria de performance: mantemos os dados em cache por 5 minutos
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      // Melhoria de UX: recarregamos dados quando o usuário volta à janela
+      refetchOnWindowFocus: true,
+      // Tentamos mais uma vez para tolerância a falhas temporárias
+      retry: 1,
+      // Melhoria de UX: Reusamos cache enquanto revalidamos para mostrar dados mais rápido
+      keepPreviousData: true,
+      // Mostrar dados imediatamente, mesmo que desatualizados (sensação de UI mais rápida)
+      refetchOnMount: 'always',
     },
     mutations: {
-      retry: false,
+      retry: 1, // Uma tentativa adicional para mutações também
     },
   },
 });
