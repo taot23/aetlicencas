@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, Home, Truck, FileText, ClipboardList, ListChecks, LogOut, ChevronRight, Building2 } from "lucide-react";
+import { Menu, Home, Truck, FileText, ClipboardList, ListChecks, LogOut, ChevronRight, Building2, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -15,6 +15,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [location, setLocation] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const isOperational = user?.role === 'operational' || user?.role === 'supervisor' || user?.isAdmin;
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -112,6 +113,20 @@ export function Sidebar({ className }: SidebarProps) {
           <ListChecks className="mr-3 h-5 w-5" />
           Licenças Emitidas
         </Button>
+        
+        {isOperational && (
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-white hover:bg-gray-700",
+              location === "/gerenciar-licencas" ? "bg-gray-700" : "bg-transparent"
+            )}
+            onClick={() => handleNavigate("/gerenciar-licencas")}
+          >
+            <ClipboardCheck className="mr-3 h-5 w-5" />
+            Gerenciar Licenças
+          </Button>
+        )}
         
         {user?.isAdmin && (
           <Button
