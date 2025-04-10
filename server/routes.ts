@@ -200,8 +200,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         grant_type: 'client_credentials',
       });
 
+      // Usar chave fornecida pelo cliente
       const authHeader = 'Basic ' + Buffer.from(
-        `${process.env.GOV_BR_CLIENT_ID}:${process.env.GOV_BR_CLIENT_SECRET}`
+        `${process.env.GOV_BR_CLIENT_ID || 'client-id'}:${process.env.GOV_BR_CLIENT_SECRET || 'client-secret'}`
       ).toString('base64');
 
       // Fazer a solicitação para obter o token
@@ -265,7 +266,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'x-cpf-usuario': '00000000000' // Header obrigatório conforme documentação
+          'x-cpf-usuario': '00000000000', // Header obrigatório conforme documentação
+          'chave-api-dados': 'e9735f5ad81244b8182d7f8085205fc0'
         }
       });
       console.log(`[DEBUG] Resposta da API: ${response.status} ${response.statusText}`);
@@ -1199,7 +1201,8 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
       }
       
       // Add file URL if provided
-      let licenseFileUrl: string | undefined = existingLicense.licenseFileUrl;
+      // Corrigir a tipagem para evitar conflito entre null e undefined
+      let licenseFileUrl: string | undefined = existingLicense.licenseFileUrl || undefined;
       if (req.file) {
         licenseFileUrl = `/uploads/${req.file.filename}`;
       }

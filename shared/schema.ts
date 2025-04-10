@@ -220,7 +220,7 @@ export const licenseRequests = pgTable("license_requests", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isDraft: boolean("is_draft").default(true).notNull(),
   comments: text("comments"),
-  licenseFileUrl: text("license_file_url"),
+  licenseFileUrl: text("license_file_url").default(''),
   validUntil: timestamp("valid_until"),
 });
 
