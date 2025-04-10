@@ -1183,6 +1183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/non-admin-users', requireAdmin, async (req, res) => {
     try {
       const users = await storage.getNonAdminUsers();
+      console.log("[DEBUG] Usuários não-admin recuperados:", users.length);
       res.json(users);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);

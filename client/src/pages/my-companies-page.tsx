@@ -9,17 +9,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Building2, Users, FileText, PackageCheck, Info, AlertCircle } from "lucide-react";
+import { Building2, Users, FileText, PackageCheck, Info, AlertCircle, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function MyCompaniesPage() {
   const { user } = useAuth();
   const [userTransporters, setUserTransporters] = useState<Transporter[]>([]);
+  const [, navigate] = useLocation();
   
   // Buscar todos os transportadores para filtrar os vinculados ao usuário
   const { data: transporters = [], isLoading, error } = useQuery({
     queryKey: ["/api/user/transporters"],
     queryFn: async () => {
-      // Esta rota pode não existir ainda, então vamos tratar os erros corretamente
       try {
         const response = await apiRequest("GET", "/api/user/transporters");
         return await response.json();
@@ -35,6 +36,10 @@ export default function MyCompaniesPage() {
       setUserTransporters(transporters);
     }
   }, [transporters]);
+
+  const handleBack = () => {
+    navigate("/dashboard");
+  };
   
   if (isLoading) {
     return (
@@ -45,15 +50,25 @@ export default function MyCompaniesPage() {
   }
   
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <div className="mb-8">
+    <div className="container mx-auto py-6 px-4 max-w-5xl">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleBack}
+        className="mb-6"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar ao Dashboard
+      </Button>
+      
+      <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Minhas Empresas</h1>
         <p className="text-muted-foreground mt-2">
           Gerencie as empresas vinculadas ao seu perfil.
         </p>
       </div>
       
-      <Separator className="mb-8" />
+      <Separator className="mb-6" />
       
       {userTransporters.length === 0 ? (
         <Alert className="mb-8">
@@ -65,50 +80,72 @@ export default function MyCompaniesPage() {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {userTransporters.map((transporter) => (
-            <Card key={transporter.id} className="overflow-hidden">
-              <CardHeader className="bg-gray-50">
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  {transporter.name}
-                </CardTitle>
-                <CardDescription>
-                  {transporter.personType === "pj" ? "Pessoa Jurídica" : "Pessoa Física"}
-                </CardDescription>
+            <Card key={transporter.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+              <CardHeader className="bg-primary/5 pb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <Building2 className="h-5 w-5 text-primary" />
+                      {transporter.name}
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      <Badge variant="outline" className="mt-1">
+                        {transporter.personType === "pj" ? "Pessoa Jurídica" : "Pessoa Física"}
+                      </Badge>
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="pt-5">
                 <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">Documento</p>
-                    <p className="text-base">{transporter.documentNumber}</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-500">Documento</span>
+                      <span className="font-medium">
+                        {transporter.documentNumber || "Não informado"}
+                      </span>
+                    </div>
+                    
+                    {transporter.personType === "pj" && transporter.tradeName && (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-500">Nome Fantasia</span>
+                        <span className="font-medium">{transporter.tradeName}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-500">Contato</span>
+                      <span className="font-medium">{transporter.email || "Não informado"}</span>
+                      <span className="text-sm">{transporter.phone || "Telefone não cadastrado"}</span>
+                    </div>
+                    
+                    {(transporter.city || transporter.state) && (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-500">Localização</span>
+                        <span className="font-medium">
+                          {transporter.city || ""}
+                          {transporter.city && transporter.state && ", "}
+                          {transporter.state || ""}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
-                  {transporter.personType === "pj" && transporter.tradeName && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">Nome Fantasia</p>
-                      <p className="text-base">{transporter.tradeName}</p>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">Contato</p>
-                    <p className="text-base">{transporter.email}</p>
-                    <p className="text-sm">{transporter.phone}</p>
-                  </div>
-                  
-                  {(transporter.city || transporter.state) && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">Localização</p>
-                      <p className="text-base">
-                        {transporter.city}
-                        {transporter.city && transporter.state && ", "}
-                        {transporter.state}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="pt-4 flex justify-end">
+                  <div className="pt-3 flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      variant="default" 
+                      className="w-full" 
+                      size="sm" 
+                      onClick={() => {
+                        // Redirecionamento para solicitar licença
+                        navigate("/request-license");
+                      }}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Solicitar Licença
+                    </Button>
                     <Button variant="outline" className="w-full" size="sm">
                       <Info className="mr-2 h-4 w-4" />
                       Ver Detalhes
