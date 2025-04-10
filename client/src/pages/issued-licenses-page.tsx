@@ -208,18 +208,22 @@ export default function IssuedLicensesPage() {
                       <TableCell>{license.mainVehiclePlate}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {license.states.map(state => (
-                            <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              {state}
-                            </span>
-                          ))}
+                          {/* Mostrar só o número de estados e um tooltip */}
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            {license.states.length} {license.states.length === 1 ? 'Estado' : 'Estados'}
+                          </span>
+                          <span className="text-xs text-gray-500">({license.states.join(', ')})</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}
+                        {license.updatedAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.updatedAt)) : '-'}
                       </TableCell>
                       <TableCell>
-                        {license.validUntil && format(new Date(license.validUntil), "dd/MM/yyyy")}
+                        {license.validUntil ? (
+                          <span className="font-semibold text-green-700">
+                            {new Intl.DateTimeFormat('pt-BR').format(new Date(license.validUntil))}
+                          </span>
+                        ) : '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         {license.licenseFileUrl && (
@@ -322,11 +326,13 @@ export default function IssuedLicensesPage() {
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Liberação:</span>
-                      <div>{license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy")}</div>
+                      <div>{license.updatedAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.updatedAt)) : '-'}</div>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Validade:</span>
-                      <div>{license.validUntil && format(new Date(license.validUntil), "dd/MM/yyyy")}</div>
+                      <div className="font-semibold text-green-700">
+                        {license.validUntil ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.validUntil)) : '-'}
+                      </div>
                     </div>
                   </div>
                   
@@ -438,13 +444,13 @@ export default function IssuedLicensesPage() {
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Data de Liberação</h3>
                 <p className="text-gray-900">
-                  {selectedLicense.updatedAt && format(new Date(selectedLicense.updatedAt), "dd/MM/yyyy")}
+                  {selectedLicense.updatedAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(selectedLicense.updatedAt)) : '-'}
                 </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Validade</h3>
-                <p className="text-gray-900">
-                  {selectedLicense.validUntil && format(new Date(selectedLicense.validUntil), "dd/MM/yyyy")}
+                <p className="font-semibold text-green-700">
+                  {selectedLicense.validUntil ? new Intl.DateTimeFormat('pt-BR').format(new Date(selectedLicense.validUntil)) : '-'}
                 </p>
               </div>
               {/* Arquivos por estado - mostrar sempre, mesmo que não haja arquivos ainda */}
