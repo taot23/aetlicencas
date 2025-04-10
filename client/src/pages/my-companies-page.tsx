@@ -3,17 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Transporter } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Building2, Users, FileText, PackageCheck, Info, AlertCircle, ArrowLeft } from "lucide-react";
+import { Building2, Users, FileText, PackageCheck, Info, AlertCircle, ArrowLeft, Home } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function MyCompaniesPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [userTransporters, setUserTransporters] = useState<Transporter[]>([]);
   const [, navigate] = useLocation();
   
@@ -38,7 +40,8 @@ export default function MyCompaniesPage() {
   }, [transporters]);
 
   const handleBack = () => {
-    navigate("/dashboard");
+    // Utilizar caminho absoluto e forçar atualização da página
+    window.location.href = "/";
   };
   
   if (isLoading) {
@@ -51,15 +54,26 @@ export default function MyCompaniesPage() {
   
   return (
     <div className="container mx-auto py-6 px-4 max-w-5xl">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={handleBack}
-        className="mb-6"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Voltar ao Dashboard
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={handleBack}
+          className="bg-primary text-white hover:bg-primary/90"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar ao Dashboard
+        </Button>
+
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => window.location.href = "/"}
+          className="ml-auto"
+        >
+          Página Inicial
+        </Button>
+      </div>
       
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Minhas Empresas</h1>
@@ -139,14 +153,26 @@ export default function MyCompaniesPage() {
                       className="w-full" 
                       size="sm" 
                       onClick={() => {
-                        // Redirecionamento para solicitar licença
-                        navigate("/request-license");
+                        // Navegação direta com window.location para garantir o carregamento correto
+                        window.location.href = "/request-license";
                       }}
                     >
                       <FileText className="mr-2 h-4 w-4" />
                       Solicitar Licença
                     </Button>
-                    <Button variant="outline" className="w-full" size="sm">
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      size="sm"
+                      onClick={() => {
+                        // Atualmente mantido sem ação, mas poderia redirecionar para detalhes
+                        // do transportador no futuro
+                        toast({
+                          title: "Funcionalidade em desenvolvimento",
+                          description: "Detalhes do transportador estarão disponíveis em breve."
+                        });
+                      }}
+                    >
                       <Info className="mr-2 h-4 w-4" />
                       Ver Detalhes
                     </Button>
