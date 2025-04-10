@@ -394,6 +394,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar transportador" });
     }
   });
+  
+  // Endpoint público para acessar dados básicos de transportadores
+  // Usado pelo componente TransporterInfo para exibir informações em licenças
+  app.get('/api/public/transporters/:id', async (req, res) => {
+    try {
+      const transporterId = parseInt(req.params.id);
+      
+      const transporter = await storage.getTransporterById(transporterId);
+      if (!transporter) {
+        return res.status(404).json({ message: "Transportador não encontrado" });
+      }
+      
+      // Retorne apenas os dados públicos necessários
+      const publicData = {
+        id: transporter.id,
+        name: transporter.name,
+        tradeName: transporter.tradeName,
+        personType: transporter.personType,
+        documentNumber: transporter.documentNumber,
+        city: transporter.city,
+        state: transporter.state,
+        email: transporter.email,
+        phone: transporter.phone
+      };
+      
+      res.json(publicData);
+    } catch (error) {
+      console.error("Erro ao buscar transportador por ID (público):", error);
+      res.status(500).json({ message: "Erro ao buscar detalhes do transportador" });
+    }
+  });
 
   // Vehicles CRUD endpoints
   app.get('/api/vehicles', requireAuth, async (req, res) => {

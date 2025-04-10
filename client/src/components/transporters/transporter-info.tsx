@@ -25,9 +25,15 @@ export const TransporterInfo = ({
     queryKey: ['/api/transporters', transporterId],
     queryFn: async () => {
       if (!transporterId) return null;
+      console.log(`[TransporterInfo] Buscando dados do transportador ID: ${transporterId}`);
       const res = await fetch(`/api/transporters/${transporterId}`);
-      if (!res.ok) return null;
-      return res.json();
+      if (!res.ok) {
+        console.error(`[TransporterInfo] Erro ao buscar transportador ID ${transporterId}:`, res.status);
+        return null;
+      }
+      const data = await res.json();
+      console.log(`[TransporterInfo] Dados do transportador ID ${transporterId} carregados:`, data);
+      return data;
     },
     enabled: !!transporterId,
     staleTime: 10 * 60 * 1000, // Cache por 10 minutos
@@ -55,18 +61,40 @@ export const TransporterInfo = ({
 
   return (
     <div className={className}>
-      <h3 className="text-sm font-medium text-gray-500">Transportador</h3>
       {isLoading ? (
         <div className="flex items-center space-x-2">
           <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
           <span className="text-sm text-gray-500">Carregando dados do transportador...</span>
         </div>
       ) : transporter ? (
-        <p className="text-gray-900">
-          {transporter.name}
-          {transporter.documentNumber && ` - ${transporter.documentNumber}`}
-          {transporter.personType === "pj" && transporter.tradeName && ` (${transporter.tradeName})`}
-        </p>
+        <div className="space-y-2">
+          <p className="text-gray-900 font-medium">
+            {transporter.name}
+            {transporter.personType === "pj" && transporter.tradeName && ` (${transporter.tradeName})`}
+          </p>
+          {transporter.documentNumber && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">
+                {transporter.personType === "pj" ? "CNPJ" : "CPF"}:
+              </span> {transporter.documentNumber}
+            </p>
+          )}
+          {(transporter.city || transporter.state) && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Local:</span> {transporter.city}{transporter.state && `, ${transporter.state}`}
+            </p>
+          )}
+          {transporter.phone && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Telefone:</span> {transporter.phone}
+            </p>
+          )}
+          {transporter.email && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Email:</span> {transporter.email}
+            </p>
+          )}
+        </div>
       ) : (
         <p className="text-gray-500">Transportador não encontrado</p>
       )}
