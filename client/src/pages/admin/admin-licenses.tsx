@@ -28,6 +28,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { LicenseRequest, brazilianStates as brazilianStatesObjects } from "@shared/schema";
+import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Lista simplificada de estados brasileiros para uso como strings
