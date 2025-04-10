@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Input } from "@/components/ui/input";
 import { 
@@ -9,8 +9,8 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { LicenseRequest, LicenseStatus } from "@shared/schema";
-import { format } from "date-fns";
+import { LicenseRequest, LicenseStatus, brazilianStates } from "@shared/schema";
+import { format, isAfter, isBefore, addDays, differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
@@ -22,15 +22,17 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
-import { FileDown, ExternalLink } from "lucide-react";
+import { FileDown, ExternalLink, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { Status, StatusBadge } from "@/components/licenses/status-badge";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
+import { Badge } from "@/components/ui/badge";
 
 export default function IssuedLicensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const itemsPerPage = 10;
@@ -52,16 +54,94 @@ export default function IssuedLicensesPage() {
     refetchOnWindowFocus: true
   });
 
-  const filteredLicenses = issuedLicenses?.filter(license => {
-    // Permitir licenças com status geral approved ou com pelo menos um estado com status approved
-    const hasApprovedState = license.stateStatuses?.some(ss => ss.includes(':approved')) || false;
-    if (license.status !== "approved" && !hasApprovedState) return false;
+  // Interface para as licenças expandidas por estado
+  interface ExpandedLicense {
+    id: number;
+    licenseId: number;
+    requestNumber: string;
+    type: string;
+    mainVehiclePlate: string;
+    state: string;
+    status: string;
+    stateStatus: string;
+    emissionDate: string | null;
+    validUntil: string | null;
+    licenseFileUrl: string | null;
+    stateFileUrl: string | null;
+    transporterId: number;
+  }
+  
+  // Obter licenças com status aprovado por estado
+  const expandedLicenses = useMemo(() => {
+    if (!issuedLicenses) return [];
+    
+    const result: ExpandedLicense[] = [];
+    
+    issuedLicenses.forEach(license => {
+      // Para cada licença, expandir para uma linha por estado que tenha sido aprovado
+      license.states.forEach((state, index) => {
+        // Verifica se este estado específico foi aprovado
+        const stateStatusEntry = license.stateStatuses?.find(entry => entry.startsWith(`${state}:`));
+        const stateStatus = stateStatusEntry?.split(':')?.[1] || 'pending_registration';
+        const stateFileEntry = license.stateFiles?.find(entry => entry.startsWith(`${state}:`));
+        const stateFileUrl = stateFileEntry?.split(':')?.[1] || null;
+        
+        // Só incluir estados com status "approved"
+        if (stateStatus === 'approved') {
+          // Obter data de validade específica para este estado, se disponível
+          let stateValidUntil = license.validUntil ? license.validUntil.toString() : null;
+          if (stateStatusEntry && stateStatusEntry.split(':').length > 2) {
+            stateValidUntil = stateStatusEntry.split(':')[2];
+          }
+          
+          result.push({
+            id: license.id * 100 + index, // Gerar ID único para a linha
+            licenseId: license.id,
+            requestNumber: license.requestNumber,
+            type: license.type,
+            mainVehiclePlate: license.mainVehiclePlate,
+            state,
+            status: stateStatus,
+            stateStatus,
+            emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
+            validUntil: stateValidUntil,
+            licenseFileUrl: license.licenseFileUrl,
+            stateFileUrl,
+            transporterId: license.transporterId || 0
+          });
+        }
+      });
+    });
+    
+    return result;
+  }, [issuedLicenses]);
 
+  // Verificar validade das licenças
+  const getLicenseStatus = (validUntil: string | null): 'active' | 'expired' | 'expiring_soon' => {
+    if (!validUntil) return 'active';
+    
+    const validDate = new Date(validUntil);
+    const today = new Date();
+    
+    if (isBefore(validDate, today)) {
+      return 'expired';
+    }
+    
+    // Se a validade é menos de 30 dias a partir de hoje
+    if (differenceInDays(validDate, today) <= 30) {
+      return 'expiring_soon';
+    }
+    
+    return 'active';
+  };
+  
+  // Filtrar as licenças expandidas
+  const filteredLicenses = expandedLicenses.filter(license => {
     const matchesSearch = !searchTerm || 
       license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const licenseDate = license.updatedAt ? new Date(license.updatedAt) : null;
+    const licenseDate = license.emissionDate ? new Date(license.emissionDate) : null;
     
     const matchesDateFrom = !dateFrom || (
       licenseDate && 
@@ -74,11 +154,15 @@ export default function IssuedLicensesPage() {
     );
     
     const matchesState = !stateFilter || stateFilter === "all_states" || (
-      license.states.includes(stateFilter)
+      license.state === stateFilter
     );
     
-    return matchesSearch && matchesDateFrom && matchesDateTo && matchesState;
-  }) || [];
+    // Verificar o status da licença para filtro de situação
+    const validityStatus = getLicenseStatus(license.validUntil);
+    const matchesStatus = !statusFilter || statusFilter === "all_status" || statusFilter === validityStatus;
+    
+    return matchesSearch && matchesDateFrom && matchesDateTo && matchesState && matchesStatus;
+  });
 
   // Paginação
   const totalPages = Math.ceil(filteredLicenses.length / itemsPerPage);
@@ -177,86 +261,124 @@ export default function IssuedLicensesPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Nº do Pedido</TableHead>
-                  <TableHead>Tipo de Conjunto</TableHead>
+                <TableRow className="bg-gray-100">
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Nº Pedido</TableHead>
                   <TableHead>Placa Principal</TableHead>
-                  <TableHead>Estados</TableHead>
-                  <TableHead>Data Liberação</TableHead>
+                  <TableHead>Nº Licença</TableHead>
+                  <TableHead>Emissão</TableHead>
                   <TableHead>Validade</TableHead>
+                  <TableHead>Situação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10">
+                    <TableCell colSpan={8} className="text-center py-10">
                       Carregando licenças...
                     </TableCell>
                   </TableRow>
                 ) : paginatedLicenses.length > 0 ? (
-                  paginatedLicenses.map((license) => (
-                    <TableRow key={license.id}>
-                      <TableCell className="font-medium">{license.requestNumber}</TableCell>
-                      <TableCell>
-                        {license.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
-                        {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
-                        {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
-                        {license.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
-                        {license.type === "flatbed" && "Prancha"}
-                      </TableCell>
-                      <TableCell>{license.mainVehiclePlate}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {/* Mostrar só o número de estados e um tooltip */}
-                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            {license.states.length} {license.states.length === 1 ? 'Estado' : 'Estados'}
-                          </span>
-                          <span className="text-xs text-gray-500">({license.states.join(', ')})</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {license.updatedAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.updatedAt)) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {license.validUntil ? (
-                          <span className="font-semibold text-green-700">
-                            {new Intl.DateTimeFormat('pt-BR').format(new Date(license.validUntil))}
-                          </span>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {license.licenseFileUrl && (
-                          <Button variant="ghost" size="icon" asChild className="mr-2 flex items-center justify-center">
-                            <a 
-                              href={license.licenseFileUrl || '#'} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                if (!license.licenseFileUrl) {
-                                  e.preventDefault();
-                                  alert('Arquivo não disponível no momento.');
-                                }
-                              }}
-                            >
-                              <FileDown className="h-4 w-4" />
-                            </a>
+                  paginatedLicenses.map((license) => {
+                    const validityStatus = getLicenseStatus(license.validUntil);
+                    
+                    return (
+                      <TableRow 
+                        key={license.id}
+                        className={
+                          validityStatus === 'expired' ? 'bg-red-50' : 
+                          validityStatus === 'expiring_soon' ? 'bg-amber-50' : 
+                          'hover:bg-gray-50'
+                        }
+                      >
+                        <TableCell>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-800 hover:bg-blue-100">
+                            {license.state}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{license.requestNumber}</TableCell>
+                        <TableCell>{license.mainVehiclePlate}</TableCell>
+                        <TableCell>
+                          {/* Simular um número de licença baseado no ID e estado */}
+                          {license.state}/{license.licenseId}-{new Date().getFullYear()}
+                        </TableCell>
+                        <TableCell>
+                          {license.emissionDate ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.emissionDate)) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {license.validUntil ? (
+                            <span className={
+                              validityStatus === 'expired' ? 'font-semibold text-red-700' : 
+                              validityStatus === 'expiring_soon' ? 'font-semibold text-amber-700' : 
+                              'font-semibold text-green-700'
+                            }>
+                              {new Intl.DateTimeFormat('pt-BR').format(new Date(license.validUntil))}
+                            </span>
+                          ) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {validityStatus === 'expired' && (
+                            <Badge variant="destructive" className="flex items-center gap-1">
+                              <span className="relative flex h-2 w-2">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+                              </span>
+                              Vencida
+                            </Badge>
+                          )}
+                          {validityStatus === 'expiring_soon' && (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> 
+                              Expirando
+                            </Badge>
+                          )}
+                          {validityStatus === 'active' && (
+                            <Badge variant="outline" className="bg-green-50 text-green-800 flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> 
+                              Ativa
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {license.stateFileUrl && (
+                            <Button variant="ghost" size="icon" asChild className="mr-2 flex items-center justify-center">
+                              <a 
+                                href={license.stateFileUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  if (!license.stateFileUrl) {
+                                    e.preventDefault();
+                                    alert('Arquivo não disponível no momento.');
+                                  }
+                                }}
+                              >
+                                <FileDown className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="flex items-center justify-center"
+                            onClick={() => {
+                              // Buscar a licença original
+                              const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
+                              if (originalLicense) {
+                                viewLicenseDetails(originalLicense);
+                              }
+                            }}
+                          >
+                            <ExternalLink className="h-4 w-4" />
                           </Button>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="flex items-center justify-center"
-                          onClick={() => viewLicenseDetails(license)}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10">
+                    <TableCell colSpan={8} className="text-center py-10">
                       Nenhuma licença emitida encontrada.
                     </TableCell>
                   </TableRow>
@@ -275,79 +397,115 @@ export default function IssuedLicensesPage() {
             </div>
           ) : paginatedLicenses.length > 0 ? (
             <div className="divide-y divide-gray-200">
-              {paginatedLicenses.map((license) => (
-                <div key={license.id} className="p-4">
-                  <div className="flex justify-between mb-1">
-                    <span className="font-medium text-gray-900">{license.requestNumber}</span>
-                    <div className="flex space-x-1">
-                      {license.licenseFileUrl && (
-                        <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 flex items-center justify-center" aria-label="Download">
-                          <a 
-                            href={license.licenseFileUrl || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              if (!license.licenseFileUrl) {
-                                e.preventDefault();
-                                alert('Arquivo não disponível no momento.');
-                              }
-                            }}
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </a>
+              {paginatedLicenses.map((license) => {
+                const validityStatus = getLicenseStatus(license.validUntil);
+                
+                return (
+                  <div 
+                    key={license.id} 
+                    className={`p-4 ${
+                      validityStatus === 'expired' ? 'bg-red-50' : 
+                      validityStatus === 'expiring_soon' ? 'bg-amber-50' : 
+                      'bg-white'
+                    }`}
+                  >
+                    <div className="flex justify-between mb-2">
+                      <div className="flex flex-col">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-800 self-start mb-1">
+                          {license.state}
+                        </Badge>
+                        <span className="font-medium text-gray-900">{license.requestNumber}</span>
+                      </div>
+                      <div className="flex space-x-1">
+                        {license.stateFileUrl && (
+                          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 flex items-center justify-center" aria-label="Download">
+                            <a 
+                              href={license.stateFileUrl || '#'} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                if (!license.stateFileUrl) {
+                                  e.preventDefault();
+                                  alert('Arquivo não disponível no momento.');
+                                }
+                              }}
+                            >
+                              <FileDown className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-8 w-8 p-0 flex items-center justify-center"
+                          aria-label="Ver detalhes"
+                          onClick={() => {
+                            // Buscar a licença original
+                            const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
+                            if (originalLicense) {
+                              viewLicenseDetails(originalLicense);
+                            }
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4" />
                         </Button>
-                      )}
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 w-8 p-0 flex items-center justify-center"
-                        aria-label="Ver detalhes"
-                        onClick={() => viewLicenseDetails(license)}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
-                    <div>
-                      <span className="text-xs text-gray-500">Tipo:</span>
+                    
+                    <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
                       <div>
-                        {license.type === "roadtrain_9_axles" && "Rodotrem 9 eixos"}
-                        {license.type === "bitrain_9_axles" && "Bitrem 9 eixos"}
-                        {license.type === "bitrain_7_axles" && "Bitrem 7 eixos"}
-                        {license.type === "bitrain_6_axles" && "Bitrem 6 eixos"}
-                        {license.type === "flatbed" && "Prancha"}
+                        <span className="text-xs text-gray-500">Nº Licença:</span>
+                        <div>{license.state}/{license.licenseId}-{new Date().getFullYear()}</div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500">Placa:</span>
+                        <div>{license.mainVehiclePlate}</div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500">Emissão:</span>
+                        <div>{license.emissionDate ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.emissionDate)) : '-'}</div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500">Validade:</span>
+                        <div className={
+                          validityStatus === 'expired' ? 'font-semibold text-red-700' : 
+                          validityStatus === 'expiring_soon' ? 'font-semibold text-amber-700' : 
+                          'font-semibold text-green-700'
+                        }>
+                          {license.validUntil ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.validUntil)) : '-'}
+                        </div>
                       </div>
                     </div>
+                    
                     <div>
-                      <span className="text-xs text-gray-500">Placa:</span>
-                      <div>{license.mainVehiclePlate}</div>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">Liberação:</span>
-                      <div>{license.updatedAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.updatedAt)) : '-'}</div>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">Validade:</span>
-                      <div className="font-semibold text-green-700">
-                        {license.validUntil ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.validUntil)) : '-'}
+                      <span className="text-xs text-gray-500">Situação:</span>
+                      <div className="mt-1">
+                        {validityStatus === 'expired' && (
+                          <Badge variant="destructive" className="flex items-center gap-1">
+                            <span className="relative flex h-2 w-2">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+                            </span>
+                            Vencida
+                          </Badge>
+                        )}
+                        {validityStatus === 'expiring_soon' && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> 
+                            Expirando
+                          </Badge>
+                        )}
+                        {validityStatus === 'active' && (
+                          <Badge variant="outline" className="bg-green-50 text-green-800 flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> 
+                            Ativa
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
-                  
-                  <div>
-                    <span className="text-xs text-gray-500">Estados:</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {license.states.map(state => (
-                        <span key={state} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                          {state}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="py-10 text-center text-gray-500">
