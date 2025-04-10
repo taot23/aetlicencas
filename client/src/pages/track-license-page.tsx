@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Input } from "@/components/ui/input";
-import { FileDown, CheckCircle } from "lucide-react";
+import { FileDown, CheckCircle, Search } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { format } from "date-fns";
 import { getLicenseTypeLabel } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +27,8 @@ export default function TrackLicensePage() {
   
 
 
+  const { toast } = useToast();
+  
   // Buscamos todas as licenças não finalizadas usando a rota /api/licenses
   const { data: licenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses"],
@@ -51,26 +54,44 @@ export default function TrackLicensePage() {
         return !allStatesApproved;
       });
     },
-    // Desabilita o cache para garantir que sempre temos os dados mais recentes
-    staleTime: 0,
-    // Recarrega os dados quando a página recebe foco
-    refetchOnWindowFocus: true
+    // Otimização: Mantém dados em cache por 5 minutos
+    staleTime: 5 * 60 * 1000,
+    // Recarrega os dados quando a página recebe foco para obter atualizações
+    refetchOnWindowFocus: true,
+    // Permite uma tentativa adicional em caso de falha
+    retry: 1
   });
 
-  const filteredLicenses = licenses?.filter(license => {
-    const matchesSearch = !searchTerm || 
-      license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
+  // Usado para notificar o usuário sobre a disponibilidade de dados em cache
+  useEffect(() => {
+    if (licenses && licenses.length > 0) {
+      toast({
+        title: "Licenças carregadas",
+        description: `${licenses.length} licenças disponíveis para consulta.`,
+        duration: 3000,
+      });
+    }
+  }, [licenses, toast]);
+
+  // Otimizado usando useMemo para evitar recálculos desnecessários
+  const filteredLicenses = useMemo(() => {
+    if (!licenses) return [];
     
-    const matchesStatus = !statusFilter || statusFilter === "all_status" || license.status === statusFilter;
-    
-    const matchesDate = !dateFilter || (
-      license.createdAt && 
-      format(new Date(license.createdAt), "yyyy-MM-dd") === dateFilter
-    );
-    
-    return matchesSearch && matchesStatus && matchesDate;
-  });
+    return licenses.filter(license => {
+      const matchesSearch = !searchTerm || 
+        license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = !statusFilter || statusFilter === "all_status" || license.status === statusFilter;
+      
+      const matchesDate = !dateFilter || (
+        license.createdAt && 
+        format(new Date(license.createdAt), "yyyy-MM-dd") === dateFilter
+      );
+      
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [licenses, searchTerm, statusFilter, dateFilter]);
 
   const handleViewLicense = (license: LicenseRequest) => {
     setSelectedLicense(license);
