@@ -554,7 +554,11 @@ export class MemStorage implements IStorage {
       stateStatuses,
       stateFiles,
       updatedAt: now.toISOString(),
-      comments: comments || license.comments
+      comments: comments || license.comments,
+      // Adicionar validUntil para a licença principal quando o estado é approved e tem validUntil
+      validUntil: (status === "approved" && validUntil) ? 
+        new Date(validUntil).toISOString() : 
+        (license.validUntil || undefined)
     };
     
     // Verifica se todos os estados possuem status 'approved' e atualiza o status geral
