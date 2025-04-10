@@ -785,7 +785,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/users', requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users);
+      console.log(`[DEBUG] Total de usuários recuperados: ${users.length}`);
+      
+      // Adicionar informações extras para melhorar a visualização no frontend
+      const enhancedUsers = users.map(user => {
+        // Formatar o perfil para exibição
+        const roleLabel = user.isAdmin ? "Administrador" : 
+                         (user.role === "operational" ? "Operacional" :
+                          user.role === "supervisor" ? "Supervisor" :
+                          user.role === "manager" ? "Gerente" : "Usuário");
+        
+        return {
+          ...user,
+          roleLabel
+        };
+      });
+      
+      res.json(enhancedUsers);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       res.status(500).json({ message: "Erro ao buscar usuários" });

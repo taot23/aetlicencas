@@ -26,12 +26,21 @@ export function UserSelect({
 }: UserSelectProps) {
   const [value, setValue] = useState<string>(selectedUserId ? String(selectedUserId) : "");
 
-  // Buscar usuários não-admin
+  // Buscar usuários (modificando para usar a rota de todos os usuários)
   const { data: users = [], isLoading, error } = useQuery({
-    queryKey: ["/api/admin/non-admin-users"],
+    queryKey: ["/api/admin/users"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/non-admin-users");
-      return await response.json();
+      try {
+        const response = await apiRequest("GET", "/api/admin/users");
+        // Filtramos apenas usuários não-admin no frontend para garantir que temos dados
+        const allUsers = await response.json();
+        console.log("[DEBUG] Usuários carregados:", allUsers.length);
+        // Apenas retorna os usuários que não são admin (a menos que a filtragem já seja feita no backend)
+        return allUsers.filter((user: any) => !user.isAdmin);
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        return [];
+      }
     },
   });
 
@@ -93,8 +102,13 @@ export function UserSelect({
                 <SelectItem key={user.id} value={String(user.id)}>
                   <div className="flex items-center gap-2">
                     <UserCircle2 size={16} className="text-gray-400" />
-                    <span>{user.fullName}</span>
-                    <span className="text-sm text-gray-500">({user.email})</span>
+                    <span className="font-medium">{user.fullName || user.email}</span>
+                    {user.fullName && <span className="text-sm text-gray-500 truncate max-w-[150px]">({user.email})</span>}
+                    {(user.roleLabel || user.role) && (
+                      <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full ml-auto">
+                        {user.roleLabel || user.role}
+                      </span>
+                    )}
                   </div>
                 </SelectItem>
               ))
