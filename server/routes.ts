@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Endpoint de API para consulta de CNPJ - implementação direta
+  // Endpoint de API para consulta de CNPJ - usando BrasilAPI
   app.get('/api/external/cnpj/:cnpj', async (req, res) => {
     // Definir explicitamente cabeçalhos para evitar intercepção pelo Vite
     res.setHeader('Content-Type', 'application/json');
@@ -243,66 +243,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { cnpj } = req.params;
       const cleanCnpj = cnpj.replace(/[^\d]/g, '');
-      console.log(`[DEBUG] Consultando CNPJ: ${cleanCnpj}`);
+      console.log(`[DEBUG] Consultando CNPJ via BrasilAPI: ${cleanCnpj}`);
       
       if (cleanCnpj.length !== 14) {
         console.log(`[DEBUG] CNPJ inválido: ${cleanCnpj}`);
         return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos' });
       }
       
-      // Obter o token de acesso
-      console.log(`[DEBUG] Obtendo token de acesso`);
-      const token = await getAccessToken();
-      console.log(`[DEBUG] Token obtido: ${token ? 'Sim' : 'Não'}`);
+      // Configurar a solicitação para a BrasilAPI (API pública sem autenticação)
+      const brasilApiUrl = `https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`;
+      console.log(`[DEBUG] URL da BrasilAPI: ${brasilApiUrl}`);
       
-      // Configurar a solicitação para a API do Gov.br
-      const apiUrl = `https://h-apigateway.conectagov.estaleiro.serpro.gov.br/api-cnpj-empresa/v2/empresa/${cleanCnpj}`;
-      console.log(`[DEBUG] URL da API: ${apiUrl}`);
-      
-      // Fazer a solicitação à API do Gov.br
-      console.log(`[DEBUG] Enviando solicitação para API`);
-      const response = await fetch(apiUrl, {
+      // Fazer a solicitação à BrasilAPI
+      console.log(`[DEBUG] Enviando solicitação para BrasilAPI`);
+      const response = await fetch(brasilApiUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'x-cpf-usuario': '00000000000' // Header obrigatório conforme documentação
+          'Accept': 'application/json'
         }
       });
-      console.log(`[DEBUG] Resposta da API: ${response.status} ${response.statusText}`);
+      console.log(`[DEBUG] Resposta da BrasilAPI: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[DEBUG] Erro na resposta da API: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Erro ao consultar API oficial: ${response.status}`);
+        console.error(`[DEBUG] Erro na resposta da BrasilAPI: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Erro ao consultar BrasilAPI: ${response.status}`);
       }
 
       // Processar a resposta da API
-      console.log(`[DEBUG] Processando resposta da API`);
+      console.log(`[DEBUG] Processando resposta da BrasilAPI`);
       const apiData = await response.json();
       console.log(`[DEBUG] Dados recebidos:`, JSON.stringify(apiData));
       
-      // Mapear os dados para o formato esperado pelo frontend
+      // Mapear os dados da BrasilAPI para o formato esperado pelo frontend
       const dadosEmpresa = {
-        razao_social: apiData.nomeEmpresarial || '',
-        nome_fantasia: apiData.nomeFantasia || '',
-        logradouro: apiData.endereco?.logradouro || '',
-        numero: apiData.endereco?.numero || '',
-        complemento: apiData.endereco?.complemento || '',
-        bairro: apiData.endereco?.bairro || '',
-        cep: apiData.endereco?.cep || '',
-        municipio: apiData.endereco?.municipio?.descricao || '',
-        uf: apiData.endereco?.uf || ''
+        razao_social: apiData.razao_social || '',
+        nome_fantasia: apiData.nome_fantasia || '',
+        logradouro: apiData.logradouro || '',
+        numero: apiData.numero || '',
+        complemento: apiData.complemento || '',
+        bairro: apiData.bairro || '',
+        cep: apiData.cep?.replace(/\D/g, '') || '',
+        municipio: apiData.municipio || '',
+        uf: apiData.uf || ''
       };
       console.log(`[DEBUG] Dados mapeados:`, JSON.stringify(dadosEmpresa));
 
       return res.json(dadosEmpresa);
     } catch (error) {
-      console.error('[DEBUG] Erro ao processar consulta CNPJ (v2):', error);
+      console.error('[DEBUG] Erro ao processar consulta CNPJ via BrasilAPI:', error);
       return res.status(503).json({ 
         error: 'Não foi possível realizar a consulta do CNPJ', 
         message: error instanceof Error ? error.message : 'Erro ao verificar dados do CNPJ',
-        details: 'Não foi possível consultar o CNPJ na Receita Federal. Prossiga com o cadastro inserindo os dados manualmente.',
+        details: 'Não foi possível consultar o CNPJ. Prossiga com o cadastro inserindo os dados manualmente.',
         service_unavailable: true
       });
     }
