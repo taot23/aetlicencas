@@ -11,6 +11,18 @@ interface TransporterInfoProps {
 /**
  * Componente otimizado para exibir informações do transportador
  * 
+ * Características:
+ * - Utiliza endpoint público que não requer autenticação
+ * - Implementa cache de 10 minutos para reduzir chamadas à API
+ * - Suporta dois modos de exibição: completo e compacto
+ * - Exibe informações formatadas de acordo com o tipo de pessoa (PJ/PF)
+ * - Gerencia estados de carregamento e erro de forma intuitiva
+ * 
+ * Casos de uso:
+ * - Exibição de dados do transportador em detalhes de licenças
+ * - Referência em listagens e relatórios
+ * - Seleção de transportador em formulários
+ * 
  * Props:
  * - transporterId: ID do transportador a ser exibido
  * - className: Classe CSS adicional para estilização
@@ -22,11 +34,14 @@ export const TransporterInfo = ({
   compact = false 
 }: TransporterInfoProps) => {
   const { data: transporter, isLoading } = useQuery<Transporter>({
-    queryKey: ['/api/transporters', transporterId],
+    queryKey: ['/api/public/transporters', transporterId],
     queryFn: async () => {
       if (!transporterId) return null;
       console.log(`[TransporterInfo] Buscando dados do transportador ID: ${transporterId}`);
-      const res = await fetch(`/api/transporters/${transporterId}`);
+      
+      // Usar o endpoint público que não requer autenticação
+      const res = await fetch(`/api/public/transporters/${transporterId}`);
+      
       if (!res.ok) {
         console.error(`[TransporterInfo] Erro ao buscar transportador ID ${transporterId}:`, res.status);
         return null;
