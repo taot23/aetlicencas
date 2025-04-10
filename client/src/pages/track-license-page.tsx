@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Input } from "@/components/ui/input";
-import { FileDown, CheckCircle, Search } from "lucide-react";
+import { FileDown, CheckCircle, Search, Loader2 } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -10,7 +10,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { LicenseRequest } from "@shared/schema";
+import { LicenseRequest, Transporter } from "@shared/schema";
 import { LicenseList } from "@/components/licenses/license-list";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,41 @@ import { StatusBadge } from "@/components/licenses/status-badge";
 import { format } from "date-fns";
 import { getLicenseTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+
+// Componente otimizado para exibir informações do transportador
+const TransporterInfo = ({ transporterId }: { transporterId: number | null }) => {
+  const { data: transporter, isLoading } = useQuery<Transporter>({
+    queryKey: ['/api/admin/transporters', transporterId],
+    queryFn: async () => {
+      if (!transporterId) return null;
+      const res = await fetch(`/api/admin/transporters/${transporterId}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!transporterId,
+    staleTime: 10 * 60 * 1000, // Cache por 10 minutos
+    retry: 1
+  });
+
+  return (
+    <div>
+      <h3 className="font-medium text-sm text-gray-500">Transportador</h3>
+      {isLoading ? (
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          <span className="text-sm text-gray-500">Carregando dados do transportador...</span>
+        </div>
+      ) : transporter ? (
+        <p>
+          {transporter.name}
+          {transporter.documentNumber && ` - ${transporter.documentNumber}`}
+        </p>
+      ) : (
+        <p className="text-gray-500">Transportador não encontrado</p>
+      )}
+    </div>
+  );
+};
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -247,6 +282,7 @@ export default function TrackLicensePage() {
                   <h3 className="font-medium text-sm text-gray-500">Veículo Principal</h3>
                   <p>{selectedLicense.mainVehiclePlate}</p>
                 </div>
+                <TransporterInfo transporterId={selectedLicense.transporterId} />
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
                   <p>
