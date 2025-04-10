@@ -170,9 +170,9 @@ export default function TrackLicensePage() {
 
       {selectedLicense && (
         <Dialog open={!!selectedLicense} onOpenChange={(open) => !open && setSelectedLicense(null)}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Detalhes da Licença</DialogTitle>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader className="pb-2">
+              <DialogTitle className="text-xl font-bold">Detalhes da Licença</DialogTitle>
               <DialogDescription>
                 Visualize os detalhes da sua solicitação
               </DialogDescription>
