@@ -397,7 +397,7 @@ export default function IssuedLicensesPage() {
 
       {selectedLicense && (
         <Dialog open={!!selectedLicense} onOpenChange={(open) => !open && setSelectedLicense(null)}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto">
+          <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detalhes da Licença</DialogTitle>
             </DialogHeader>
