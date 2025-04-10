@@ -9,6 +9,11 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { UserCircle2, AlertCircle } from "lucide-react";
 
+// Definindo uma extensão do tipo User para incluir os campos adicionados pelo backend
+interface EnhancedUser extends User {
+  roleLabel?: string;
+}
+
 interface UserSelectProps {
   selectedUserId: number | null;
   onChange: (userId: number | null) => void;
@@ -26,17 +31,16 @@ export function UserSelect({
 }: UserSelectProps) {
   const [value, setValue] = useState<string>(selectedUserId ? String(selectedUserId) : "");
 
-  // Buscar usuários (modificando para usar a rota de todos os usuários)
+  // Buscar usuários, mas agora usando a rota específica para usuários não-admin
   const { data: users = [], isLoading, error } = useQuery({
-    queryKey: ["/api/admin/users"],
+    queryKey: ["/api/admin/non-admin-users"],
     queryFn: async () => {
       try {
-        const response = await apiRequest("GET", "/api/admin/users");
-        // Filtramos apenas usuários não-admin no frontend para garantir que temos dados
+        const response = await apiRequest("GET", "/api/admin/non-admin-users");
         const allUsers = await response.json();
-        console.log("[DEBUG] Usuários carregados:", allUsers.length);
-        // Apenas retorna os usuários que não são admin (a menos que a filtragem já seja feita no backend)
-        return allUsers.filter((user: any) => !user.isAdmin);
+        console.log("[DEBUG] Usuários não-admin carregados:", allUsers.length);
+        // A filtragem já é feita no backend, então retornamos todos os usuários que recebemos
+        return allUsers as EnhancedUser[];
       } catch (error) {
         console.error("Erro ao carregar usuários:", error);
         return [];
@@ -98,7 +102,7 @@ export function UserSelect({
                 Nenhum usuário disponível
               </div>
             ) : (
-              users.map((user: User) => (
+              users.map((user: EnhancedUser) => (
                 <SelectItem key={user.id} value={String(user.id)}>
                   <div className="flex items-center gap-2">
                     <UserCircle2 size={16} className="text-gray-400" />

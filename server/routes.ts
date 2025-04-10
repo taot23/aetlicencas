@@ -703,6 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  /* Rota removida para evitar duplicação - já existe implementação abaixo
   // Rota para obter usuários não-admin para seleção
   app.get('/api/admin/non-admin-users', requireAdmin, async (req, res) => {
     try {
@@ -713,6 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro ao buscar usuários não-admin' });
     }
   });
+  */
   
   // Dashboard Admin
   app.get('/api/admin/dashboard/stats', requireAdmin, async (req, res) => {
@@ -1200,7 +1202,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const users = await storage.getNonAdminUsers();
       console.log("[DEBUG] Usuários não-admin recuperados:", users.length);
-      res.json(users);
+      
+      // Adicionar informações extras para melhorar a visualização no frontend
+      const enhancedUsers = users.map(user => {
+        // Formatar o perfil para exibição
+        const roleLabel = user.isAdmin ? "Administrador" : 
+                         (user.role === "operational" ? "Operacional" :
+                          user.role === "supervisor" ? "Supervisor" :
+                          user.role === "manager" ? "Gerente" : "Usuário");
+        
+        return {
+          ...user,
+          roleLabel
+        };
+      });
+      
+      res.json(enhancedUsers);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       res.status(500).json({ message: "Erro ao buscar usuários" });
