@@ -350,6 +350,23 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
       </div>
       
       <Separator />
+
+      {/* SEÇÃO DE VINCULAÇÃO COM USUÁRIO */}
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="bg-muted/50">
+          <CardTitle>Vinculação com Usuário</CardTitle>
+          <CardDescription>
+            Selecione o usuário que será responsável por gerenciar este transportador
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <UserSelect
+            selectedUserId={selectedUserId}
+            onChange={setSelectedUserId}
+            description="O usuário selecionado terá acesso para gerenciar este transportador, seus veículos e licenças."
+          />
+        </CardContent>
+      </Card>
       
       {/* Formulário de Pessoa Jurídica */}
       {personType === "pj" && (
@@ -634,11 +651,9 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="UF" />
-                                </SelectTrigger>
-                              </FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="UF" />
+                              </SelectTrigger>
                               <SelectContent>
                                 {brazilianStates.map((state) => (
                                   <SelectItem key={state.code} value={state.code}>
@@ -654,90 +669,71 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Documentos Anexos */}
-            <Card className="w-full overflow-hidden">
-              <CardHeader>
-                <CardTitle>Documentos Anexos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 overflow-visible">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="socialContract">Contrato Social</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="socialContract"
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => handleFileChange(e, "socialContract")}
-                        className="flex-1"
-                      />
-                      {selectedFiles.socialContract && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <FileText size={16} />
-                          <span>{selectedFiles.socialContract.name}</span>
-                        </div>
-                      )}
+                
+                {/* Documentos Anexos */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium">Documentos Anexos</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="socialContract">Contrato Social</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="socialContract"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleFileChange(e, "socialContract")}
+                          className="flex-1"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="powerOfAttorney">Procuração (se aplicável)</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="powerOfAttorney"
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => handleFileChange(e, "powerOfAttorney")}
-                        className="flex-1"
-                      />
-                      {selectedFiles.powerOfAttorney && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <FileText size={16} />
-                          <span>{selectedFiles.powerOfAttorney.name}</span>
-                        </div>
-                      )}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="powerOfAttorney">Procuração (se aplicável)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="powerOfAttorney"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleFileChange(e, "powerOfAttorney")}
+                          className="flex-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            {/* Filiais (Vincular CNPJs Adicionais) */}
+            {/* Filiais */}
             <Card className="w-full overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>FILIAIS (Vincular CNPJs Adicionais)</CardTitle>
-                  <CardDescription>Adicione aqui as filiais, se existirem</CardDescription>
+                  <CardTitle>Filiais</CardTitle>
+                  <CardDescription>Adicione as filiais que serão incluídas na AET (opcional)</CardDescription>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addSubsidiary}>
-                  <Plus size={16} className="mr-2" />
-                  Adicionar Nova Filial
+                <Button type="button" onClick={addSubsidiary}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Filial
                 </Button>
               </CardHeader>
-              <CardContent className="overflow-visible max-h-[70vh] overflow-y-auto">
+              <CardContent className="space-y-6">
                 {subsidiaries.length === 0 ? (
-                  <div className="text-center p-4 text-muted-foreground">
-                    Nenhuma filial cadastrada. Clique no botão acima para adicionar.
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma filial cadastrada
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     {subsidiaries.map((subsidiary, index) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-sm font-medium">Filial #{index + 1}</h4>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeSubsidiary(index)}
-                          >
-                            <Trash2 size={16} className="mr-2" />
-                            Remover
-                          </Button>
-                        </div>
+                      <div key={index} className="border p-4 rounded-md space-y-4 relative">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-2 top-2"
+                          onClick={() => removeSubsidiary(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
@@ -764,12 +760,12 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                           <Input
                             value={subsidiary.tradeName || ""}
                             onChange={(e) => updateSubsidiary(index, "tradeName", e.target.value)}
-                            placeholder="Nome Fantasia da filial"
+                            placeholder="Nome fantasia da filial"
                           />
                         </div>
                         
-                        <div className="space-y-2">
-                          <h5 className="text-sm font-medium">Endereço da Filial</h5>
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-medium">Endereço da Filial</h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>Logradouro</Label>
@@ -795,19 +791,19 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                 <Input
                                   value={subsidiary.complement || ""}
                                   onChange={(e) => updateSubsidiary(index, "complement", e.target.value)}
-                                  placeholder="Sala, etc."
+                                  placeholder="Complemento"
                                 />
                               </div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <Label>CEP</Label>
                               <Input
                                 value={subsidiary.zipCode || ""}
                                 onChange={(e) => updateSubsidiary(index, "zipCode", e.target.value)}
-                                placeholder="Somente números"
+                                placeholder="CEP"
                               />
                             </div>
                             
@@ -882,10 +878,10 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
           <form onSubmit={pfForm.handleSubmit(onSubmit)} className="space-y-6">
             <Card className="w-full overflow-hidden">
               <CardHeader>
-                <CardTitle>Dados Pessoais</CardTitle>
+                <CardTitle>Dados do Transportador Autônomo</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6 overflow-visible">
-                {/* CPF e Nome Completo */}
+              <CardContent className="space-y-6">
+                {/* CPF e Nome */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={pfForm.control}
@@ -896,7 +892,6 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                         <FormControl>
                           <Input placeholder="Somente números" {...field} />
                         </FormControl>
-                        <FormDescription>Informe o CPF com 11 dígitos</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -917,6 +912,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   />
                 </div>
                 
+                {/* Data de nascimento e nacionalidade */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={pfForm.control}
@@ -939,7 +935,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                       <FormItem>
                         <FormLabel>Nacionalidade</FormLabel>
                         <FormControl>
-                          <Input placeholder="Nacionalidade" {...field} />
+                          <Input placeholder="Ex: Brasileira" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -947,10 +943,10 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   />
                 </div>
                 
-                {/* Documentos */}
+                {/* Documento de Identidade */}
                 <div className="space-y-4">
-                  <h3 className="text-md font-medium">Documentos</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <h3 className="text-md font-medium">Documento de Identidade</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <FormField
                       control={pfForm.control}
                       name="idNumber"
@@ -972,7 +968,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                         <FormItem>
                           <FormLabel>Órgão Emissor</FormLabel>
                           <FormControl>
-                            <Input placeholder="SSP, etc." {...field} />
+                            <Input placeholder="Ex: SSP" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -989,11 +985,9 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="UF" />
-                              </SelectTrigger>
-                            </FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="UF" />
+                            </SelectTrigger>
                             <SelectContent>
                               {brazilianStates.map((state) => (
                                 <SelectItem key={state.code} value={state.code}>
@@ -1009,16 +1003,16 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                   </div>
                 </div>
                 
-                {/* Contato */}
+                {/* Informações de Contato */}
                 <div className="space-y-4">
-                  <h3 className="text-md font-medium">Contato</h3>
+                  <h3 className="text-md font-medium">Informações de Contato</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={pfForm.control}
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Celular</FormLabel>
+                          <FormLabel>Telefone</FormLabel>
                           <FormControl>
                             <Input placeholder="(00) 00000-0000" {...field} />
                           </FormControl>
