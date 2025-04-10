@@ -201,6 +201,7 @@ export type LicenseType = z.infer<typeof licenseTypeEnum>;
 export const licenseRequests = pgTable("license_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
+  transporterId: integer("transporter_id").references(() => transporters.id),
   requestNumber: text("request_number").notNull().unique(),
   type: text("type").notNull(), // From licenseTypeEnum
   mainVehiclePlate: text("main_vehicle_plate").notNull(),
@@ -235,6 +236,7 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
     validUntil: true 
   })
   .extend({
+    transporterId: z.number().positive("Um transportador deve ser selecionado"),
     states: z.array(z.string()).min(1, "Select at least one state"),
     length: z.coerce.number().min(1, "Length must be greater than 0"),
     additionalPlates: z.array(z.string()).optional().default([]),

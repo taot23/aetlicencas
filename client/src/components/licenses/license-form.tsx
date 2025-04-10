@@ -11,6 +11,7 @@ import {
   licenseTypeEnum,
   Vehicle,
   LicenseRequest,
+  Transporter,
 } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -51,6 +52,11 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
   const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
   });
+  
+  // Fetch transporters linked to the user
+  const { data: transporters = [], isLoading: isLoadingTransporters } = useQuery<Transporter[]>({
+    queryKey: ["/api/user/transporters"],
+  });
 
   // Define filtered vehicle lists based on type
   const tractorUnits = vehicles?.filter(v => v.type === "tractor_unit") || [];
@@ -67,6 +73,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: draft ? {
       type: draft.type,
+      transporterId: draft.transporterId,
       mainVehiclePlate: draft.mainVehiclePlate,
       tractorUnitId: draft.tractorUnitId,
       firstTrailerId: draft.firstTrailerId,
@@ -81,6 +88,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       comments: draft.comments || "",
     } : {
       type: "",
+      transporterId: undefined,
       mainVehiclePlate: "",
       tractorUnitId: undefined,
       firstTrailerId: undefined,
