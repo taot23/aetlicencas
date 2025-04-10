@@ -94,7 +94,9 @@ const updateStateStatusSchema = z.object({
 export default function AdminLicensesPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeStatus, setActiveStatus] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [transporterFilter, setTransporterFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const [licenseDetailsOpen, setLicenseDetailsOpen] = useState(false);
   const [stateStatusDialogOpen, setStateStatusDialogOpen] = useState(false);
@@ -167,14 +169,39 @@ export default function AdminLicensesPage() {
     },
   });
 
-  // Filtrar licenças por termo de busca e por status
+  // Filtrar licenças com critérios múltiplos
   const filteredLicenses = licenses.filter(license => {
-    const matchesSearch = 
+    // Filtro de busca (número do pedido, placa ou transportador)
+    const matchesSearch = !searchTerm || 
       license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (activeStatus === "all") return matchesSearch;
-    return matchesSearch && license.status === activeStatus;
+    // Filtro de status
+    const matchesStatus = !statusFilter || statusFilter === "all" || license.status === statusFilter;
+    
+    // Filtro de transportador
+    const matchesTransporter = !transporterFilter || (
+      license.transporterId != null && license.transporterId.toString() === transporterFilter
+    );
+    
+    // Filtro de data
+    let matchesDate = true;
+    if (dateFilter) {
+      const requestDate = license.createdAt ? new Date(license.createdAt) : null;
+      const filterDate = new Date(dateFilter);
+      
+      if (requestDate) {
+        // Comparar apenas ano, mês e dia
+        matchesDate = 
+          requestDate.getFullYear() === filterDate.getFullYear() &&
+          requestDate.getMonth() === filterDate.getMonth() &&
+          requestDate.getDate() === filterDate.getDate();
+      } else {
+        matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesTransporter && matchesDate;
   });
 
   // Função removida pois o status agora só será editado por estado individual
@@ -376,26 +403,76 @@ export default function AdminLicensesPage() {
         <div className="flex flex-col space-y-4">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-                <div className="relative w-full md:w-96">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    placeholder="Buscar por AET ou placa..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+              {/* Novo layout de pesquisa conforme mockup, similar ao da página "Acompanhar Licença" */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="license-search">Pesquisar</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                      <Input
+                        id="license-search"
+                        placeholder="Nº do pedido ou placa..."
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Tabs defaultValue="all" value={activeStatus} onValueChange={setActiveStatus}>
-                  <TabsList>
-                    <TabsTrigger value="all">Todos</TabsTrigger>
-                    {statusOptions.map((option) => (
-                      <TabsTrigger key={option.value} value={option.value}>
-                        {option.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
+                
+                <div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="status-filter">Status</Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger id="status-filter">
+                        <SelectValue placeholder="Todos os status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os status</SelectItem>
+                        {statusOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <div className="flex items-center">
+                              {getStatusIcon(option.value)}
+                              {option.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="date-filter">Data</Label>
+                    <Input
+                      id="date-filter"
+                      type="date"
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="md:col-span-3">
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="transporter-filter">Transportador</Label>
+                    <Select value={transporterFilter} onValueChange={setTransporterFilter}>
+                      <SelectTrigger id="transporter-filter">
+                        <SelectValue placeholder="Todos os transportadores" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todos os transportadores</SelectItem>
+                        {/* Aqui seria ideal ter uma lista de transportadores para selecionar */}
+                        {/* Como é um exemplo, adicionamos alguns valores genéricos */}
+                        <SelectItem value="1">Transportadora ABC Ltda</SelectItem>
+                        <SelectItem value="2">Transportes XYZ S.A.</SelectItem>
+                        <SelectItem value="3">Logística Express Ltda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               {isLoading ? (
