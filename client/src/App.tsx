@@ -9,6 +9,7 @@ import VehiclesPage from "@/pages/vehicles-page";
 import RequestLicensePage from "@/pages/request-license-page";
 import TrackLicensePage from "@/pages/track-license-page";
 import IssuedLicensesPage from "@/pages/issued-licenses-page";
+import MyCompaniesPage from "@/pages/my-companies-page";
 import AdminDashboardPage from "@/pages/admin/admin-dashboard";
 import AdminLicensesPage from "@/pages/admin/admin-licenses";
 import AdminTransportersPage from "@/pages/admin/admin-transporters";
@@ -29,6 +30,7 @@ function Router() {
       
       {/* Sistema de Controle de Licenças - Rotas do usuário */}
       <ProtectedRoute path="/" component={DashboardPage} />
+      <ProtectedRoute path="/my-companies" component={MyCompaniesPage} />
       <ProtectedRoute path="/vehicles" component={VehiclesPage} />
       <ProtectedRoute path="/request-license" component={RequestLicensePage} />
       <ProtectedRoute path="/track-license" component={TrackLicensePage} />
