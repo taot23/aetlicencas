@@ -818,6 +818,14 @@ export default function AdminLicensesPage() {
                 </div>
               </div>
               
+              {/* Informações do Transportador */}
+              {selectedLicense.transporterId && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <h4 className="font-medium text-sm mb-2">Transportador:</h4>
+                  <TransporterInfo transporterId={selectedLicense.transporterId} />
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md">
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
