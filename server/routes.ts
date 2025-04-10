@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Endpoint de API para consulta de CNPJ - usando BrasilAPI
+  // Endpoint de API para consulta de CNPJ - usando ReceitaWS
   app.get('/api/external/cnpj/:cnpj', async (req, res) => {
     // Definir explicitamente cabeçalhos para evitar intercepção pelo Vite
     res.setHeader('Content-Type', 'application/json');
@@ -243,42 +243,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { cnpj } = req.params;
       const cleanCnpj = cnpj.replace(/[^\d]/g, '');
-      console.log(`[DEBUG] Consultando CNPJ via BrasilAPI: ${cleanCnpj}`);
+      console.log(`[DEBUG] Consultando CNPJ via ReceitaWS: ${cleanCnpj}`);
       
       if (cleanCnpj.length !== 14) {
         console.log(`[DEBUG] CNPJ inválido: ${cleanCnpj}`);
         return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos' });
       }
       
-      // Configurar a solicitação para a BrasilAPI (API pública sem autenticação)
-      const brasilApiUrl = `https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`;
-      console.log(`[DEBUG] URL da BrasilAPI: ${brasilApiUrl}`);
+      // Configurar a solicitação para a ReceitaWS (API pública sem autenticação - consulta básica)
+      const receitaWsUrl = `https://www.receitaws.com.br/v1/cnpj/${cleanCnpj}`;
+      console.log(`[DEBUG] URL da ReceitaWS: ${receitaWsUrl}`);
       
-      // Fazer a solicitação à BrasilAPI
-      console.log(`[DEBUG] Enviando solicitação para BrasilAPI`);
-      const response = await fetch(brasilApiUrl, {
+      // Fazer a solicitação à ReceitaWS
+      console.log(`[DEBUG] Enviando solicitação para ReceitaWS`);
+      const response = await fetch(receitaWsUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; AETLicencasApp/1.0)',
         }
       });
-      console.log(`[DEBUG] Resposta da BrasilAPI: ${response.status} ${response.statusText}`);
+      console.log(`[DEBUG] Resposta da ReceitaWS: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[DEBUG] Erro na resposta da BrasilAPI: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Erro ao consultar BrasilAPI: ${response.status}`);
+        console.error(`[DEBUG] Erro na resposta da ReceitaWS: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Erro ao consultar ReceitaWS: ${response.status}`);
       }
 
       // Processar a resposta da API
-      console.log(`[DEBUG] Processando resposta da BrasilAPI`);
+      console.log(`[DEBUG] Processando resposta da ReceitaWS`);
       const apiData = await response.json();
       console.log(`[DEBUG] Dados recebidos:`, JSON.stringify(apiData));
       
-      // Mapear os dados da BrasilAPI para o formato esperado pelo frontend
+      // Verificar se a API retornou um erro no corpo da resposta
+      if (apiData.status === 'ERROR') {
+        console.error(`[DEBUG] Erro reportado pela ReceitaWS:`, apiData.message);
+        throw new Error(apiData.message || 'Erro na consulta do CNPJ');
+      }
+      
+      // Mapear os dados da ReceitaWS para o formato esperado pelo frontend
       const dadosEmpresa = {
-        razao_social: apiData.razao_social || '',
-        nome_fantasia: apiData.nome_fantasia || '',
+        razao_social: apiData.nome || '',
+        nome_fantasia: apiData.fantasia || '',
         logradouro: apiData.logradouro || '',
         numero: apiData.numero || '',
         complemento: apiData.complemento || '',
@@ -291,7 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       return res.json(dadosEmpresa);
     } catch (error) {
-      console.error('[DEBUG] Erro ao processar consulta CNPJ via BrasilAPI:', error);
+      console.error('[DEBUG] Erro ao processar consulta CNPJ via ReceitaWS:', error);
       return res.status(503).json({ 
         error: 'Não foi possível realizar a consulta do CNPJ', 
         message: error instanceof Error ? error.message : 'Erro ao verificar dados do CNPJ',
