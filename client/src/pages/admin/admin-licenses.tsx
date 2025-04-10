@@ -4,6 +4,7 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { getLicenseTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -98,6 +99,11 @@ export default function AdminLicensesPage() {
   const [licenseDetailsOpen, setLicenseDetailsOpen] = useState(false);
   const [stateStatusDialogOpen, setStateStatusDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState("");
+  const [location] = useLocation();
+  
+  // Verificar se estamos na rota de gerenciar-licencas (staff) ou admin
+  const isStaffRoute = location.includes('gerenciar-licencas');
+  const apiEndpoint = isStaffRoute ? '/api/staff/licenses' : '/api/admin/licenses';
 
   // Form removido para atualização de status geral
   
@@ -113,7 +119,7 @@ export default function AdminLicensesPage() {
 
   // Buscar todas as licenças
   const { data: licenses = [], isLoading } = useQuery<LicenseRequest[]>({
-    queryKey: ["/api/admin/licenses"],
+    queryKey: [apiEndpoint],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
@@ -147,7 +153,8 @@ export default function AdminLicensesPage() {
         title: "Status do estado atualizado",
         description: "Status do estado atualizado com sucesso!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/licenses"] });
+      // Invalidar as queries para manter a consistência
+      queryClient.invalidateQueries({ queryKey: [apiEndpoint] });
       setStateStatusDialogOpen(false);
       stateStatusForm.reset();
     },

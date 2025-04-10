@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, Home, Truck, FileText, ClipboardList, ListChecks, LogOut, ChevronRight, Building2, ClipboardCheck } from "lucide-react";
+import { Menu, Home, Truck, FileText, ClipboardList, ListChecks, LogOut, ChevronRight, Building2, ClipboardEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -123,7 +123,7 @@ export function Sidebar({ className }: SidebarProps) {
             )}
             onClick={() => handleNavigate("/gerenciar-licencas")}
           >
-            <ClipboardCheck className="mr-3 h-5 w-5" />
+            <ClipboardEdit className="mr-3 h-5 w-5" />
             Gerenciar Licenças
           </Button>
         )}

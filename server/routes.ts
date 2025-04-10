@@ -730,12 +730,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin endpoints
   // Endpoint para buscar todas as licenças - acessível para Admin, Operacional e Supervisor
+  // Rota para admin/operational obter todas as licenças
   app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
       const licenses = await storage.getAllLicenseRequests();
       res.json(licenses);
     } catch (error) {
       console.error('Error fetching all license requests:', error);
+      res.status(500).json({ message: 'Erro ao buscar todas as solicitações de licenças' });
+    }
+  });
+  
+  // Rota para staff (operational/supervisor) obter todas as licenças
+  app.get('/api/staff/licenses', requireOperational, async (req, res) => {
+    try {
+      const licenses = await storage.getAllLicenseRequests();
+      res.json(licenses);
+    } catch (error) {
+      console.error('Error fetching all license requests for staff:', error);
       res.status(500).json({ message: 'Erro ao buscar todas as solicitações de licenças' });
     }
   });
