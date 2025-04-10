@@ -208,6 +208,11 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
         }
       });
       
+      // Adicionar id do usuário selecionado (se houver)
+      if (selectedUserId !== null) {
+        formData.append("userId", selectedUserId.toString());
+      }
+      
       // Adicionar filiais se for PJ
       if (data.personType === "pj") {
         formData.append("subsidiaries", JSON.stringify(subsidiaries));
@@ -265,6 +270,11 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
           formData.append(key, value.toString());
         }
       });
+      
+      // Adicionar id do usuário selecionado (se houver)
+      if (selectedUserId !== null) {
+        formData.append("userId", selectedUserId.toString());
+      }
       
       // Adicionar filiais se for PJ
       if (data.personType === "pj") {
