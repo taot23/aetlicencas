@@ -266,8 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'x-cpf-usuario': '00000000000', // Header obrigatório conforme documentação
-          'chave-api-dados': 'e9735f5ad81244b8182d7f8085205fc0'
+          'x-cpf-usuario': '00000000000' // Header obrigatório conforme documentação
         }
       });
       console.log(`[DEBUG] Resposta da API: ${response.status} ${response.statusText}`);
