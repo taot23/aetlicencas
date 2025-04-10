@@ -73,19 +73,19 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: draft ? {
       type: draft.type,
-      transporterId: draft.transporterId,
+      transporterId: draft.transporterId || undefined,
       mainVehiclePlate: draft.mainVehiclePlate,
-      tractorUnitId: draft.tractorUnitId,
-      firstTrailerId: draft.firstTrailerId,
-      dollyId: draft.dollyId,
-      secondTrailerId: draft.secondTrailerId,
-      flatbedId: draft.flatbedId,
+      tractorUnitId: draft.tractorUnitId || undefined,
+      firstTrailerId: draft.firstTrailerId || undefined,
+      dollyId: draft.dollyId || undefined,
+      secondTrailerId: draft.secondTrailerId || undefined,
+      flatbedId: draft.flatbedId || undefined,
       length: draft.length / 100, // Convert from cm to meters for display
       additionalPlates: draft.additionalPlates || [],
       additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
       isDraft: draft.isDraft,
-      comments: draft.comments || "",
+      comments: draft.comments || undefined,
     } : {
       type: "",
       transporterId: undefined,
@@ -202,6 +202,44 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-3xl mx-auto">
+        <FormField
+          control={form.control}
+          name="transporterId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Transportador</FormLabel>
+              <Select 
+                onValueChange={(value) => field.onChange(parseInt(value))} 
+                defaultValue={field.value?.toString()}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o transportador" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {isLoadingTransporters ? (
+                    <SelectItem value="loading">Carregando transportadores...</SelectItem>
+                  ) : transporters.length > 0 ? (
+                    transporters.map((transporter) => (
+                      <SelectItem key={transporter.id} value={transporter.id.toString()}>
+                        {transporter.name} {transporter.documentNumber ? `- ${transporter.documentNumber}` : ''}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no_transporter">Nenhum transportador vinculado</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Selecione o transportador para o qual esta licença será emitida.
+                Caso não encontre o transportador desejado, vá para "Minhas Empresas" e vincule o transportador à sua conta.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="type"
