@@ -751,6 +751,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rotas para staff check
+  app.get('/api/staff/check-operational', requireAuth, (req, res) => {
+    const user = req.user!;
+    
+    if (user.role === 'operational' || user.role === 'supervisor' || user.isAdmin) {
+      res.json({ message: "Acesso operacional confirmado" });
+    } else {
+      res.status(403).json({ message: "Acesso negado. Perfil operacional necessário" });
+    }
+  });
+  
+  app.get('/api/staff/check-supervisor', requireAuth, (req, res) => {
+    const user = req.user!;
+    
+    if (user.role === 'supervisor' || user.isAdmin) {
+      res.json({ message: "Acesso de supervisor confirmado" });
+    } else {
+      res.status(403).json({ message: "Acesso negado. Perfil de supervisor necessário" });
+    }
+  });
+  
   /* Rota removida para evitar duplicação - já existe implementação abaixo
   // Rota para obter usuários não-admin para seleção
   app.get('/api/admin/non-admin-users', requireAdmin, async (req, res) => {

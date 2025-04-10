@@ -14,7 +14,7 @@ import AdminDashboardPage from "@/pages/admin/admin-dashboard";
 import AdminLicensesPage from "@/pages/admin/admin-licenses";
 import AdminTransportersPage from "@/pages/admin/admin-transporters";
 import AdminUsersPage from "@/pages/admin/admin-users";
-import { ProtectedRoute, AdminRoute } from "./lib/protected-route";
+import { ProtectedRoute, AdminRoute, OperationalRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { useEffect, useState } from "react";
 
@@ -28,6 +28,9 @@ function Router() {
       <AdminRoute path="/admin/licenses" component={AdminLicensesPage} />
       <AdminRoute path="/admin/transporters" component={AdminTransportersPage} />
       <AdminRoute path="/admin/users" component={AdminUsersPage} />
+      
+      {/* Rotas para usuários Operacionais */}
+      <OperationalRoute path="/gerenciar-licencas" component={AdminLicensesPage} />
       
       {/* Sistema de Controle de Licenças - Rotas do usuário */}
       <ProtectedRoute path="/" component={DashboardPage} />
