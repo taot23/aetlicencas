@@ -22,10 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 // Componente otimizado para exibir informações do transportador
 const TransporterInfo = ({ transporterId }: { transporterId: number | null }) => {
   const { data: transporter, isLoading } = useQuery<Transporter>({
-    queryKey: ['/api/admin/transporters', transporterId],
+    queryKey: ['/api/transporters', transporterId],
     queryFn: async () => {
       if (!transporterId) return null;
-      const res = await fetch(`/api/admin/transporters/${transporterId}`);
+      const res = await fetch(`/api/transporters/${transporterId}`);
       if (!res.ok) return null;
       return res.json();
     },

@@ -377,6 +377,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro ao buscar transportadores do usuário' });
     }
   });
+  
+  // Endpoint para buscar um transportador específico por ID (acessível a todos usuários autenticados)
+  app.get('/api/transporters/:id', requireAuth, async (req, res) => {
+    try {
+      const transporterId = parseInt(req.params.id);
+      
+      const transporter = await storage.getTransporterById(transporterId);
+      if (!transporter) {
+        return res.status(404).json({ message: "Transportador não encontrado" });
+      }
+      
+      res.json(transporter);
+    } catch (error) {
+      console.error("Erro ao buscar transportador:", error);
+      res.status(500).json({ message: "Erro ao buscar transportador" });
+    }
+  });
 
   // Vehicles CRUD endpoints
   app.get('/api/vehicles', requireAuth, async (req, res) => {
