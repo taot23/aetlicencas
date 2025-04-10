@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Upload, File, FileText, Search as SearchIcon } from "lucide-react";
+import { UserSelect } from "./user-select";
 
 // Interface para filial
 interface Subsidiary {
@@ -61,6 +62,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
     powerOfAttorney: null,
   });
   const [isLoadingCnpj, setIsLoadingCnpj] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(transporter?.userId || null);
   
   // Formulário para pessoa jurídica
   const pjForm = useForm<InsertTransporter>({
