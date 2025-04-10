@@ -362,6 +362,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro ao buscar estatísticas por estado' });
     }
   });
+  
+  // Endpoint para buscar transportadores vinculados ao usuário
+  app.get('/api/user/transporters', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      // Buscar todos os transportadores
+      const allTransporters = await storage.getAllTransporters();
+      // Filtrar apenas os vinculados ao usuário atual
+      const userTransporters = allTransporters.filter(t => t.userId === userId);
+      res.json(userTransporters);
+    } catch (error) {
+      console.error('Error fetching user transporters:', error);
+      res.status(500).json({ message: 'Erro ao buscar transportadores do usuário' });
+    }
+  });
 
   // Vehicles CRUD endpoints
   app.get('/api/vehicles', requireAuth, async (req, res) => {
