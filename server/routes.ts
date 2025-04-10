@@ -235,8 +235,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Alternativa: Endpoint em arquivo estático via Express
-  app.get('/uploads/cnpj-data/:cnpj.json', async (req, res) => {
+  // Endpoint de API para consulta de CNPJ
+  app.get('/api/external/cnpj/:cnpj', async (req, res) => {
     // Definir explicitamente cabeçalhos para evitar intercepção pelo Vite
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -305,9 +305,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('[DEBUG] Erro ao processar consulta CNPJ (v2):', error);
       return res.status(503).json({ 
-        error: 'Falha na API de CNPJ', 
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
-        details: 'O serviço requer credenciais válidas da API Gov.br. Entre em contato com o administrador.'
+        error: 'Não foi possível realizar a consulta do CNPJ', 
+        message: error instanceof Error ? error.message : 'Erro ao verificar dados do CNPJ',
+        details: 'Não foi possível consultar o CNPJ na Receita Federal. Verifique o número e tente novamente.'
       });
     }
   });

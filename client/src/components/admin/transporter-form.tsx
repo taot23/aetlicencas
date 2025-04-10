@@ -370,12 +370,11 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                 if (field.value && field.value.length === 14) {
                                   try {
                                     setIsLoadingCnpj(true);
-                                    // Usar uploads direto como bypass para Vite
-                                    const response = await fetch(`/uploads/cnpj-data/${field.value}.json`, {
+                                    // Acessar diretamente a API oficial via proxy do backend
+                                    const response = await fetch(`/api/external/cnpj/${field.value}`, {
                                       headers: {
                                         'Accept': 'application/json',
-                                        'X-Requested-With': 'XmlHttpRequest',
-                                        'X-Ajax-Request': 'true'
+                                        'X-Requested-With': 'XmlHttpRequest'
                                       }
                                     });
                                     
@@ -385,9 +384,13 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                     
                                     const data = await response.json();
                                     
+                                    if (!data.razao_social) {
+                                      throw new Error('Não foi possível obter dados do CNPJ');
+                                    }
+                                    
                                     // Preencher os campos com os dados da empresa
                                     pjForm.setValue('name', data.razao_social);
-                                    pjForm.setValue('tradeName', data.nome_fantasia);
+                                    pjForm.setValue('tradeName', data.nome_fantasia || '');
                                     
                                     // Preencher endereço
                                     if (data.logradouro) pjForm.setValue('street', data.logradouro);
@@ -404,15 +407,8 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                     });
                                   } catch (error) {
                                     console.error("Erro ao consultar CNPJ:", error);
-                                    // Verificar se o erro está relacionado à falta de credenciais
-                                    let errorDescription = "Verifique o número e tente novamente";
-                                    
-                                    // Tentar extrair mensagem mais informativa se disponível
-                                    if (error instanceof Error && error.message.includes('Serviço')) {
-                                      errorDescription = error.message;
-                                    } else if (error instanceof Error && error.message.includes('credenciais')) {
-                                      errorDescription = "Credenciais da API Gov.br não configuradas. Entre em contato com o administrador.";
-                                    }
+                                    // Mensagem de erro padrão
+                                    let errorDescription = "Não foi possível realizar a consulta do CNPJ. Verifique o número e tente novamente.";
                                     
                                     toast({
                                       title: "Erro ao consultar CNPJ",
