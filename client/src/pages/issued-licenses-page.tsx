@@ -183,7 +183,7 @@ export default function IssuedLicensesPage() {
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <label htmlFor="issued-search" className="block text-sm font-medium text-gray-700 mb-1">
               Pesquisar
@@ -238,20 +238,68 @@ export default function IssuedLicensesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_states">Todos os estados</SelectItem>
-                <SelectItem value="SP">SP</SelectItem>
-                <SelectItem value="MG">MG</SelectItem>
-                <SelectItem value="MT">MT</SelectItem>
-                <SelectItem value="PE">PE</SelectItem>
-                <SelectItem value="TO">TO</SelectItem>
-                <SelectItem value="MS">MS</SelectItem>
-                <SelectItem value="PR">PR</SelectItem>
-                <SelectItem value="ES">ES</SelectItem>
-                <SelectItem value="DNIT">DNIT</SelectItem>
-                <SelectItem value="RS">RS</SelectItem>
-                <SelectItem value="BA">BA</SelectItem>
+                {brazilianStates.map(state => (
+                  <SelectItem key={state} value={state}>{state}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+          
+          <div>
+            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Situação
+            </label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as situações" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all_status">Todas as situações</SelectItem>
+                <SelectItem value="active">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-3 w-3 mr-2 text-green-500" /> 
+                    Ativas
+                  </div>
+                </SelectItem>
+                <SelectItem value="expiring_soon">
+                  <div className="flex items-center">
+                    <Clock className="h-3 w-3 mr-2 text-amber-500" /> 
+                    Expirando
+                  </div>
+                </SelectItem>
+                <SelectItem value="expired">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-2 text-red-500" /> 
+                    Vencidas
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {/* Estatísticas rápidas */}
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          {expandedLicenses.length > 0 && (
+            <>
+              <div className="text-center py-2 bg-gray-50 rounded-md border border-gray-200">
+                <span className="text-xs text-gray-500">Total de licenças</span>
+                <p className="font-semibold">{expandedLicenses.length}</p>
+              </div>
+              <div className="text-center py-2 bg-amber-50 rounded-md border border-amber-200">
+                <span className="text-xs text-amber-800">Expirando em 30 dias</span>
+                <p className="font-semibold text-amber-700">
+                  {expandedLicenses.filter(l => getLicenseStatus(l.validUntil) === 'expiring_soon').length}
+                </p>
+              </div>
+              <div className="text-center py-2 bg-red-50 rounded-md border border-red-200">
+                <span className="text-xs text-red-800">Vencidas</span>
+                <p className="font-semibold text-red-700">
+                  {expandedLicenses.filter(l => getLicenseStatus(l.validUntil) === 'expired').length}
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
