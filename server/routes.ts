@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Cache para armazenar tokens de acesso
-  let accessToken: string | null = null;
+  let accessToken: string | undefined = undefined;
   let tokenExpiration: number = 0;
 
   // Função para obter token de acesso
@@ -234,68 +234,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Integração com a API Gov.br para consulta de CNPJ
-  app.get('/api/cnpj/:cnpj', async (req, res) => {
+  // Alternativa: Endpoint em arquivo estático via Express
+  app.get('/uploads/cnpj-data/:cnpj.json', async (req, res) => {
+    // Definir explicitamente cabeçalhos para evitar intercepção pelo Vite
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     try {
       const { cnpj } = req.params;
       const cleanCnpj = cnpj.replace(/[^\d]/g, '');
+      console.log(`[DEBUG] Consultando CNPJ (v2): ${cleanCnpj}`);
       
       if (cleanCnpj.length !== 14) {
+        console.log(`[DEBUG] CNPJ inválido: ${cleanCnpj}`);
         return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos' });
       }
 
-      try {
-        // Obter o token de acesso
-        const token = await getAccessToken();
-        
-        // Configurar a solicitação para a API do Gov.br
-        const apiUrl = `https://h-apigateway.conectagov.estaleiro.serpro.gov.br/api-cnpj/v2/cnpj/${cleanCnpj}`;
-        
-        // Fazer a solicitação à API do Gov.br
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          console.error('Erro na resposta da API:', response.status, response.statusText);
-          return res.status(response.status).json({ 
-            error: 'Erro ao consultar CNPJ na API oficial',
-            message: response.statusText
-          });
+      // Obter o token de acesso
+      console.log(`[DEBUG] Obtendo token de acesso`);
+      const token = await getAccessToken();
+      console.log(`[DEBUG] Token obtido: ${token ? 'Sim' : 'Não'}`);
+      
+      // Configurar a solicitação para a API do Gov.br
+      const apiUrl = `https://h-apigateway.conectagov.estaleiro.serpro.gov.br/api-cnpj-empresa/v2/empresa/${cleanCnpj}`;
+      console.log(`[DEBUG] URL da API: ${apiUrl}`);
+      
+      // Fazer a solicitação à API do Gov.br
+      console.log(`[DEBUG] Enviando solicitação para API`);
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'x-cpf-usuario': '00000000000' // Header obrigatório conforme documentação
         }
+      });
+      console.log(`[DEBUG] Resposta da API: ${response.status} ${response.statusText}`);
 
-        // Processar a resposta da API
-        const apiData = await response.json();
-        
-        // Mapear os dados para o formato esperado pelo frontend
-        const dadosEmpresa = {
-          razao_social: apiData.razaoSocial || apiData.nomeEmpresarial || '',
-          nome_fantasia: apiData.nomeFantasia || '',
-          logradouro: apiData.logradouro || '',
-          numero: apiData.numero || '',
-          complemento: apiData.complemento || '',
-          bairro: apiData.bairro || '',
-          cep: apiData.cep || '',
-          municipio: apiData.municipio || '',
-          uf: apiData.uf || ''
-        };
-
-        return res.json(dadosEmpresa);
-      } catch (apiError) {
-        console.error('Erro ao consultar API oficial:', apiError);
-        return res.status(500).json({ 
-          error: 'Falha na comunicação com a API de CNPJ',
-          message: apiError instanceof Error ? apiError.message : 'Erro desconhecido'
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[DEBUG] Erro na resposta da API: ${response.status} ${response.statusText}`, errorText);
+        return res.status(response.status).json({ 
+          error: 'Erro ao consultar CNPJ na API oficial',
+          message: response.statusText,
+          details: errorText
         });
       }
+
+      // Processar a resposta da API
+      console.log(`[DEBUG] Processando resposta da API`);
+      const apiData = await response.json();
+      console.log(`[DEBUG] Dados recebidos:`, JSON.stringify(apiData));
+      
+      // Mapear os dados para o formato esperado pelo frontend
+      const dadosEmpresa = {
+        razao_social: apiData.nomeEmpresarial || '',
+        nome_fantasia: apiData.nomeFantasia || '',
+        logradouro: apiData.endereco?.logradouro || '',
+        numero: apiData.endereco?.numero || '',
+        complemento: apiData.endereco?.complemento || '',
+        bairro: apiData.endereco?.bairro || '',
+        cep: apiData.endereco?.cep || '',
+        municipio: apiData.endereco?.municipio?.descricao || '',
+        uf: apiData.endereco?.uf || ''
+      };
+      console.log(`[DEBUG] Dados mapeados:`, JSON.stringify(dadosEmpresa));
+
+      return res.json(dadosEmpresa);
     } catch (error) {
-      console.error('Erro ao processar consulta CNPJ:', error);
-      return res.status(500).json({ error: 'Erro ao consultar CNPJ' });
+      console.error('[DEBUG] Erro ao processar consulta CNPJ (v2):', error);
+      return res.status(503).json({ 
+        error: 'Falha na API de CNPJ', 
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        details: 'O serviço requer credenciais válidas da API Gov.br. Entre em contato com o administrador.'
+      });
     }
+  });
+  
+  // API antiga - manter temporariamente para compatibilidade durante a transição
+  app.get('/api/cnpj/:cnpj', async (req, res) => {
+    const { cnpj } = req.params;
+    const cleanCnpj = cnpj.replace(/[^\d]/g, '');
+    
+    // Verificação de credenciais para avaliação
+    if (!process.env.GOV_BR_CLIENT_ID || !process.env.GOV_BR_CLIENT_SECRET) {
+      return res.status(500).json({ 
+        error: 'Credenciais não configuradas',
+        message: 'As credenciais da API Gov.br não estão configuradas corretamente'
+      });
+    }
+    
+    // Retornar erro indicando que a consulta requer credenciais
+    return res.status(503).json({
+      error: 'Serviço temporariamente indisponível',
+      message: 'O serviço de consulta de CNPJ requer credenciais válidas da API Gov.br Connect',
+      instructions: 'Entre em contato com o administrador do sistema para configurar as credenciais de integração'
+    });
   });
 
   // Dashboard Stats

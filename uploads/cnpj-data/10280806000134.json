@@ -1,0 +1,11 @@
+{
+  "razao_social": "EMPRESA TESTE LTDA",
+  "nome_fantasia": "EMPRESA TESTE",
+  "logradouro": "RUA DOS TESTES",
+  "numero": "123",
+  "complemento": "SALA 456",
+  "bairro": "CENTRO",
+  "cep": "12345678",
+  "municipio": "SÃO PAULO",
+  "uf": "SP"
+}

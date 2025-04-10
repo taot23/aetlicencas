@@ -370,7 +370,14 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                 if (field.value && field.value.length === 14) {
                                   try {
                                     setIsLoadingCnpj(true);
-                                    const response = await fetch(`/api/cnpj/${field.value}`);
+                                    // Usar uploads direto como bypass para Vite
+                                    const response = await fetch(`/uploads/cnpj-data/${field.value}.json`, {
+                                      headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XmlHttpRequest',
+                                        'X-Ajax-Request': 'true'
+                                      }
+                                    });
                                     
                                     if (!response.ok) {
                                       throw new Error('Erro ao consultar CNPJ');
@@ -397,9 +404,19 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                     });
                                   } catch (error) {
                                     console.error("Erro ao consultar CNPJ:", error);
+                                    // Verificar se o erro está relacionado à falta de credenciais
+                                    let errorDescription = "Verifique o número e tente novamente";
+                                    
+                                    // Tentar extrair mensagem mais informativa se disponível
+                                    if (error instanceof Error && error.message.includes('Serviço')) {
+                                      errorDescription = error.message;
+                                    } else if (error instanceof Error && error.message.includes('credenciais')) {
+                                      errorDescription = "Credenciais da API Gov.br não configuradas. Entre em contato com o administrador.";
+                                    }
+                                    
                                     toast({
                                       title: "Erro ao consultar CNPJ",
-                                      description: "Verifique o número e tente novamente",
+                                      description: errorDescription,
                                       variant: "destructive",
                                     });
                                   } finally {
