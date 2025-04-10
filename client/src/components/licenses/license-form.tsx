@@ -758,7 +758,11 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
                 <Textarea
                   placeholder="Adicione observações relevantes para este pedido de licença"
                   className="min-h-[120px]"
-                  {...field}
+                  value={field.value as string || ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
                 />
               </FormControl>
               <FormDescription>
