@@ -42,9 +42,10 @@ interface LicenseFormProps {
   draft?: LicenseRequest | null;
   onComplete: () => void;
   onCancel: () => void;
+  preSelectedTransporterId?: number | null;
 }
 
-export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
+export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporterId }: LicenseFormProps) {
   const { toast } = useToast();
   const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
 
@@ -69,6 +70,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
     ? insertDraftLicenseSchema 
     : insertLicenseRequestSchema;
 
+  // Usar o transportador pré-selecionado quando disponível
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: draft ? {
@@ -88,7 +90,7 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       comments: draft.comments || undefined,
     } : {
       type: "",
-      transporterId: undefined,
+      transporterId: preSelectedTransporterId || undefined, // Usar o transportador pré-selecionado
       mainVehiclePlate: "",
       tractorUnitId: undefined,
       firstTrailerId: undefined,
@@ -103,6 +105,19 @@ export function LicenseForm({ draft, onComplete, onCancel }: LicenseFormProps) {
       comments: "",
     },
   });
+
+  // Efeito para mostrar notificação quando tiver transportador pré-selecionado
+  useEffect(() => {
+    if (preSelectedTransporterId && transporters && transporters.length > 0) {
+      const selectedTransporter = transporters.find(t => t.id === preSelectedTransporterId);
+      if (selectedTransporter) {
+        toast({
+          title: "Transportador selecionado",
+          description: `Usando ${selectedTransporter.name} como transportador para esta solicitação`,
+        });
+      }
+    }
+  }, [preSelectedTransporterId, transporters, toast]);
 
   // Watch for type changes to conditionally render fields
   useEffect(() => {

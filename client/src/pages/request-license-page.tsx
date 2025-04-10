@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -6,10 +6,33 @@ import { useQuery } from "@tanstack/react-query";
 import { LicenseRequest, InsertLicenseRequest } from "@shared/schema";
 import { LicenseForm } from "@/components/licenses/license-form";
 import { LicenseList } from "@/components/licenses/license-list";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RequestLicensePage() {
   const [showForm, setShowForm] = useState(false);
   const [currentDraft, setCurrentDraft] = useState<LicenseRequest | null>(null);
+  const [preSelectedTransporterId, setPreSelectedTransporterId] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  // Verificar se há um transportador pré-selecionado
+  useEffect(() => {
+    const selectedId = sessionStorage.getItem('selectedTransporterId');
+    if (selectedId) {
+      const transporterId = parseInt(selectedId, 10);
+      setPreSelectedTransporterId(transporterId);
+      
+      // Se tiver um transportador pré-selecionado, abrimos o formulário automaticamente
+      setShowForm(true);
+      
+      // Limpar o sessionStorage para não reutilizar em futuras visitas à página
+      sessionStorage.removeItem('selectedTransporterId');
+      
+      toast({
+        title: "Transportador selecionado",
+        description: "Continuando com a solicitação para o transportador selecionado",
+      });
+    }
+  }, []);
 
   const { data: draftLicenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses/drafts"],
@@ -71,6 +94,7 @@ export default function RequestLicensePage() {
             draft={currentDraft}
             onComplete={handleFormComplete}
             onCancel={() => setShowForm(false)}
+            preSelectedTransporterId={preSelectedTransporterId}
           />
         </div>
       )}
