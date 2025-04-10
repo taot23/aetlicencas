@@ -414,7 +414,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                     toast({
                                       title: "Serviço de consulta CNPJ indisponível",
                                       description: "Não foi possível consultar o CNPJ automaticamente. Por favor, preencha os dados manualmente.",
-                                      variant: "warning",
+                                      variant: "destructive",
                                     });
                                     
                                     // Se o CNPJ parece válido, habilitar os campos para preenchimento manual
