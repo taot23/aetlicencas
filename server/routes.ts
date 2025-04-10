@@ -303,7 +303,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(503).json({ 
         error: 'Não foi possível realizar a consulta do CNPJ', 
         message: error instanceof Error ? error.message : 'Erro ao verificar dados do CNPJ',
-        details: 'Não foi possível consultar o CNPJ na Receita Federal. Verifique o número e tente novamente.'
+        details: 'Não foi possível consultar o CNPJ na Receita Federal. Prossiga com o cadastro inserindo os dados manualmente.',
+        service_unavailable: true
       });
     }
   });

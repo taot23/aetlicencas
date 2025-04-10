@@ -379,7 +379,7 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                     });
                                     
                                     if (!response.ok) {
-                                      throw new Error('Erro ao consultar CNPJ');
+                                      throw new Error(`Erro ao consultar CNPJ: ${response.status}`);
                                     }
                                     
                                     const data = await response.json();
@@ -407,14 +407,23 @@ export function TransporterForm({ transporter, onSuccess }: TransporterFormProps
                                     });
                                   } catch (error) {
                                     console.error("Erro ao consultar CNPJ:", error);
-                                    // Mensagem de erro padrão
-                                    let errorDescription = "Não foi possível realizar a consulta do CNPJ. Verifique o número e tente novamente.";
+                                    
+                                    // Mostrar diálogo de confirmação para permitir preenchimento manual
+                                    setIsLoadingCnpj(false);
                                     
                                     toast({
-                                      title: "Erro ao consultar CNPJ",
-                                      description: errorDescription,
-                                      variant: "destructive",
+                                      title: "Serviço de consulta CNPJ indisponível",
+                                      description: "Não foi possível consultar o CNPJ automaticamente. Por favor, preencha os dados manualmente.",
+                                      variant: "warning",
                                     });
+                                    
+                                    // Se o CNPJ parece válido, habilitar os campos para preenchimento manual
+                                    if (field.value && field.value.length === 14) {
+                                      toast({
+                                        title: "Preenchimento manual habilitado",
+                                        description: "Continue o cadastro preenchendo os dados manualmente.",
+                                      });
+                                    }
                                   } finally {
                                     setIsLoadingCnpj(false);
                                   }
