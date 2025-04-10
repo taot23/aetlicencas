@@ -9,7 +9,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { LicenseRequest, LicenseStatus, Transporter } from "@shared/schema";
+import { LicenseRequest, LicenseStatus } from "@shared/schema";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,43 +22,9 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
-import { FileDown, ExternalLink, Loader2 } from "lucide-react";
+import { FileDown, ExternalLink } from "lucide-react";
 import { Status, StatusBadge } from "@/components/licenses/status-badge";
-
-// Componente otimizado para exibir informações do transportador
-const TransporterInfo = ({ transporterId }: { transporterId: number | null }) => {
-  const { data: transporter, isLoading } = useQuery<Transporter>({
-    queryKey: ['/api/transporters', transporterId],
-    queryFn: async () => {
-      if (!transporterId) return null;
-      const res = await fetch(`/api/transporters/${transporterId}`);
-      if (!res.ok) return null;
-      return res.json();
-    },
-    enabled: !!transporterId,
-    staleTime: 10 * 60 * 1000, // Cache por 10 minutos
-    retry: 1
-  });
-
-  return (
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Transportador</h3>
-      {isLoading ? (
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-          <span className="text-sm text-gray-500">Carregando dados do transportador...</span>
-        </div>
-      ) : transporter ? (
-        <p className="text-gray-900">
-          {transporter.name}
-          {transporter.documentNumber && ` - ${transporter.documentNumber}`}
-        </p>
-      ) : (
-        <p className="text-gray-500">Transportador não encontrado</p>
-      )}
-    </div>
-  );
-};
+import { TransporterInfo } from "@/components/transporters/transporter-info";
 
 export default function IssuedLicensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
