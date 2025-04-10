@@ -688,6 +688,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para obter usuários não-admin para seleção
+  app.get('/api/admin/non-admin-users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getNonAdminUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Erro ao buscar usuários não-admin:', error);
+      res.status(500).json({ message: 'Erro ao buscar usuários não-admin' });
+    }
+  });
+  
   // Dashboard Admin
   app.get('/api/admin/dashboard/stats', requireAdmin, async (req, res) => {
     try {
