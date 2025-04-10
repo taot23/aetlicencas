@@ -19,7 +19,7 @@ export default function MyCompaniesPage() {
   const [userTransporters, setUserTransporters] = useState<Transporter[]>([]);
   const [, navigate] = useLocation();
   
-  // Buscar todos os transportadores para filtrar os vinculados ao usuário
+  // Buscar os transportadores vinculados ao usuário atual
   const { data: transporters = [], isLoading, error } = useQuery({
     queryKey: ["/api/user/transporters"],
     queryFn: async () => {
@@ -30,7 +30,10 @@ export default function MyCompaniesPage() {
         console.error("Erro ao buscar transportadores:", error);
         return [];
       }
-    }
+    },
+    // Otimizações de performance
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    retry: 1, // Uma tentativa extra em caso de falha
   });
   
   useEffect(() => {
@@ -155,6 +158,8 @@ export default function MyCompaniesPage() {
                       size="sm" 
                       onClick={() => {
                         // Usar navegação interna para melhor performance
+                        // Armazenar transportador selecionado no sessionStorage para uso na página de solicitação
+                        sessionStorage.setItem('selectedTransporterId', transporter.id.toString());
                         navigate("/request-license");
                       }}
                     >

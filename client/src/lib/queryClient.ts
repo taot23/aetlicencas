@@ -65,10 +65,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: true,
       // Tentamos mais uma vez para tolerância a falhas temporárias
       retry: 1,
-      // Melhoria de UX: Reusamos cache enquanto revalidamos para mostrar dados mais rápido
-      keepPreviousData: true,
       // Mostrar dados imediatamente, mesmo que desatualizados (sensação de UI mais rápida)
-      refetchOnMount: 'always',
+      refetchOnMount: true,
     },
     mutations: {
       retry: 1, // Uma tentativa adicional para mutações também

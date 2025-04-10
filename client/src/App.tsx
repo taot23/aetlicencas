@@ -16,7 +16,7 @@ import AdminTransportersPage from "@/pages/admin/admin-transporters";
 import AdminUsersPage from "@/pages/admin/admin-users";
 import { ProtectedRoute, AdminRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function Router() {
   return (
@@ -44,11 +44,14 @@ function Router() {
 
 // Componente para pré-carregar dados importantes
 function AppInitializer() {
-  // Pré-carregar dados da sessão atual ao iniciar o aplicativo
-  queryClient.prefetchQuery({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
+  // Efeito para carregar dados do usuário e outros recursos importantes
+  useEffect(() => {
+    // Pré-carregar dados da sessão atual
+    queryClient.prefetchQuery({
+      queryKey: ["/api/user"],
+      queryFn: getQueryFn({ on401: "returnNull" }),
+    });
+  }, []);
   
   return null;
 }
