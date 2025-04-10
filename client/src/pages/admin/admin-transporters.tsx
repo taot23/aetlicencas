@@ -6,12 +6,13 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TransporterForm } from "@/components/admin/transporter-form";
+import { TransporterLinkUser } from "@/components/admin/transporter-link-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Plus, MoreVertical, Edit, Trash } from "lucide-react";
+import { Plus, MoreVertical, Edit, Trash, Link as LinkIcon, UserCircle2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -22,6 +23,7 @@ export default function AdminTransporters() {
   const isMobile = useIsMobile();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLinkUserDialogOpen, setIsLinkUserDialogOpen] = useState(false);
   const [selectedTransporter, setSelectedTransporter] = useState<Transporter | null>(null);
 
   // Fetch transporters
@@ -68,6 +70,11 @@ export default function AdminTransporters() {
       deleteTransporterMutation.mutate(transporterId);
     }
   };
+  
+  const handleLinkUser = (transporter: Transporter) => {
+    setSelectedTransporter(transporter);
+    setIsLinkUserDialogOpen(true);
+  };
 
 
 
@@ -104,6 +111,10 @@ export default function AdminTransporters() {
                       <DropdownMenuItem onClick={() => handleEditTransporter(transporter)}>
                         <Edit size={16} className="mr-2" />
                         Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLinkUser(transporter)}>
+                        <UserCircle2 size={16} className="mr-2" />
+                        Vincular Usuário
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleDeleteTransporter(transporter.id)} className="text-red-600">
                         <Trash size={16} className="mr-2" />
@@ -163,6 +174,10 @@ export default function AdminTransporters() {
                       <Edit size={16} className="mr-2" />
                       Editar
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLinkUser(transporter)}>
+                      <UserCircle2 size={16} className="mr-2" />
+                      Vincular Usuário
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDeleteTransporter(transporter.id)} className="text-red-600">
                       <Trash size={16} className="mr-2" />
                       Excluir
@@ -221,6 +236,26 @@ export default function AdminTransporters() {
                     setIsEditDialogOpen(false);
                     setSelectedTransporter(null);
                   }} 
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Modal de vinculação de usuário */}
+        {selectedTransporter && (
+          <Dialog open={isLinkUserDialogOpen} onOpenChange={setIsLinkUserDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Vincular Usuário ao Transportador</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <TransporterLinkUser 
+                  transporter={selectedTransporter}
+                  onSuccess={() => {
+                    setIsLinkUserDialogOpen(false);
+                    setSelectedTransporter(null);
+                  }}
                 />
               </div>
             </DialogContent>
