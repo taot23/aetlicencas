@@ -180,7 +180,7 @@ export default function AdminLicensesPage() {
     const matchesStatus = !statusFilter || statusFilter === "all" || license.status === statusFilter;
     
     // Filtro de transportador
-    const matchesTransporter = !transporterFilter || (
+    const matchesTransporter = !transporterFilter || transporterFilter === "all" || (
       license.transporterId != null && license.transporterId.toString() === transporterFilter
     );
     
@@ -463,7 +463,7 @@ export default function AdminLicensesPage() {
                         <SelectValue placeholder="Todos os transportadores" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos os transportadores</SelectItem>
+                        <SelectItem value="all">Todos os transportadores</SelectItem>
                         {/* Aqui seria ideal ter uma lista de transportadores para selecionar */}
                         {/* Como é um exemplo, adicionamos alguns valores genéricos */}
                         <SelectItem value="1">Transportadora ABC Ltda</SelectItem>
