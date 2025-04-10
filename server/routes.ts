@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Endpoint de API para consulta de CNPJ
+  // Endpoint de API para consulta de CNPJ - implementação alternativa usando arquivos estáticos
   app.get('/api/external/cnpj/:cnpj', async (req, res) => {
     // Definir explicitamente cabeçalhos para evitar intercepção pelo Vite
     res.setHeader('Content-Type', 'application/json');
@@ -243,13 +243,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { cnpj } = req.params;
       const cleanCnpj = cnpj.replace(/[^\d]/g, '');
-      console.log(`[DEBUG] Consultando CNPJ (v2): ${cleanCnpj}`);
+      console.log(`[DEBUG] Consultando CNPJ via arquivo: ${cleanCnpj}`);
       
       if (cleanCnpj.length !== 14) {
         console.log(`[DEBUG] CNPJ inválido: ${cleanCnpj}`);
         return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos' });
       }
 
+      // Primeiro tentamos o arquivo local para testes
+      const filePath = path.join(process.cwd(), 'uploads', 'cnpj-data', `${cleanCnpj}.json`);
+      console.log(`[DEBUG] Verificando arquivo: ${filePath}`);
+      
+      if (fs.existsSync(filePath)) {
+        console.log(`[DEBUG] Arquivo encontrado, lendo dados`);
+        const fileData = fs.readFileSync(filePath, 'utf8');
+        const cnpjData = JSON.parse(fileData);
+        
+        console.log(`[DEBUG] Dados lidos do arquivo:`, JSON.stringify(cnpjData));
+        
+        // Assumindo que os dados do arquivo já estão no formato esperado
+        return res.json(cnpjData);
+      }
+      
+      console.log(`[DEBUG] Arquivo não encontrado, tentando API`);
+      // Se o arquivo não existe, tentamos a API online
+      
       // Obter o token de acesso
       console.log(`[DEBUG] Obtendo token de acesso`);
       const token = await getAccessToken();
@@ -275,11 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[DEBUG] Erro na resposta da API: ${response.status} ${response.statusText}`, errorText);
-        return res.status(response.status).json({ 
-          error: 'Erro ao consultar CNPJ na API oficial',
-          message: response.statusText,
-          details: errorText
-        });
+        throw new Error(`Erro ao consultar API oficial: ${response.status}`);
       }
 
       // Processar a resposta da API

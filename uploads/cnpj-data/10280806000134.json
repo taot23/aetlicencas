@@ -1,11 +1,11 @@
 {
   "razao_social": "EMPRESA TESTE LTDA",
   "nome_fantasia": "EMPRESA TESTE",
-  "logradouro": "RUA DOS TESTES",
+  "logradouro": "RUA ABC",
   "numero": "123",
-  "complemento": "SALA 456",
+  "complemento": "SALA 101",
   "bairro": "CENTRO",
-  "cep": "12345678",
+  "cep": "01234567",
   "municipio": "SÃO PAULO",
   "uf": "SP"
 }
