@@ -9,7 +9,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { LicenseRequest, LicenseStatus, brazilianStates } from "@shared/schema";
+import { LicenseRequest, LicenseStatus } from "@shared/schema";
 import { format, isAfter, isBefore, addDays, differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -238,7 +238,8 @@ export default function IssuedLicensesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_states">Todos os estados</SelectItem>
-                {brazilianStates.map(state => (
+                {/* O erro estava aqui: brazilianStates é um objeto no schema, não um array de strings */}
+                {['SP', 'MG', 'MT', 'PE', 'TO', 'MS', 'PR', 'ES', 'DNIT', 'RS', 'BA', 'PA', 'SC', 'DF', 'MA', 'GO', 'RJ', 'CE', 'AL', 'SE'].map(state => (
                   <SelectItem key={state} value={state}>{state}</SelectItem>
                 ))}
               </SelectContent>
@@ -612,12 +613,15 @@ export default function IssuedLicensesPage() {
           <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detalhes da Licença</DialogTitle>
+              <p className="text-sm text-gray-500">Informações detalhadas da licença selecionada</p>
             </DialogHeader>
             <div className="space-y-4">
+              {selectedLicense && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Número do Pedido</h3>
                 <p className="text-gray-900">{selectedLicense.requestNumber}</p>
               </div>
+              )}
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Tipo de Conjunto</h3>
                 <p className="text-gray-900">
