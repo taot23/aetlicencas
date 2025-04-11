@@ -89,13 +89,19 @@ const updateStateStatusSchema = z.object({
     });
   }
   
-  // Se o status for "under_review", número da AET é obrigatório
-  if (data.status === "under_review" && !data.aetNumber) {
+  // Se o status for "under_review" ou "pending_approval", número da AET é obrigatório
+  if ((data.status === "under_review" || data.status === "pending_approval") && !data.aetNumber) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "O número da AET é obrigatório quando o status é Análise do Órgão",
+      message: `O número da AET é obrigatório quando o status é ${data.status === "under_review" ? "Análise do Órgão" : "Pendente Liberação"}`,
       path: ["aetNumber"]
     });
+  }
+  
+  // Para o status "approved", o número da AET deve ser informado apenas se não houver um número anterior
+  if (data.status === "approved" && !data.aetNumber) {
+    // Não vamos adicionar o erro aqui, pois o backend vai buscar o valor do status anterior
+    // Mas podemos melhorar isso com validação do lado do cliente se necessário
   }
 });
 
@@ -158,8 +164,8 @@ export default function AdminLicensesPage() {
         formData.append("stateFile", data.licenseFile);
       }
       
-      // Incluir número da AET se o status for "under_review" (Análise do Órgão)
-      if (data.aetNumber && data.status === "under_review") {
+      // Incluir número da AET se o status for "under_review" (Análise do Órgão), "pending_approval" (Pendente Liberação) ou "approved" (Liberada)
+      if (data.aetNumber && (data.status === "under_review" || data.status === "pending_approval" || data.status === "approved")) {
         formData.append("aetNumber", data.aetNumber);
       }
       
@@ -281,12 +287,12 @@ export default function AdminLicensesPage() {
       }
     }
     
-    // Validação adicional para o status "under_review": exigir número da AET
-    if (data.status === "under_review") {
+    // Validação adicional para o status "under_review" ou "pending_approval": exigir número da AET
+    if (data.status === "under_review" || data.status === "pending_approval") {
       if (!data.aetNumber) {
         toast({
           title: "Erro de validação",
-          description: "Para o status 'Análise do Órgão' é obrigatório informar o número da AET.",
+          description: `Para o status '${data.status === "under_review" ? "Análise do Órgão" : "Pendente Liberação"}' é obrigatório informar o número da AET.`,
           variant: "destructive",
         });
         return;
@@ -728,10 +734,16 @@ export default function AdminLicensesPage() {
                 )}
               />
               
-              {/* Campo para Número de AET quando status for Análise do Órgão */}
-              {stateStatusForm.watch("status") === "under_review" && (
+              {/* Campo para Número de AET quando status for Análise do Órgão, Pendente Liberação ou Liberada */}
+              {(stateStatusForm.watch("status") === "under_review" || 
+                stateStatusForm.watch("status") === "pending_approval" || 
+                stateStatusForm.watch("status") === "approved") && (
                 <div className="space-y-4">
-                  <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Análise do Órgão</h3>
+                  <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">
+                    {stateStatusForm.watch("status") === "under_review" && "Informações para Análise do Órgão"}
+                    {stateStatusForm.watch("status") === "pending_approval" && "Informações para Pendente Liberação"}
+                    {stateStatusForm.watch("status") === "approved" && "Número da AET"}
+                  </h3>
                   <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={stateStatusForm.control}

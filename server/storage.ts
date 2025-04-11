@@ -635,10 +635,25 @@ export class MemStorage implements IStorage {
     
     // Se for status "approved" e tiver data de validade, incluir no status
     if (status === "approved" && validUntil) {
-      stateStatuses.push(`${state}:${status}:${validUntil}`);
+      // Se existe um aetNumber em um estado anterior, manter esse número
+      if (aetNumber) {
+        stateStatuses.push(`${state}:${status}:${validUntil}:${aetNumber}`);
+      } else {
+        // Procurar número da AET em estados anteriores
+        const aetNumberFromPreviousState = license.stateStatuses?.find(
+          ss => ss.includes(":under_review:") || ss.includes(":pending_approval:"))
+          ?.split(":")
+          ?.pop();
+        
+        if (aetNumberFromPreviousState) {
+          stateStatuses.push(`${state}:${status}:${validUntil}:${aetNumberFromPreviousState}`);
+        } else {
+          stateStatuses.push(`${state}:${status}:${validUntil}`);
+        }
+      }
     } 
-    // Se for status "under_review" e tiver número da AET, incluir no status
-    else if (status === "under_review" && aetNumber) {
+    // Se for status "under_review" ou "pending_approval" e tiver número da AET, incluir no status
+    else if ((status === "under_review" || status === "pending_approval") && aetNumber) {
       stateStatuses.push(`${state}:${status}:${aetNumber}`);
       
       // Se for o primeiro estado a receber número de AET, atualizar o número do pedido/licença
