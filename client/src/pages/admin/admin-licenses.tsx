@@ -87,6 +87,15 @@ const updateStateStatusSchema = z.object({
       path: ["validUntil"]
     });
   }
+  
+  // Se o status for "under_review", número da AET é obrigatório
+  if (data.status === "under_review" && !data.aetNumber) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "O número da AET é obrigatório quando o status é Análise do Órgão",
+      path: ["aetNumber"]
+    });
+  }
 });
 
 // Constantes e funções auxiliares para status
@@ -698,6 +707,37 @@ export default function AdminLicensesPage() {
                   </FormItem>
                 )}
               />
+              
+              {/* Campo para Número de AET quando status for Análise do Órgão */}
+              {stateStatusForm.watch("status") === "under_review" && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Análise do Órgão</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={stateStatusForm.control}
+                      name="aetNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Número da AET <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Digite o número da AET"
+                              {...field}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Número único que será vinculado ao número da licença
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
               
               {/* Campo de upload de arquivo PDF para status "Liberada" */}
               {stateStatusForm.watch("status") === "approved" && (

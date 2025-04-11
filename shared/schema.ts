@@ -269,6 +269,7 @@ export const updateLicenseStateSchema = z.object({
   file: z.any().optional(),
   comments: z.string().optional(),
   validUntil: z.string().optional(),
+  aetNumber: z.string().optional(), // Número da AET para o status "Análise do Órgão"
 });
 
 // Type definitions
