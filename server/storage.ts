@@ -115,9 +115,114 @@ export class MemStorage implements IStorage {
       password: "admin-special-password", // Este é apenas um marcador, verificação real está em auth.ts
       fullName: "Administrador",
       phone: "(11) 99999-9999",
-      isAdmin: true
+      isAdmin: true,
+      role: "admin",
+      createdAt: new Date().toISOString()
     };
     this.users.set(id, adminUser);
+    
+    // Cria usuário transportador para testes
+    const transporterId = this.currentUserId++;
+    const transporterUser: User = {
+      id: transporterId,
+      email: "transportador@teste.com",
+      password: "$2b$10$oDIUQbw08yuv3aX/uAHWoO8BDC5h3l24giiPDZ.iWoKKwS3.AvbW6", // senha: 123456
+      fullName: "Usuário Transportador",
+      phone: "(11) 98765-4321",
+      isAdmin: false,
+      role: "user",
+      createdAt: new Date().toISOString()
+    };
+    this.users.set(transporterId, transporterUser);
+    
+    // Cria empresa transportadora de teste e vincula ao usuário
+    const companyId = this.currentTransporterId++;
+    const testCompany: Transporter = {
+      id: companyId,
+      personType: "pj",
+      name: "Transportadora Teste Ltda",
+      tradeName: "Transportes Rápidos",
+      documentNumber: "12345678000190",
+      email: "contato@transportesteste.com",
+      phone: "(11) 3333-4444",
+      legalResponsible: "João da Silva",
+      street: "Avenida Brasil",
+      number: "1500",
+      complement: "Sala 300",
+      district: "Centro",
+      zipCode: "01000-000",
+      city: "São Paulo",
+      state: "SP",
+      userId: transporterId,
+      subsidiaries: [],
+      documents: [],
+      createdAt: new Date().toISOString()
+    };
+    this.transporters.set(companyId, testCompany);
+    
+    // Adicionar veículos de teste para o transportador
+    const tratorId = this.currentVehicleId++;
+    const vehicleTrator: Vehicle = {
+      id: tratorId,
+      userId: transporterId,
+      plate: "ABC1234",
+      type: "tractor", // Unidade Tratora
+      tare: 9000,
+      crlvYear: 2023,
+      status: "active",
+      crlvUrl: null
+    };
+    this.vehicles.set(tratorId, vehicleTrator);
+    
+    const semiReboqueId1 = this.currentVehicleId++;
+    const vehicleSemi1: Vehicle = {
+      id: semiReboqueId1,
+      userId: transporterId,
+      plate: "XYZ5678",
+      type: "semi_trailer", // Semirreboque
+      tare: 7000,
+      crlvYear: 2022,
+      status: "active",
+      crlvUrl: null
+    };
+    this.vehicles.set(semiReboqueId1, vehicleSemi1);
+    
+    const semiReboqueId2 = this.currentVehicleId++;
+    const vehicleSemi2: Vehicle = {
+      id: semiReboqueId2,
+      userId: transporterId,
+      plate: "DEF9012",
+      type: "semi_trailer", // Semirreboque
+      tare: 6500,
+      crlvYear: 2021,
+      status: "active",
+      crlvUrl: null
+    };
+    this.vehicles.set(semiReboqueId2, vehicleSemi2);
+    
+    // Criar uma licença de teste para o transportador
+    const licenseId = this.currentLicenseId++;
+    const testLicense: LicenseRequest = {
+      id: licenseId,
+      userId: transporterId,
+      transporterId: companyId,
+      requestNumber: "LIC-2023-001",
+      type: "bitrem",
+      mainVehiclePlate: "ABC1234",
+      additionalPlates: ["XYZ5678", "DEF9012"],
+      additionalPlatesDocuments: [],
+      states: ["SP", "MG", "PR"],
+      status: "under_review",
+      comments: "Licença de teste para demonstração do sistema",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isDraft: false,
+      licenseFileUrl: null,
+      validUntil: null,
+      stateStatuses: ["SP:under_review", "MG:pending", "PR:pending_approval"],
+      stateFiles: []
+    };
+    this.licenseRequests.set(licenseId, testLicense);
   }
 
   // Métodos de usuário
