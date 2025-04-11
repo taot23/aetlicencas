@@ -1045,7 +1045,6 @@ export default function AdminLicensesPage() {
                         
                         {/* Fluxo de Progresso do Estado */}
                         <div className="mt-2 pt-2 overflow-x-auto">
-                          <h4 className="font-medium text-sm mb-2 text-gray-500">Fluxo de Progresso da Licença: {state}</h4>
                           <div className="flex justify-center mb-2">
                             <StatusBadge status={stateStatus} />
                           </div>
