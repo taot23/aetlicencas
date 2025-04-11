@@ -74,6 +74,7 @@ export default function TrackLicensePage() {
     interface ExtendedLicense extends LicenseRequest {
       specificState?: string;
       specificStateStatus?: string;
+      specificStateFileUrl?: string;
     }
     
     // Criar uma lista expandida de licenças separadas por estado
@@ -86,6 +87,10 @@ export default function TrackLicensePage() {
           // Verificar o status para este estado específico
           const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
           
+          // Verificar se existe um arquivo específico para este estado
+          const stateFileEntry = license.stateFiles?.find(sf => sf.startsWith(`${state}:`));
+          const stateFileUrl = stateFileEntry ? stateFileEntry.split(':').slice(1).join(':') : undefined;
+          
           // Criar uma cópia da licença com o estado específico
           const stateLicense: ExtendedLicense = {
             ...license,
@@ -93,7 +98,9 @@ export default function TrackLicensePage() {
             // Substituir o array de estados com apenas este estado
             states: [state],
             // Para filtros de status no frontend, usamos o status do estado específico
-            specificStateStatus: stateStatus
+            specificStateStatus: stateStatus,
+            // URL do arquivo deste estado específico
+            specificStateFileUrl: stateFileUrl
           };
           
           expandedLicenses.push(stateLicense);
@@ -239,6 +246,15 @@ export default function TrackLicensePage() {
                     <h3 className="font-medium text-sm text-gray-500">Status: {(selectedLicense as any).specificState}</h3>
                     <div className="flex items-center mt-1">
                       <StatusBadge status={(selectedLicense as any).specificStateStatus || selectedLicense.status} />
+                      {/* Botão de download após status liberada */}
+                      {((selectedLicense as any).specificStateStatus === "approved" || selectedLicense.status === "approved") && (selectedLicense as any).specificStateFileUrl && (
+                        <Button variant="outline" size="sm" className="ml-2" asChild>
+                          <a href={(selectedLicense as any).specificStateFileUrl} target="_blank" rel="noopener noreferrer">
+                            <FileDown className="h-4 w-4 mr-1" />
+                            Download
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -246,6 +262,15 @@ export default function TrackLicensePage() {
                     <h3 className="font-medium text-sm text-gray-500">Status</h3>
                     <div className="flex items-center mt-1">
                       <StatusBadge status={selectedLicense.status} />
+                      {/* Botão de download após status liberada */}
+                      {selectedLicense.status === "approved" && selectedLicense.licenseFileUrl && (
+                        <Button variant="outline" size="sm" className="ml-2" asChild>
+                          <a href={selectedLicense.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+                            <FileDown className="h-4 w-4 mr-1" />
+                            Download
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
