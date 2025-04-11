@@ -859,31 +859,7 @@ export default function AdminLicensesPage() {
             <div className="space-y-4">
               <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200 overflow-x-auto">
                 <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
-                <div className="relative flex items-center justify-between mt-3 min-w-[500px]">
-                  {/* Linha de conexão */}
-                  <div className="absolute left-0 right-0 h-0.5 bg-gray-200"></div>
-                  
-                  {/* Etapas */}
-                  {statusOptions.map((option, index) => {
-                    const isCompleted = 
-                      statusOptions.findIndex(opt => opt.value === selectedLicense.status) >= index;
-                    const isCurrent = option.value === selectedLicense.status;
-                    
-                    return (
-                      <div key={option.value} className="relative flex flex-col items-center z-10">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center
-                          ${isCurrent ? 'bg-blue-500 text-white' : 
-                            isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
-                          {isCompleted && !isCurrent ? 
-                            <CheckCircle className="h-4 w-4" /> : 
-                            <span className="text-xs">{index + 1}</span>
-                          }
-                        </div>
-                        <span className="text-xs text-center mt-1 max-w-[70px] whitespace-normal">{option.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ProgressFlow currentStatus={selectedLicense.status} size="md" />
               </div>
               
               {/* Informações do Transportador */}
@@ -1061,10 +1037,16 @@ export default function AdminLicensesPage() {
                             </div>
                           </div>
                         </div>
+                        
+                        {/* Fluxo de Progresso do Estado */}
+                        <div className="mt-2 border-t pt-2 overflow-x-auto">
+                          <StateProgressFlow stateStatus={stateStatus} size="sm" />
+                        </div>
+                        
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="w-full mt-1"
+                          className="w-full mt-2"
                           onClick={() => handleStateStatusUpdate(selectedLicense, state)}
                         >
                           <MapPin className="h-3 w-3 mr-1" />

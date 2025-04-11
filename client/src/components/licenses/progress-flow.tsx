@@ -1,0 +1,129 @@
+import { cn } from "@/lib/utils";
+import { CheckCircle } from "lucide-react";
+
+interface ProgressFlowStep {
+  label: string;
+  value: string;
+  number: number;
+}
+
+interface ProgressFlowProps {
+  currentStatus: string;
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}
+
+export function ProgressFlow({ currentStatus, className, size = "md" }: ProgressFlowProps) {
+  const steps: ProgressFlowStep[] = [
+    { label: "Pedido em Cadastramento", value: "pending_registration", number: 1 },
+    { label: "Cadastro em Andamento", value: "registration_in_progress", number: 2 },
+    { label: "Reprovado", value: "rejected", number: 3 },
+    { label: "Análise do Órgão", value: "under_review", number: 4 },
+    { label: "Pendente Liberação", value: "pending_approval", number: 5 },
+    { label: "Liberada", value: "approved", number: 6 },
+    { label: "Cancelado", value: "canceled", number: 7 }
+  ];
+
+  // Encontrar o índice do status atual
+  const currentIndex = steps.findIndex(step => step.value === currentStatus);
+  
+  // Determinar tamanhos com base no parâmetro size
+  const getSize = () => {
+    switch(size) {
+      case "sm":
+        return {
+          circle: "w-5 h-5",
+          icon: "h-3 w-3",
+          font: "text-[10px]",
+          label: "max-w-[50px] text-[10px]",
+          container: "min-w-[320px]"
+        };
+      case "lg":
+        return {
+          circle: "w-8 h-8",
+          icon: "h-5 w-5",
+          font: "text-sm",
+          label: "max-w-[90px] text-xs",
+          container: "min-w-[600px]"
+        };
+      default: // medium
+        return {
+          circle: "w-6 h-6",
+          icon: "h-4 w-4",
+          font: "text-xs",
+          label: "max-w-[70px] text-xs",
+          container: "min-w-[450px]"
+        };
+    }
+  };
+  
+  const sizeConfig = getSize();
+
+  return (
+    <div className={cn("relative flex items-center justify-between", sizeConfig.container, className)}>
+      {/* Linha de conexão */}
+      <div className="absolute left-0 right-0 h-0.5 bg-gray-200"></div>
+      
+      {/* Etapas */}
+      {steps.map((step, index) => {
+        // Determinando o estado visual do passo
+        const isCompleted = currentIndex >= index;
+        const isCurrent = step.value === currentStatus;
+        // Para o caso especial "Reprovado", sempre mostramos em vermelho se for o status atual
+        const isRejected = step.value === "rejected" && isCurrent;
+        // Para o caso de "Cancelado", mostramos em cinza se for o status atual
+        const isCanceled = step.value === "canceled" && isCurrent;
+        
+        // Aplicando as cores baseadas no estado
+        let bgColor: string;
+        if (isCurrent) {
+          if (isRejected) {
+            bgColor = "bg-red-500";
+          } else if (isCanceled) {
+            bgColor = "bg-gray-500";
+          } else {
+            bgColor = "bg-blue-500";
+          }
+        } else if (isCompleted) {
+          bgColor = "bg-green-500";
+        } else {
+          bgColor = "bg-gray-200";
+        }
+        
+        return (
+          <div key={step.value} className="relative flex flex-col items-center z-10">
+            <div className={cn(
+              sizeConfig.circle,
+              "rounded-full flex items-center justify-center text-white",
+              bgColor
+            )}>
+              {isCompleted && !isCurrent ? (
+                <CheckCircle className={sizeConfig.icon} />
+              ) : (
+                <span className={sizeConfig.font}>{step.number}</span>
+              )}
+            </div>
+            <span className={cn("text-center mt-1 whitespace-normal", sizeConfig.label)}>
+              {step.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Versão que mostra o progresso por estado
+export function StateProgressFlow({ 
+  stateStatus, 
+  className, 
+  size = "sm" 
+}: { 
+  stateStatus: string, 
+  className?: string, 
+  size?: "sm" | "md" | "lg" 
+}) {
+  return (
+    <ProgressFlow currentStatus={stateStatus} className={className} size={size} />
+  );
+}
