@@ -1044,15 +1044,16 @@ export default function AdminLicensesPage() {
                           <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
                         </div>
                         
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="w-full mt-2"
-                          onClick={() => handleStateStatusUpdate(selectedLicense, state)}
-                        >
-                          <MapPin className="h-3 w-3 mr-1" />
-                          Editar
-                        </Button>
+                        <div className="flex justify-end mt-2">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="rounded-full h-8 w-8 p-0"
+                            onClick={() => handleStateStatusUpdate(selectedLicense, state)}
+                          >
+                            <Pencil className="h-4 w-4 text-green-600" />
+                          </Button>
+                        </div>
                       </div>
                     );
                   })}
