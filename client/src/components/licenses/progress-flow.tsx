@@ -32,11 +32,11 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
     switch(size) {
       case "xs":
         return {
-          circle: "w-4 h-4",
-          icon: "h-2.5 w-2.5",
-          font: "text-[8px]",
-          label: "max-w-[40px] text-[7px]",
-          container: "min-w-[280px]"
+          circle: "w-5 h-5",
+          icon: "h-3 w-3",
+          font: "text-[9px]",
+          label: "max-w-[45px] text-[8px]",
+          container: "min-w-[320px]"
         };
       case "sm":
         return {
@@ -136,8 +136,8 @@ export function StateProgressFlow({
   return (
     <ProgressFlow 
       currentStatus={stateStatus} 
-      className={cn("max-w-full min-w-full scale-90 origin-left", className)} 
-      size="xs" 
+      className={cn("max-w-full min-w-full", className)} 
+      size={size} 
     />
   );
 }

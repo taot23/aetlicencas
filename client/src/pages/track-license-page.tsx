@@ -242,12 +242,12 @@ export default function TrackLicensePage() {
                       const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
                       
                       return (
-                        <div key={state} className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                        <div key={state} className="p-4 bg-white rounded-md border border-gray-200 shadow-sm">
                           <div className="flex justify-between items-start">
                             <div>
-                              <div className="flex items-center">
-                                <span className="font-medium">{state}</span>
-                                <div className="ml-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-lg">{state}</span>
+                                <div>
                                   <StatusBadge status={stateStatus} />
                                 </div>
                               </div>
@@ -273,7 +273,8 @@ export default function TrackLicensePage() {
                           </div>
                           
                           {/* Fluxo de Progresso do Estado */}
-                          <div className="mt-2 border-t pt-2 overflow-x-auto">
+                          <div className="mt-2 pt-2 overflow-x-auto">
+                            <h4 className="font-medium text-sm mb-2 text-gray-500">Fluxo de Progresso da Licença: {state}</h4>
                             <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
                           </div>
                         </div>

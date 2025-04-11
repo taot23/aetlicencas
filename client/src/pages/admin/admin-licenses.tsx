@@ -1028,23 +1028,17 @@ export default function AdminLicensesPage() {
                     }
                     
                     return (
-                      <div key={state} className="border rounded p-2 sm:p-3 flex flex-col gap-1 sm:gap-2">
+                      <div key={state} className="border rounded-md p-4 flex flex-col gap-2 bg-white shadow-sm">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">{state}</span>
-                          <div className="group relative">
-                            <StatusBadge status={stateStatus} />
-                            <div className="invisible group-hover:visible absolute z-50 w-48 p-2 bg-black text-white text-xs rounded shadow-lg right-0 mt-1">
-                              {statusOptions.find(opt => opt.value === stateStatus)?.description || 'Status pendente de atualização'}
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium text-lg">{state}</span>
+                            <div className="group relative">
+                              <StatusBadge status={stateStatus} />
+                              <div className="invisible group-hover:visible absolute z-50 w-48 p-2 bg-black text-white text-xs rounded shadow-lg left-0 mt-1">
+                                {statusOptions.find(opt => opt.value === stateStatus)?.description || 'Status pendente de atualização'}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        
-                        {/* Fluxo de Progresso do Estado */}
-                        <div className="mt-2 border-t pt-2 overflow-x-auto">
-                          <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
-                        </div>
-                        
-                        <div className="flex justify-end mt-2">
                           <Button 
                             size="sm" 
                             variant="ghost"
@@ -1053,6 +1047,12 @@ export default function AdminLicensesPage() {
                           >
                             <Pencil className="h-4 w-4 text-green-600" />
                           </Button>
+                        </div>
+                        
+                        {/* Fluxo de Progresso do Estado */}
+                        <div className="mt-2 pt-2 overflow-x-auto">
+                          <h4 className="font-medium text-sm mb-2 text-gray-500">Fluxo de Progresso da Licença: {state}</h4>
+                          <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
                         </div>
                       </div>
                     );
