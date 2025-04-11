@@ -1,12 +1,22 @@
 import { cn } from "@/lib/utils";
 import { LicenseStatus } from "@shared/schema";
+import { 
+  Clock, 
+  Loader2, 
+  CheckCircle, 
+  XCircle, 
+  FileText, 
+  File, 
+  X 
+} from "lucide-react";
 
 interface StatusBadgeProps {
   status: string;
   className?: string;
+  showIcon?: boolean;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className, showIcon = true }: StatusBadgeProps) {
   const getStatusStyles = () => {
     switch (status) {
       case "pending":
@@ -59,6 +69,32 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     }
   };
 
+  const getStatusIcon = () => {
+    switch (status) {
+      case "pending":
+      case "pending_registration":
+        return <Clock className="h-3 w-3 mr-1" />;
+      case "in_progress":
+      case "registration_in_progress":
+        return <Loader2 className="h-3 w-3 mr-1 animate-spin" />;
+      case "rejected":
+        return <XCircle className="h-3 w-3 mr-1" />;
+      case "analyzing":
+      case "under_review":
+        return <FileText className="h-3 w-3 mr-1" />;
+      case "pending_release":
+      case "pending_approval":
+        return <File className="h-3 w-3 mr-1" />;
+      case "released":
+      case "approved":
+        return <CheckCircle className="h-3 w-3 mr-1" />;
+      case "canceled":
+        return <X className="h-3 w-3 mr-1" />;
+      default:
+        return <Clock className="h-3 w-3 mr-1" />;
+    }
+  };
+
   return (
     <span
       className={cn(
@@ -67,6 +103,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className
       )}
     >
+      {showIcon && getStatusIcon()}
       {getStatusLabel()}
     </span>
   );

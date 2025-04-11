@@ -556,10 +556,7 @@ export default function AdminLicensesPage() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center">
-                                  {getStatusIcon(license.status)}
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(license.status)}`}>
-                                    {getStatusLabel(license.status)}
-                                  </span>
+                                  <StatusBadge status={license.status} />
                                 </div>
                               </TableCell>
                               <TableCell>{formatDate(license.createdAt)}</TableCell>
