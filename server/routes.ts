@@ -829,6 +829,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para admin obter todos os veículos
+  app.get('/api/admin/vehicles', requireAdmin, async (req, res) => {
+    try {
+      // Buscar todos os veículos de todos os usuários
+      const allVehicles = [];
+      const users = await storage.getAllUsers();
+      
+      for (const user of users) {
+        const userVehicles = await storage.getVehiclesByUserId(user.id);
+        allVehicles.push(...userVehicles);
+      }
+      
+      res.json(allVehicles);
+    } catch (error) {
+      console.error("Erro ao buscar todos os veículos:", error);
+      res.status(500).json({ message: "Erro ao buscar todos os veículos" });
+    }
+  });
+  
   // Rota para verificar acesso operacional
   app.get('/api/staff/check-operational', requireAuth, (req, res) => {
     const user = req.user!;

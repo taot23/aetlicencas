@@ -55,6 +55,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </Link>
       </div>
       <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
+        <Link href="/admin/vehicles">
+          <span className={`text-sm font-medium block py-2 ${location === "/admin/vehicles" ? "text-blue-600" : "text-gray-600"}`}>
+            Veículos
+          </span>
+        </Link>
+      </div>
+      <div className="px-1 py-4 hover:bg-gray-100 rounded-md">
         <Link href="/">
           <span className="text-sm font-medium block py-2 text-gray-600">
             Voltar ao Sistema
@@ -84,6 +91,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Link href="/admin/users">
         <span className={`text-sm font-medium cursor-pointer ${location === "/admin/users" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
           Usuários
+        </span>
+      </Link>
+      <Link href="/admin/vehicles">
+        <span className={`text-sm font-medium cursor-pointer ${location === "/admin/vehicles" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"}`}>
+          Veículos
         </span>
       </Link>
       <Link href="/">
