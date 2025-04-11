@@ -245,11 +245,8 @@ export default function TrackLicensePage() {
                         <div key={state} className="p-4 bg-white rounded-md border border-gray-200 shadow-sm">
                           <div className="flex justify-between items-start">
                             <div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center">
                                 <span className="font-medium text-lg">{state}</span>
-                                <div>
-                                  <StatusBadge status={stateStatus} />
-                                </div>
                               </div>
                               
                               {stateStatus === "approved" ? (

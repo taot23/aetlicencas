@@ -1030,14 +1030,8 @@ export default function AdminLicensesPage() {
                     return (
                       <div key={state} className="border rounded-md p-4 flex flex-col gap-2 bg-white shadow-sm">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center">
                             <span className="font-medium text-lg">{state}</span>
-                            <div className="group relative">
-                              <StatusBadge status={stateStatus} />
-                              <div className="invisible group-hover:visible absolute z-50 w-48 p-2 bg-black text-white text-xs rounded shadow-lg left-0 mt-1">
-                                {statusOptions.find(opt => opt.value === stateStatus)?.description || 'Status pendente de atualização'}
-                              </div>
-                            </div>
                           </div>
                           <Button 
                             size="sm" 
