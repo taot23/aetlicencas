@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud, Pencil, AlertCircle } from "lucide-react";
 import { StatusBadge } from "@/components/licenses/status-badge";
+import { ProgressFlow, StateProgressFlow } from "@/components/licenses/progress-flow";
 import {
   Table,
   TableBody,

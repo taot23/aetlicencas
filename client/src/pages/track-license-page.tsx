@@ -15,6 +15,7 @@ import { LicenseList } from "@/components/licenses/license-list";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/licenses/status-badge";
+import { ProgressFlow, StateProgressFlow } from "@/components/licenses/progress-flow";
 import { format } from "date-fns";
 import { getLicenseTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -182,45 +183,7 @@ export default function TrackLicensePage() {
               {/* Fluxo de progresso - similar ao da admin-licenses.tsx */}
               <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
                 <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
-                <div className="relative flex items-center justify-between mt-3">
-                  {/* Linha de conexão */}
-                  <div className="absolute left-0 right-0 h-0.5 bg-gray-200"></div>
-                  
-                  {/* Etapas */}
-                  {[
-                    { value: "pending_registration", label: "Pedido em Cadastramento" },
-                    { value: "registration_in_progress", label: "Cadastro em Andamento" },
-                    { value: "rejected", label: "Reprovado" },
-                    { value: "under_review", label: "Análise do Órgão" },
-                    { value: "pending_approval", label: "Pendente Liberação" },
-                    { value: "approved", label: "Liberada" }
-                  ].map((option, index) => {
-                    const isCompleted = [
-                      "pending_registration",
-                      "registration_in_progress",
-                      "rejected",
-                      "under_review",
-                      "pending_approval",
-                      "approved"
-                    ].indexOf(selectedLicense.status) >= index;
-                    
-                    const isCurrent = option.value === selectedLicense.status;
-                    
-                    return (
-                      <div key={option.value} className="relative flex flex-col items-center z-10">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center
-                          ${isCurrent ? 'bg-blue-500 text-white' : 
-                            isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
-                          {isCompleted && !isCurrent ? 
-                            <CheckCircle className="h-4 w-4" /> : 
-                            <span className="text-xs">{index + 1}</span>
-                          }
-                        </div>
-                        <span className="text-xs text-center mt-1 max-w-[60px]">{option.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ProgressFlow currentStatus={selectedLicense.status} size="md" />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,6 +270,11 @@ export default function TrackLicensePage() {
                                 </a>
                               </Button>
                             )}
+                          </div>
+                          
+                          {/* Fluxo de Progresso do Estado */}
+                          <div className="mt-2 border-t pt-2 overflow-x-auto">
+                            <StateProgressFlow stateStatus={stateStatus} size="sm" />
                           </div>
                         </div>
                       );
