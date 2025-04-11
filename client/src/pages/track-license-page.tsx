@@ -273,7 +273,7 @@ export default function TrackLicensePage() {
                           </div>
                           
                           {/* Fluxo de Progresso do Estado */}
-                          <div className="mt-2 border-t pt-2">
+                          <div className="mt-2 border-t pt-2 overflow-x-auto">
                             <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
                           </div>
                         </div>

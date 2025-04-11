@@ -10,7 +10,7 @@ interface ProgressFlowStep {
 interface ProgressFlowProps {
   currentStatus: string;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }
 
 export function ProgressFlow({ currentStatus, className, size = "md" }: ProgressFlowProps) {
@@ -30,12 +30,20 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
   // Determinar tamanhos com base no parâmetro size
   const getSize = () => {
     switch(size) {
+      case "xs":
+        return {
+          circle: "w-4 h-4",
+          icon: "h-2.5 w-2.5",
+          font: "text-[8px]",
+          label: "max-w-[40px] text-[7px]",
+          container: "min-w-[280px]"
+        };
       case "sm":
         return {
           circle: "w-5 h-5",
           icon: "h-3 w-3",
           font: "text-[10px]",
-          label: "max-w-[50px] text-[10px]",
+          label: "max-w-[50px] text-[9px]",
           container: "min-w-[320px]"
         };
       case "lg":
@@ -121,66 +129,15 @@ export function StateProgressFlow({
 }: { 
   stateStatus: string, 
   className?: string, 
-  size?: "sm" | "md" | "lg" 
+  size?: "sm" | "md" | "lg" | "xs" 
 }) {
-  // Define os passos para mostrar na versão vertical (por estado)
-  const steps: ProgressFlowStep[] = [
-    { label: "Pedido em Cadastramento", value: "pending_registration", number: 1 },
-    { label: "Cadastro em Andamento", value: "registration_in_progress", number: 2 },
-    { label: "Reprovado", value: "rejected", number: 3 },
-    { label: "Análise do Órgão", value: "under_review", number: 4 },
-    { label: "Pendente Liberação", value: "pending_approval", number: 5 },
-    { label: "Liberada", value: "approved", number: 6 }
-  ];
-
-  // Encontrar o índice do status atual
-  const currentIndex = steps.findIndex(step => step.value === stateStatus);
-  
+  // No fluxo por estado, usamos o mesmo modelo horizontal do fluxo principal
+  // mas com um tamanho específico menor
   return (
-    <div className={cn("flex flex-col space-y-1", className)}>
-      {steps.map((step, index) => {
-        // Determinando o estado visual do passo
-        const isCompleted = currentIndex >= index;
-        const isCurrent = step.value === stateStatus;
-        // Para o caso especial "Reprovado", sempre mostramos em vermelho se for o status atual
-        const isRejected = step.value === "rejected" && isCurrent;
-        
-        // Aplicando as cores baseadas no estado
-        let bgColor: string;
-        let textColor = "text-gray-600";
-        if (isCurrent) {
-          if (isRejected) {
-            bgColor = "bg-red-500";
-            textColor = "text-red-600 font-medium";
-          } else {
-            bgColor = "bg-blue-500";
-            textColor = "text-blue-600 font-medium";
-          }
-        } else if (isCompleted) {
-          bgColor = "bg-green-500";
-          textColor = "text-green-600 font-medium";
-        } else {
-          bgColor = "bg-gray-200";
-        }
-        
-        return (
-          <div key={step.value} className="flex items-center space-x-2">
-            <div className={cn(
-              "w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0",
-              bgColor
-            )}>
-              {isCompleted && !isCurrent ? (
-                <CheckCircle className="h-3 w-3" />
-              ) : (
-                <span className="text-[10px]">{step.number}</span>
-              )}
-            </div>
-            <span className={cn("text-xs whitespace-normal", textColor)}>
-              {step.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
+    <ProgressFlow 
+      currentStatus={stateStatus} 
+      className={cn("max-w-full min-w-full scale-90 origin-left", className)} 
+      size="xs" 
+    />
   );
 }
