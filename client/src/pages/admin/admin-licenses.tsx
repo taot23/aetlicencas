@@ -65,6 +65,7 @@ const updateStateStatusSchema = z.object({
   }),
   comments: z.string().optional(),
   validUntil: z.string().optional(),
+  aetNumber: z.string().optional(),
   licenseFile: z
     .any()
     .optional()
@@ -274,6 +275,18 @@ export default function AdminLicensesPage() {
         toast({
           title: "Erro de validação",
           description: "Para o status 'Liberada' é obrigatório definir uma data de validade.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // Validação adicional para o status "under_review": exigir número da AET
+    if (data.status === "under_review") {
+      if (!data.aetNumber) {
+        toast({
+          title: "Erro de validação",
+          description: "Para o status 'Análise do Órgão' é obrigatório informar o número da AET.",
           variant: "destructive",
         });
         return;
