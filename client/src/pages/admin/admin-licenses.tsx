@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud, Pencil, AlertCircle } from "lucide-react";
+import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud, Pencil, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { ProgressFlow, StateProgressFlow } from "@/components/licenses/progress-flow";
 import {
@@ -120,6 +120,7 @@ export default function AdminLicensesPage() {
   const [stateStatusDialogOpen, setStateStatusDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState("");
   const [location] = useLocation();
+  const [visibleStateFlows, setVisibleStateFlows] = useState<string[]>([]);
   
   // Verificar se estamos na rota de gerenciar-licencas (staff) ou admin
   const isStaffRoute = location.includes('gerenciar-licencas');
@@ -232,6 +233,8 @@ export default function AdminLicensesPage() {
 
   const handleViewDetails = (license: LicenseRequest) => {
     setSelectedLicense(license);
+    // Inicialmente, todos os estados têm o fluxo oculto
+    setVisibleStateFlows([]);
     setLicenseDetailsOpen(true);
   };
 
@@ -1030,26 +1033,47 @@ export default function AdminLicensesPage() {
                     return (
                       <div key={state} className="border rounded-md p-4 flex flex-col gap-2 bg-white shadow-sm">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center">
+                          <div className="flex items-center gap-2">
                             <span className="font-medium text-lg">{state}</span>
+                            <StatusBadge status={stateStatus} />
                           </div>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            className="rounded-full h-8 w-8 p-0"
-                            onClick={() => handleStateStatusUpdate(selectedLicense, state)}
-                          >
-                            <Pencil className="h-4 w-4 text-green-600" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="rounded-full h-8 w-8 p-0"
+                              onClick={() => {
+                                // Encontrar o estado no array de estados visíveis e alternar
+                                const stateFlowVisible = visibleStateFlows.includes(state);
+                                if (stateFlowVisible) {
+                                  setVisibleStateFlows(visibleStateFlows.filter(s => s !== state));
+                                } else {
+                                  setVisibleStateFlows([...visibleStateFlows, state]);
+                                }
+                              }}
+                            >
+                              {visibleStateFlows.includes(state) ? 
+                                <Eye className="h-4 w-4 text-blue-600" /> : 
+                                <EyeOff className="h-4 w-4 text-gray-600" />
+                              }
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="rounded-full h-8 w-8 p-0"
+                              onClick={() => handleStateStatusUpdate(selectedLicense, state)}
+                            >
+                              <Pencil className="h-4 w-4 text-green-600" />
+                            </Button>
+                          </div>
                         </div>
                         
                         {/* Fluxo de Progresso do Estado */}
-                        <div className="mt-2 pt-2 overflow-x-auto">
-                          <div className="flex justify-center mb-2">
-                            <StatusBadge status={stateStatus} />
+                        {visibleStateFlows.includes(state) && (
+                          <div className="mt-2 pt-2 overflow-x-auto">
+                            <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
                           </div>
-                          <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
-                        </div>
+                        )}
                       </div>
                     );
                   })}
