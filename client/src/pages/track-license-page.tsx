@@ -44,17 +44,8 @@ export default function TrackLicensePage() {
       
       const data = await res.json();
       
-      // Filtra apenas licenças que não estão totalmente aprovadas
-      return data.filter((license: LicenseRequest) => {
-        // Verifica se todos os estados têm status 'approved'
-        const allStatesApproved = license.states.every(state => {
-          const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
-          return stateStatus === 'approved';
-        });
-        
-        // Mostra apenas licenças que não estão completamente aprovadas
-        return !allStatesApproved;
-      });
+      // Retornar todas as licenças, sem filtrar as aprovadas
+      return data;
     },
     // Otimização: Mantém dados em cache por 5 minutos
     staleTime: 5 * 60 * 1000,
@@ -79,12 +70,50 @@ export default function TrackLicensePage() {
   const filteredLicenses = useMemo(() => {
     if (!licenses) return [];
     
-    return licenses.filter(license => {
+    // Criar uma interface estendida para a licença com estado específico
+    interface ExtendedLicense extends LicenseRequest {
+      specificState?: string;
+      specificStateStatus?: string;
+    }
+    
+    // Criar uma lista expandida de licenças separadas por estado
+    const expandedLicenses: ExtendedLicense[] = [];
+    
+    licenses.forEach(license => {
+      // Para cada estado na licença, crie uma entrada específica
+      if (license.states && license.states.length > 0) {
+        license.states.forEach(state => {
+          // Verificar o status para este estado específico
+          const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+          
+          // Criar uma cópia da licença com o estado específico
+          const stateLicense: ExtendedLicense = {
+            ...license,
+            specificState: state,
+            // Substituir o array de estados com apenas este estado
+            states: [state],
+            // Para filtros de status no frontend, usamos o status do estado específico
+            specificStateStatus: stateStatus
+          };
+          
+          expandedLicenses.push(stateLicense);
+        });
+      } else {
+        // Se não houver estados, apenas adicione a licença como está
+        expandedLicenses.push({...license});
+      }
+    });
+    
+    // Aplicar filtros à lista expandida
+    return expandedLicenses.filter(license => {
       const matchesSearch = !searchTerm || 
         license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = !statusFilter || statusFilter === "all_status" || license.status === statusFilter;
+      // Modo compatibilidade: filtrar pelo status geral ou status específico do estado
+      const matchesStatus = !statusFilter || statusFilter === "all_status" || 
+        license.status === statusFilter || 
+        license.specificStateStatus === statusFilter;
       
       const matchesDate = !dateFilter || (
         license.createdAt && 

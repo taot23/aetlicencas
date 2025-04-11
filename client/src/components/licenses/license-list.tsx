@@ -200,7 +200,7 @@ export function LicenseList({
               <div key={license.id} className="bg-white shadow rounded-lg p-4 border border-gray-100">
                 <div className="flex justify-between mb-2">
                   <div className="font-medium text-lg">{license.requestNumber}</div>
-                  {!isDraftList && <StatusBadge status={license.status} />}
+                  {!isDraftList && <StatusBadge status={(license as any).specificStateStatus || license.status} />}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -213,8 +213,8 @@ export function LicenseList({
                     <span>{license.mainVehiclePlate}</span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-sm text-gray-500 block">Estados:</span>
-                    <span>{license.states.join(", ")}</span>
+                    <span className="text-sm text-gray-500 block">Estado:</span>
+                    <span>{(license as any).specificState || license.states.join(", ")}</span>
                   </div>
                   <div className="col-span-2">
                     <span className="text-sm text-gray-500 block">
@@ -309,7 +309,7 @@ export function LicenseList({
               <TableHead>{isDraftList ? "Nº Rascunho" : "Nº do Pedido"}</TableHead>
               <TableHead>Tipo de Conjunto</TableHead>
               <TableHead>Placa Principal</TableHead>
-              <TableHead>Estados</TableHead>
+              <TableHead>Estado</TableHead>
               <TableHead>{isDraftList ? "Última Modificação" : "Data Solicitação"}</TableHead>
               {!isDraftList && <TableHead>Status</TableHead>}
               <TableHead className="text-right">Ações</TableHead>
@@ -328,7 +328,9 @@ export function LicenseList({
                   <TableCell className="font-medium">{license.requestNumber}</TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
                   <TableCell>{license.mainVehiclePlate}</TableCell>
-                  <TableCell>{license.states.join(", ")}</TableCell>
+                  <TableCell>
+                    {(license as any).specificState || license.states.join(", ")}
+                  </TableCell>
                   <TableCell>
                     {isDraftList 
                       ? (license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy HH:mm"))
@@ -336,7 +338,7 @@ export function LicenseList({
                   </TableCell>
                   {!isDraftList && (
                     <TableCell>
-                      <StatusBadge status={license.status} />
+                      <StatusBadge status={(license as any).specificStateStatus || license.status} />
                     </TableCell>
                   )}
                   <TableCell className="text-right">
