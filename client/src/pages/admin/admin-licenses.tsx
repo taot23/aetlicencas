@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud, Pencil, AlertCircle } from "lucide-react";
+import { StatusBadge } from "@/components/licenses/status-badge";
 import {
   Table,
   TableBody,
@@ -596,12 +597,7 @@ export default function AdminLicensesPage() {
                                     {getLicenseTypeLabel(license.type)}
                                   </p>
                                 </div>
-                                <div className="flex items-center">
-                                  {getStatusIcon(license.status)}
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(license.status)}`}>
-                                    {getStatusLabel(license.status)}
-                                  </span>
-                                </div>
+                                <StatusBadge status={license.status} />
                               </div>
                               
                               <div className="mt-2">
@@ -987,10 +983,7 @@ export default function AdminLicensesPage() {
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Status</h3>
                   <div className="flex items-center mt-1">
-                    {getStatusIcon(selectedLicense.status)}
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedLicense.status)}`}>
-                      {getStatusLabel(selectedLicense.status)}
-                    </span>
+                    <StatusBadge status={selectedLicense.status} />
                   </div>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm">
@@ -1143,9 +1136,7 @@ export default function AdminLicensesPage() {
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{state}</span>
                           <div className="group relative">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(stateStatus)}`}>
-                              {getStatusLabel(stateStatus)}
-                            </span>
+                            <StatusBadge status={stateStatus} />
                             <div className="invisible group-hover:visible absolute z-50 w-48 p-2 bg-black text-white text-xs rounded shadow-lg right-0 mt-1">
                               {statusOptions.find(opt => opt.value === stateStatus)?.description || 'Status pendente de atualização'}
                             </div>
