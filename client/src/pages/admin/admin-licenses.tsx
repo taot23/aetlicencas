@@ -125,6 +125,7 @@ export default function AdminLicensesPage() {
       state: "",
       status: "",
       comments: "",
+      aetNumber: "", // Adicionar campo para número da AET
     },
   });
 
@@ -154,6 +155,11 @@ export default function AdminLicensesPage() {
       // Incluir arquivo da licença se o status for "approved" (Liberada)
       if (data.licenseFile && data.status === "approved") {
         formData.append("stateFile", data.licenseFile);
+      }
+      
+      // Incluir número da AET se o status for "under_review" (Análise do Órgão)
+      if (data.aetNumber && data.status === "under_review") {
+        formData.append("aetNumber", data.aetNumber);
       }
       
       const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/state-status`, formData);
@@ -244,6 +250,7 @@ export default function AdminLicensesPage() {
       state: state,
       status: currentStateStatus,
       comments: "",
+      aetNumber: "", // Resetar também o campo de número da AET
     });
     
     setStateStatusDialogOpen(true);

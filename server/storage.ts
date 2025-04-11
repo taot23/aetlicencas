@@ -616,7 +616,7 @@ export class MemStorage implements IStorage {
   
   // Método específico para atualizar apenas o status de um estado
   async updateLicenseStateStatus(data: UpdateLicenseState): Promise<LicenseRequest> {
-    const { licenseId, state, status, file, comments, validUntil } = data;
+    const { licenseId, state, status, file, comments, validUntil, aetNumber } = data;
     
     const license = this.licenseRequests.get(licenseId);
     if (!license) {
@@ -636,7 +636,17 @@ export class MemStorage implements IStorage {
     // Se for status "approved" e tiver data de validade, incluir no status
     if (status === "approved" && validUntil) {
       stateStatuses.push(`${state}:${status}:${validUntil}`);
-    } else {
+    } 
+    // Se for status "under_review" e tiver número da AET, incluir no status
+    else if (status === "under_review" && aetNumber) {
+      stateStatuses.push(`${state}:${status}:${aetNumber}`);
+      
+      // Se for o primeiro estado a receber número de AET, atualizar o número do pedido/licença
+      if (license.requestNumber && !license.requestNumber.includes("AET")) {
+        license.requestNumber = `${license.requestNumber} (AET: ${aetNumber})`;
+      }
+    } 
+    else {
       // Adiciona novo status normal
       stateStatuses.push(`${state}:${status}`);
     }

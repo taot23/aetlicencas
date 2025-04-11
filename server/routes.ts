@@ -1369,6 +1369,7 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         status: req.body.status,
         comments: req.body.comments,
         validUntil: req.body.validUntil,
+        aetNumber: req.body.aetNumber, // Incluir número da AET
       };
       
       try {
