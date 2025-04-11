@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud } from "lucide-react";
+import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud, Pencil, AlertCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -934,18 +934,111 @@ export default function AdminLicensesPage() {
                   <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
                   <p className="text-base">{formatDate(selectedLicense.createdAt)}</p>
                 </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Veículo Principal</h3>
-                  <p className="text-base">{selectedLicense.mainVehiclePlate}</p>
+              </div>
+              
+              {/* Nova seção de Composição de Veículos baseada na imagem */}
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium text-sm">Composição de Veículos</h4>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                      Adicionar Veículo Trator
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs bg-indigo-100 border-indigo-300 hover:bg-indigo-200">
+                      Adicionar Carreta
+                    </Button>
+                  </div>
                 </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
-                  <p className="text-base truncate">
-                    {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
-                      ? selectedLicense.additionalPlates.join(", ")
-                      : "Nenhum veículo adicional"}
-                  </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                  {/* Unidade Tratora */}
+                  <div className="bg-white rounded-md p-3 border border-gray-200 relative">
+                    <div className="absolute top-2 right-2 flex space-x-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
+                        <SearchIcon className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
+                        <XIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Unidade Tratora</div>
+                    <div className="text-base font-medium">{selectedLicense.mainVehiclePlate || "TRK1234"}</div>
+                    <div className="text-sm text-gray-600 mt-1">Cavalo</div>
+                  </div>
+                  
+                  {/* Carretas */}
+                  {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0 ? (
+                    selectedLicense.additionalPlates.map((plate, index) => (
+                      <div key={index} className="bg-white rounded-md p-3 border border-gray-200 relative">
+                        <div className="absolute top-2 right-2 flex space-x-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
+                            <SearchIcon className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
+                            <XIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
+                        <div className="text-base font-medium">{plate}</div>
+                        <div className="text-sm text-gray-600 mt-1">2 eixos</div>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="bg-white rounded-md p-3 border border-gray-200 relative">
+                        <div className="absolute top-2 right-2 flex space-x-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
+                            <SearchIcon className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
+                            <XIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
+                        <div className="text-base font-medium">SEM1234</div>
+                        <div className="text-sm text-gray-600 mt-1">3 eixos</div>
+                      </div>
+                      <div className="bg-white rounded-md p-3 border border-gray-200 relative">
+                        <div className="absolute top-2 right-2 flex space-x-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
+                            <SearchIcon className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
+                            <XIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
+                        <div className="text-base font-medium">SEM5678</div>
+                        <div className="text-sm text-gray-600 mt-1">3 eixos</div>
+                      </div>
+                    </>
+                  )}
                 </div>
+                
+                <div className="mt-3 text-right border-t pt-2">
+                  <div className="text-sm font-medium">Total Unidades Acopladas: {(selectedLicense.additionalPlates?.length || 0) + 1}</div>
+                </div>
+              </div>
+              
+              <div className="p-2 bg-white rounded-md shadow-sm">
+                <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
+                <p className="text-base truncate">
+                  {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
+                    ? selectedLicense.additionalPlates.join(", ")
+                    : "Nenhum veículo adicional"}
+                </p>
               </div>
 
               <div className="p-3 bg-gray-50 rounded-md">
