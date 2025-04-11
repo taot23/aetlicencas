@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { Vehicle } from "@shared/schema";
+import { Vehicle, vehicleTypeOptions } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Search, AlertCircle, Truck } from "lucide-react";
+import { Loader2, Search, AlertCircle, Truck, Pencil, CheckCircle, XCircle } from "lucide-react";
 import { 
   Dialog, 
   DialogContent,
@@ -28,10 +28,42 @@ import {
   DialogDescription,
   DialogFooter 
 } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+// Esquema de validação para edição de veículos
+const editVehicleSchema = z.object({
+  plate: z.string().min(1, "A placa é obrigatória"),
+  type: z.string().min(1, "O tipo de veículo é obrigatório"),
+  tare: z.coerce.number().min(1, "A tara deve ser maior que zero"),
+  crlvYear: z.coerce.number().min(1900, "Ano inválido"),
+  status: z.enum(["active", "inactive"])
+});
+
+type EditVehicleFormValues = z.infer<typeof editVehicleSchema>;
 
 export default function AdminVehiclesPage() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+
+  // Formulário para edição
+  const form = useForm<EditVehicleFormValues>({
+    resolver: zodResolver(editVehicleSchema),
+    defaultValues: {
+      plate: "",
+      type: "",
+      tare: 0,
+      crlvYear: 0,
+      status: "active"
+    }
+  });
 
   // Buscar todos os veículos
   const { data: vehicles, isLoading, error } = useQuery<Vehicle[]>({
@@ -63,8 +95,63 @@ export default function AdminVehiclesPage() {
     return typeMapping[type] || type;
   };
 
+  // Mutation para atualizar veículo
+  const updateVehicleMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: EditVehicleFormValues }) => {
+      const response = await fetch(`/api/admin/vehicles/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar veículo');
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Invalidar cache para recarregar a lista
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vehicles'] });
+      toast({
+        title: 'Veículo atualizado',
+        description: 'As informações do veículo foram atualizadas com sucesso.',
+      });
+      setEditingVehicle(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar veículo',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Abrir modal de detalhes
   const handleViewDetails = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
+  };
+
+  // Abrir modal de edição
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    form.reset({
+      plate: vehicle.plate,
+      type: vehicle.type,
+      tare: vehicle.tare,
+      crlvYear: vehicle.crlvYear,
+      status: vehicle.status as "active" | "inactive"
+    });
+  };
+
+  // Processar submissão do formulário
+  const onSubmit = (data: EditVehicleFormValues) => {
+    if (editingVehicle) {
+      updateVehicleMutation.mutate({ id: editingVehicle.id, data });
+    }
   };
 
   return (
@@ -150,13 +237,23 @@ export default function AdminVehiclesPage() {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewDetails(vehicle)}
-                            >
-                              Ver Detalhes
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewDetails(vehicle)}
+                              >
+                                Ver Detalhes
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditVehicle(vehicle)}
+                              >
+                                <Pencil className="h-4 w-4 mr-1" />
+                                Editar
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -199,7 +296,7 @@ export default function AdminVehiclesPage() {
                         <span className="text-sm font-medium text-gray-500">Ano CRLV:</span>
                         <span className="text-sm">{vehicle.crlvYear}</span>
                       </div>
-                      <div className="mt-4">
+                      <div className="mt-4 space-y-2">
                         <Button 
                           variant="outline"
                           className="w-full" 
@@ -207,6 +304,15 @@ export default function AdminVehiclesPage() {
                           onClick={() => handleViewDetails(vehicle)}
                         >
                           Ver Detalhes
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="w-full" 
+                          size="sm"
+                          onClick={() => handleEditVehicle(vehicle)}
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Editar
                         </Button>
                       </div>
                     </div>
@@ -282,6 +388,142 @@ export default function AdminVehiclesPage() {
                 Fechar
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal de Edição do Veículo */}
+      {editingVehicle && (
+        <Dialog open={!!editingVehicle} onOpenChange={(open) => !open && setEditingVehicle(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Veículo</DialogTitle>
+              <DialogDescription>
+                Atualize as informações do veículo
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="plate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Placa*</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="AAA0000" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Veículo*</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {vehicleTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="tare"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tara (kg)*</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} placeholder="0" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="crlvYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ano CRLV*</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} placeholder="2023" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status*</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Ativo</SelectItem>
+                          <SelectItem value="inactive">Inativo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setEditingVehicle(null)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={updateVehicleMutation.isPending}
+                  >
+                    {updateVehicleMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>Salvar Alterações</>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       )}

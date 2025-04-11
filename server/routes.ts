@@ -848,6 +848,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para admin atualizar um veículo específico
+  app.patch('/api/admin/vehicles/:id', requireAdmin, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.id);
+      if (isNaN(vehicleId)) {
+        return res.status(400).json({ message: "ID de veículo inválido" });
+      }
+      
+      // Validação básica
+      const { plate, type, tare, crlvYear, status } = req.body;
+      
+      if (!plate || !type || !tare || !crlvYear || !status) {
+        return res.status(400).json({ message: "Dados incompletos" });
+      }
+      
+      // Verificar se o veículo existe
+      const vehicle = await storage.getVehicleById(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+      
+      // Atualizar o veículo
+      const updatedVehicle = await storage.updateVehicle(vehicleId, {
+        plate,
+        type,
+        tare: Number(tare),
+        crlvYear: Number(crlvYear),
+        status
+      });
+      
+      res.json(updatedVehicle);
+    } catch (error) {
+      console.error("Erro ao atualizar veículo:", error);
+      res.status(500).json({ message: "Erro ao atualizar veículo" });
+    }
+  });
+  
   // Rota para verificar acesso operacional
   app.get('/api/staff/check-operational', requireAuth, (req, res) => {
     const user = req.user!;
