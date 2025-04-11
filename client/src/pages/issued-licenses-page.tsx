@@ -265,7 +265,7 @@ export default function IssuedLicensesPage() {
                 <SelectItem value="expiring_soon">
                   <div className="flex items-center">
                     <Clock className="h-3 w-3 mr-2 text-amber-500" /> 
-                    Expirando
+                    Vence
                   </div>
                 </SelectItem>
                 <SelectItem value="expired">
@@ -288,7 +288,7 @@ export default function IssuedLicensesPage() {
                 <p className="font-semibold">{expandedLicenses.length}</p>
               </div>
               <div className="text-center py-2 bg-amber-50 rounded-md border border-amber-200">
-                <span className="text-xs text-amber-800">Expirando em 30 dias</span>
+                <span className="text-xs text-amber-800">Vence em 30 dias</span>
                 <p className="font-semibold text-amber-700">
                   {expandedLicenses.filter(l => getLicenseStatus(l.validUntil) === 'expiring_soon').length}
                 </p>
@@ -379,7 +379,7 @@ export default function IssuedLicensesPage() {
                           {validityStatus === 'expiring_soon' && (
                             <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1">
                               <Clock className="h-3 w-3" /> 
-                              Expirando
+                              Vence
                             </Badge>
                           )}
                           {validityStatus === 'active' && (
@@ -541,7 +541,7 @@ export default function IssuedLicensesPage() {
                         {validityStatus === 'expiring_soon' && (
                           <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1">
                             <Clock className="h-3 w-3" /> 
-                            Expirando
+                            Vence
                           </Badge>
                         )}
                         {validityStatus === 'active' && (
