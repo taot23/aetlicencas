@@ -335,60 +335,6 @@ export default function AdminLicensesPage() {
     }
   };
 
-  // Obter a cor do badge baseada no status
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      case "analyzing":
-        return "bg-purple-100 text-purple-800";
-      case "pending_release":
-        return "bg-amber-100 text-amber-800";
-      case "released":
-        return "bg-emerald-100 text-emerald-800";
-      case "canceled":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  // Obter o label do status em português
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case "pending":
-      case "pending_registration":
-        return "Pedido em Cadastramento";
-      case "in_progress":
-      case "registration_in_progress":
-        return "Cadastro em Andamento";
-      case "approved":
-        return "Liberada";
-      case "rejected":
-        return "Reprovado";
-      case "analyzing":
-      case "under_review":
-        return "Análise do Órgão";
-      case "pending_release":
-      case "pending_approval":
-        return "Pendente Liberação";
-      case "released":
-        return "Liberada";
-      case "canceled":
-        return "Cancelado";
-      default:
-        return status;
-    }
-  };
-  
-
-
   // Opções de status para o select com descrições detalhadas
   const statusOptions = [
     { value: "pending_registration", label: "Pedido em Cadastramento", description: "Status inicial do pedido" },
@@ -399,30 +345,6 @@ export default function AdminLicensesPage() {
     { value: "approved", label: "Liberada", description: "Licença aprovada com documento disponível" },
     { value: "canceled", label: "Cancelado", description: "Licença cancelada pelo cliente ou pelo sistema" },
   ];
-
-  // Obter o ícone do status
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600 mr-1" />;
-      case "in_progress":
-        return <Loader2 className="h-4 w-4 text-blue-600 mr-1" />;
-      case "approved":
-        return <CheckCircle className="h-4 w-4 text-green-600 mr-1" />;
-      case "rejected":
-        return <XCircle className="h-4 w-4 text-red-600 mr-1" />;
-      case "analyzing":
-        return <FileText className="h-4 w-4 text-purple-600 mr-1" />;
-      case "pending_release":
-        return <File className="h-4 w-4 text-amber-600 mr-1" />;
-      case "released":
-        return <CheckCircle className="h-4 w-4 text-emerald-600 mr-1" />;
-      case "canceled":
-        return <X className="h-4 w-4 text-gray-600 mr-1" />;
-      default:
-        return <File className="h-4 w-4 mr-1" />;
-    }
-  };
 
   return (
     <AdminLayout>
@@ -468,10 +390,7 @@ export default function AdminLicensesPage() {
                         <SelectItem value="all">Todos os status</SelectItem>
                         {statusOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center">
-                              {getStatusIcon(option.value)}
-                              {option.label}
-                            </div>
+                            <StatusBadge status={option.value} />
                           </SelectItem>
                         ))}
                       </SelectContent>
