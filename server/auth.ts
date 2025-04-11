@@ -25,10 +25,28 @@ const scryptAsync = promisify(scrypt);
 const MemoryStore = createMemoryStore(session);
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Verificar se stored é uma string válida e contém um ponto
+  if (!stored || !stored.includes('.')) {
+    console.error('Formato de senha inválido:', stored);
+    return false;
+  }
+  
   const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  
+  // Verificar se hashed e salt estão presentes
+  if (!hashed || !salt) {
+    console.error('Formato de senha inválido - falta hash ou salt');
+    return false;
+  }
+  
+  try {
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Erro na comparação de senhas:', error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
