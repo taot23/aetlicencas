@@ -235,7 +235,7 @@ export default function TrackLicensePage() {
               {selectedLicense.states && selectedLicense.states.length > 0 && (
                 <div className="mt-6">
                   <h3 className="font-medium text-sm text-gray-700 mb-3">Status por Estado</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     {selectedLicense.states.map(state => {
                       // Procura o status para este estado
                       const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";

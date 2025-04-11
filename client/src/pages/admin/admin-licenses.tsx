@@ -1013,7 +1013,7 @@ export default function AdminLicensesPage() {
               {/* Status por estado */}
               <div>
                 <h3 className="font-medium text-sm text-gray-500 mb-2">Status por Estado</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 gap-2">
                   {selectedLicense.states.map((state) => {
                     // Encontrar o status atual deste estado
                     let stateStatus = "pending";
