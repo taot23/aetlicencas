@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Vehicle, vehicleTypeOptions } from "@shared/schema";
@@ -19,7 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Search, AlertCircle, Truck, Pencil, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Search, AlertCircle, Truck, Pencil, CheckCircle, XCircle, UploadCloud, FileText } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { 
   Dialog, 
   DialogContent,
@@ -52,6 +53,9 @@ export default function AdminVehiclesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadFileName, setUploadFileName] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Formulário para edição
   const form = useForm<EditVehicleFormValues>({
@@ -95,22 +99,75 @@ export default function AdminVehiclesPage() {
     return typeMapping[type] || type;
   };
 
-  // Mutation para atualizar veículo
+  // Gerenciar seleção de arquivo
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      setUploadFileName(file.name);
+    }
+  };
+
+  // Limpar arquivo selecionado
+  const clearFileSelection = () => {
+    setUploadedFile(null);
+    setUploadFileName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Acionar diálogo de escolha de arquivo
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Mutation para atualizar veículo com suporte a upload de arquivo
   const updateVehicleMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: EditVehicleFormValues }) => {
-      const response = await fetch(`/api/admin/vehicles/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao atualizar veículo');
+      // Se tiver arquivo, usar FormData
+      if (uploadedFile) {
+        const formData = new FormData();
+        formData.append("crlvFile", uploadedFile);
+        
+        // Adicionar os dados do veículo como campo json
+        formData.append("plate", data.plate);
+        formData.append("type", data.type);
+        formData.append("tare", data.tare.toString());
+        formData.append("crlvYear", data.crlvYear.toString());
+        formData.append("status", data.status);
+        
+        const response = await fetch(`/api/admin/vehicles/${id}`, {
+          method: 'PATCH',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao atualizar veículo');
+        }
+        
+        return await response.json();
+      } 
+      // Sem arquivo, usar JSON normal
+      else {
+        const response = await fetch(`/api/admin/vehicles/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao atualizar veículo');
+        }
+        
+        return await response.json();
       }
-      return await response.json();
     },
     onSuccess: () => {
       // Invalidar cache para recarregar a lista
@@ -120,6 +177,8 @@ export default function AdminVehiclesPage() {
         description: 'As informações do veículo foram atualizadas com sucesso.',
       });
       setEditingVehicle(null);
+      setUploadedFile(null);
+      setUploadFileName("");
     },
     onError: (error: Error) => {
       toast({
@@ -499,6 +558,79 @@ export default function AdminVehiclesPage() {
                     </FormItem>
                   )}
                 />
+                
+                {/* Upload de CRLV */}
+                <div className="space-y-2">
+                  <Label htmlFor="crlv-upload">Documento CRLV</Label>
+                  <div className="grid gap-2">
+                    <input
+                      ref={fileInputRef}
+                      id="crlv-upload"
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf"
+                      onChange={handleFileChange}
+                    />
+                    
+                    {/* Área para fazer upload do arquivo */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={`h-auto p-4 justify-start text-left font-normal ${uploadedFile ? "border-primary" : ""}`}
+                      onClick={triggerFileInput}
+                    >
+                      <div className="flex items-center gap-3">
+                        {uploadedFile ? (
+                          <FileText className="h-5 w-5 text-primary" />
+                        ) : (
+                          <UploadCloud className="h-5 w-5 text-muted-foreground" />
+                        )}
+                        <div className="flex flex-col text-sm gap-1">
+                          {uploadedFile ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium text-primary">Arquivo selecionado</span>
+                              <span className="text-xs text-muted-foreground line-clamp-1">{uploadFileName}</span>
+                            </div>
+                          ) : (
+                            <>
+                              <span>Clique para fazer upload do CRLV</span>
+                              <span className="text-xs text-muted-foreground">
+                                Substitui o arquivo atual se existir
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Button>
+                    
+                    {/* Botão para limpar arquivo selecionado */}
+                    {uploadedFile && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="mt-1"
+                        onClick={clearFileSelection}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Remover arquivo
+                      </Button>
+                    )}
+                    
+                    {/* Exibir documento atual */}
+                    {editingVehicle?.crlvUrl && !uploadedFile && (
+                      <div className="text-sm text-muted-foreground flex items-center">
+                        <FileText className="h-4 w-4 mr-1" />
+                        <span>CRLV atual disponível - </span>
+                        <Button asChild variant="link" size="sm" className="h-auto p-0 ml-1">
+                          <a href={editingVehicle.crlvUrl} target="_blank" rel="noreferrer">
+                            Visualizar
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 
                 <DialogFooter className="gap-2 sm:gap-0">
                   <Button 

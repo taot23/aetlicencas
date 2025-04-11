@@ -848,19 +848,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Configuração do multer para upload de arquivos de veículos
+  const vehicleStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Cria o diretório de uploads caso não exista
+      const uploadDir = './uploads/vehicles';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      // Preservar o ID do veículo no nome do arquivo para facilitar substituição
+      const vehicleId = req.params.id || Date.now();
+      const ext = path.extname(file.originalname);
+      cb(null, `vehicle-${vehicleId}-crlv${ext}`);
+    }
+  });
+  
+  const vehicleFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    // Aceitar apenas imagens e PDFs
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  };
+  
+  const vehicleUpload = multer({ 
+    storage: vehicleStorage,
+    fileFilter: vehicleFileFilter,
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max file size
+    }
+  });
+
   // Rota para admin atualizar um veículo específico
-  app.patch('/api/admin/vehicles/:id', requireAdmin, async (req, res) => {
+  app.patch('/api/admin/vehicles/:id', requireAdmin, vehicleUpload.single('crlvFile'), async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.id);
       if (isNaN(vehicleId)) {
         return res.status(400).json({ message: "ID de veículo inválido" });
-      }
-      
-      // Validação básica
-      const { plate, type, tare, crlvYear, status } = req.body;
-      
-      if (!plate || !type || !tare || !crlvYear || !status) {
-        return res.status(400).json({ message: "Dados incompletos" });
       }
       
       // Verificar se o veículo existe
@@ -869,14 +897,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
       
+      // Tratar formulário multipart
+      let vehicleData: any = {};
+      
+      // Se os dados vierem como campo JSON
+      if (req.body.vehicleData) {
+        try {
+          vehicleData = JSON.parse(req.body.vehicleData);
+        } catch (err) {
+          console.error("Erro ao processar JSON de dados do veículo:", err);
+          return res.status(400).json({ message: "Dados do veículo inválidos" });
+        }
+      } else {
+        // Caso contrário, usar campos individuais
+        const { plate, type, tare, crlvYear, status } = req.body;
+        
+        if (!plate || !type || !tare || !crlvYear || !status) {
+          return res.status(400).json({ message: "Dados incompletos" });
+        }
+        
+        vehicleData = {
+          plate,
+          type,
+          tare: Number(tare),
+          crlvYear: Number(crlvYear),
+          status
+        };
+      }
+      
+      // Verificar se há um novo arquivo CRLV
+      if (req.file) {
+        console.log("Arquivo CRLV recebido:", req.file.filename);
+        
+        // Se o veículo já tinha um arquivo CRLV, excluir o arquivo antigo
+        if (vehicle.crlvUrl) {
+          try {
+            // Extrair o caminho físico do arquivo antigo
+            const oldFilePath = path.join(process.cwd(), vehicle.crlvUrl.replace(/^\//, ''));
+            
+            // Verificar se o arquivo existe antes de tentar excluí-lo
+            if (fs.existsSync(oldFilePath)) {
+              fs.unlinkSync(oldFilePath);
+              console.log("Arquivo CRLV antigo excluído:", oldFilePath);
+            }
+          } catch (err) {
+            console.error("Erro ao excluir arquivo CRLV antigo:", err);
+            // Não interromper o processo se falhar ao excluir o arquivo antigo
+          }
+        }
+        
+        // Adicionar o caminho do novo arquivo aos dados do veículo
+        vehicleData.crlvUrl = `/uploads/vehicles/${req.file.filename}`;
+      }
+      
       // Atualizar o veículo
-      const updatedVehicle = await storage.updateVehicle(vehicleId, {
-        plate,
-        type,
-        tare: Number(tare),
-        crlvYear: Number(crlvYear),
-        status
-      });
+      const updatedVehicle = await storage.updateVehicle(vehicleId, vehicleData);
       
       res.json(updatedVehicle);
     } catch (error) {
