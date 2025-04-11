@@ -260,55 +260,7 @@ export default function TrackLicensePage() {
                 </div>
               )}
               
-              {/* Status por Estado */}
-              {selectedLicense.states && selectedLicense.states.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-medium text-sm text-gray-700 mb-3">Status por Estado</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {selectedLicense.states.map(state => {
-                      // Procura o status para este estado
-                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
-                      const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
-                      
-                      return (
-                        <div key={state} className="p-4 bg-white rounded-md border border-gray-200 shadow-sm">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center">
-                                <span className="font-medium text-lg">{state}</span>
-                              </div>
-                              
-                              {stateStatus === "approved" ? (
-                                <p className="text-xs text-green-600 font-medium mt-1">
-                                  {selectedLicense.requestNumber} - "{state}"
-                                </p>
-                              ) : (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Aguardando processamento
-                                </p>
-                              )}
-                            </div>
-                            
-                            {stateFileEntry && stateStatus === "approved" && (
-                              <Button variant="outline" size="sm" asChild className="ml-2">
-                                <a href={stateFileEntry.split(':')[1]} target="_blank" rel="noopener noreferrer">
-                                  <FileDown className="h-4 w-4 mr-1" /> Baixar
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                          
-                          {/* Fluxo de Progresso do Estado */}
-                          <div className="mt-2 pt-2 overflow-x-auto">
-                            <h4 className="font-medium text-sm mb-2 text-gray-500">Fluxo de Progresso da Licença: {state}</h4>
-                            <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Área de Status por Estado foi removida conforme solicitação do cliente */}
               
               {/* Arquivo principal da licença (manter para compatibilidade) */}
               {selectedLicense.status === "approved" && selectedLicense.licenseFileUrl && (
