@@ -710,7 +710,7 @@ export default function AdminLicensesPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Data de Validade <span className="text-red-500">*</span>
+                            Vencimento da Licença <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -721,7 +721,7 @@ export default function AdminLicensesPage() {
                             />
                           </FormControl>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Data obrigatória para liberação
+                            Data de vencimento obrigatória para liberação
                           </p>
                           <FormMessage />
                         </FormItem>
