@@ -14,15 +14,51 @@ interface ProgressFlowProps {
 }
 
 export function ProgressFlow({ currentStatus, className, size = "md" }: ProgressFlowProps) {
-  const steps: ProgressFlowStep[] = [
+  // Etapas padrão do fluxo normal (sem os estados terminais especiais)
+  const normalSteps: ProgressFlowStep[] = [
     { label: "Pedido em Cadastramento", value: "pending_registration", number: 1 },
     { label: "Cadastro em Andamento", value: "registration_in_progress", number: 2 },
-    { label: "Reprovado", value: "rejected", number: 3 },
-    { label: "Análise do Órgão", value: "under_review", number: 4 },
-    { label: "Pendente Liberação", value: "pending_approval", number: 5 },
-    { label: "Liberada", value: "approved", number: 6 },
-    { label: "Cancelado", value: "canceled", number: 7 }
+    { label: "Análise do Órgão", value: "under_review", number: 3 },
+    { label: "Pendente Liberação", value: "pending_approval", number: 4 },
+    { label: "Liberada", value: "approved", number: 5 }
   ];
+  
+  // Estados excepcionais que só são mostrados quando são o status atual
+  const specialSteps: ProgressFlowStep[] = [
+    { label: "Reprovado", value: "rejected", number: 3 },
+    { label: "Cancelado", value: "canceled", number: 6 }
+  ];
+  
+  // Verificar se o status atual é um dos especiais
+  const isSpecialStatus = specialSteps.some(step => step.value === currentStatus);
+  
+  // Definir quais passos mostrar com base no status atual
+  let steps: ProgressFlowStep[];
+  
+  if (isSpecialStatus) {
+    // Se for um status especial, pegamos os passos normais até onde estamos
+    // e adicionamos apenas o status especial atual
+    const currentSpecialStep = specialSteps.find(step => step.value === currentStatus)!;
+    
+    if (currentStatus === "rejected") {
+      // Para "Reprovado", mostramos os dois primeiros passos + Reprovado
+      steps = [
+        ...normalSteps.slice(0, 2),
+        currentSpecialStep
+      ];
+    } else if (currentStatus === "canceled") {
+      // Para "Cancelado", mostramos todos os passos normais + Cancelado
+      steps = [
+        ...normalSteps,
+        currentSpecialStep
+      ];
+    } else {
+      steps = normalSteps;
+    }
+  } else {
+    // Fluxo normal
+    steps = normalSteps;
+  }
 
   // Encontrar o índice do status atual
   const currentIndex = steps.findIndex(step => step.value === currentStatus);
