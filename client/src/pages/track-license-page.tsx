@@ -233,12 +233,22 @@ export default function TrackLicensePage() {
                   <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
                   <p className="font-medium">{selectedLicense.requestNumber}</p>
                 </div>
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Status</h3>
-                  <div className="flex items-center mt-1">
-                    <StatusBadge status={selectedLicense.status} />
+                {/* Status individualizado por estado */}
+                {(selectedLicense as any).specificState ? (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-500">Status: {(selectedLicense as any).specificState}</h3>
+                    <div className="flex items-center mt-1">
+                      <StatusBadge status={(selectedLicense as any).specificStateStatus || selectedLicense.status} />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-500">Status</h3>
+                    <div className="flex items-center mt-1">
+                      <StatusBadge status={selectedLicense.status} />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
                   <p>
