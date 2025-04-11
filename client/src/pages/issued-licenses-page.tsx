@@ -366,9 +366,9 @@ export default function IssuedLicensesPage() {
                             </span>
                           ) : '-'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-center">
                           {validityStatus === 'expired' && (
-                            <Badge variant="destructive" className="flex items-center gap-1">
+                            <Badge variant="destructive" className="flex items-center gap-1 justify-center w-24 mx-auto">
                               <span className="relative flex h-2 w-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
@@ -377,13 +377,13 @@ export default function IssuedLicensesPage() {
                             </Badge>
                           )}
                           {validityStatus === 'expiring_soon' && (
-                            <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1">
+                            <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1 justify-center w-24 mx-auto">
                               <Clock className="h-3 w-3" /> 
                               Vence
                             </Badge>
                           )}
                           {validityStatus === 'active' && (
-                            <Badge variant="outline" className="bg-green-50 text-green-800 flex items-center gap-1">
+                            <Badge variant="outline" className="bg-green-50 text-green-800 flex items-center gap-1 justify-center w-24 mx-auto">
                               <CheckCircle2 className="h-3 w-3" /> 
                               Ativa
                             </Badge>
@@ -530,7 +530,7 @@ export default function IssuedLicensesPage() {
                       <span className="text-xs text-gray-500">Situação:</span>
                       <div className="mt-1">
                         {validityStatus === 'expired' && (
-                          <Badge variant="destructive" className="flex items-center gap-1">
+                          <Badge variant="destructive" className="flex items-center gap-1 justify-center w-24 mx-auto">
                             <span className="relative flex h-2 w-2">
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
@@ -539,13 +539,13 @@ export default function IssuedLicensesPage() {
                           </Badge>
                         )}
                         {validityStatus === 'expiring_soon' && (
-                          <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1">
+                          <Badge variant="outline" className="bg-amber-50 text-amber-800 flex items-center gap-1 justify-center w-24 mx-auto">
                             <Clock className="h-3 w-3" /> 
                             Vence
                           </Badge>
                         )}
                         {validityStatus === 'active' && (
-                          <Badge variant="outline" className="bg-green-50 text-green-800 flex items-center gap-1">
+                          <Badge variant="outline" className="bg-green-50 text-green-800 flex items-center gap-1 justify-center w-24 mx-auto">
                             <CheckCircle2 className="h-3 w-3" /> 
                             Ativa
                           </Badge>
