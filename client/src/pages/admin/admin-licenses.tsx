@@ -955,13 +955,13 @@ export default function AdminLicensesPage() {
                   <div className="bg-white rounded-md p-3 border border-gray-200 relative">
                     <div className="absolute top-2 right-2 flex space-x-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                        <PencilIcon className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                        <SearchIcon className="h-4 w-4" />
+                        <Search className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                        <XIcon className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Unidade Tratora</div>
@@ -975,13 +975,13 @@ export default function AdminLicensesPage() {
                       <div key={index} className="bg-white rounded-md p-3 border border-gray-200 relative">
                         <div className="absolute top-2 right-2 flex space-x-1">
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                            <PencilIcon className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                            <SearchIcon className="h-4 w-4" />
+                            <Search className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                            <XIcon className="h-4 w-4" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                         <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
@@ -994,13 +994,13 @@ export default function AdminLicensesPage() {
                       <div className="bg-white rounded-md p-3 border border-gray-200 relative">
                         <div className="absolute top-2 right-2 flex space-x-1">
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                            <PencilIcon className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                            <SearchIcon className="h-4 w-4" />
+                            <Search className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                            <XIcon className="h-4 w-4" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                         <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
@@ -1010,13 +1010,13 @@ export default function AdminLicensesPage() {
                       <div className="bg-white rounded-md p-3 border border-gray-200 relative">
                         <div className="absolute top-2 right-2 flex space-x-1">
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                            <PencilIcon className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                            <SearchIcon className="h-4 w-4" />
+                            <Search className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                            <XIcon className="h-4 w-4" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                         <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
