@@ -128,19 +128,7 @@ export function Sidebar({ className }: SidebarProps) {
           </Button>
         )}
         
-        {user?.isAdmin && (
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-white hover:bg-gray-700",
-              location === "/admin" ? "bg-gray-700" : "bg-transparent"
-            )}
-            onClick={() => handleNavigate("/admin")}
-          >
-            <ChevronRight className="mr-3 h-5 w-5" />
-            Painel Admin
-          </Button>
-        )}
+        {/* Botão do Painel Admin foi removido a pedido do cliente */}
       </div>
       
       <div className="p-4 border-t border-gray-700">
