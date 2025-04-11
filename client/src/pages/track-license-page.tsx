@@ -209,11 +209,24 @@ export default function TrackLicensePage() {
             </DialogHeader>
             
             <div className="space-y-4">
-              {/* Fluxo de progresso - similar ao da admin-licenses.tsx */}
-              <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-                <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
-                <ProgressFlow currentStatus={selectedLicense.status} size="md" />
-              </div>
+              {/* Fluxo de progresso individualizado por estado */}
+              {selectedLicense.states && selectedLicense.states.length > 0 && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <div className="grid grid-cols-1 gap-4">
+                    {selectedLicense.states.map(state => {
+                      // Procura o status para este estado
+                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
+                      
+                      return (
+                        <div key={state} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                          <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença: {state}</h4>
+                          <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
