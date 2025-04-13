@@ -683,6 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Recebendo dados do formulário:", req.body);
       
       const licenseData = { ...req.body };
+      console.log("Verificando estados solicitados:", licenseData.requestedStates);
       
       // Se tiver um ID de rascunho, usa o fluxo de submissão de rascunho
       if (licenseData.id) {
