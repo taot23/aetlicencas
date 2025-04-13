@@ -76,17 +76,19 @@ export default function RequestLicensePage() {
     <MainLayout>
       {/* Dialog para o formulário */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {currentDraft ? "Editar Solicitação" : "Solicitar AET"}
-            </DialogTitle>
-            <DialogDescription>
-              Preencha os dados abaixo para solicitar uma Autorização Especial de Transporte
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+          <div className="sticky top-0 z-10 bg-white p-6 border-b">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">
+                {currentDraft ? "Editar Solicitação" : "Solicitar AET"}
+              </DialogTitle>
+              <DialogDescription>
+                Preencha os dados abaixo para solicitar uma Autorização Especial de Transporte
+              </DialogDescription>
+            </DialogHeader>
+          </div>
           
-          <div className="py-4">
+          <div className="p-6">
             <LicenseForm
               draft={currentDraft}
               onComplete={handleFormComplete}
