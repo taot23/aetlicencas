@@ -53,6 +53,8 @@ const formSchema = insertDraftLicenseSchema.extend({
     plate: z.string().min(1, "Placa é obrigatória"),
     type: z.string().min(1, "Tipo é obrigatório"),
   })).default([]),
+  requestedStates: z.array(z.string()).default([]),
+  additionalInfo: z.string().optional(),
 });
 
 // Tipo para os valores do formulário
@@ -284,141 +286,143 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos do Rodotrem</h3>
             
-            <FormField
-              control={form.control}
-              name="tractorUnitId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unidade Tratora</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a unidade tratora" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : tractorUnits.length > 0 ? (
-                        tractorUnits.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="tractorUnitId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidade Tratora</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a unidade tratora" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : tractorUnits.length > 0 ? (
+                          tractorUnits.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="firstTrailerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>1ª Carreta</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a 1ª carreta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : semiTrailers.length > 0 ? (
-                        semiTrailers.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="firstTrailerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>1ª Carreta</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a 1ª carreta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : semiTrailers.length > 0 ? (
+                          semiTrailers.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="dollyId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dolly</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o dolly" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : dollys.length > 0 ? (
-                        dollys.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="dollyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dolly</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o dolly" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : dollys.length > 0 ? (
+                          dollys.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="secondTrailerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>2ª Carreta</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a 2ª carreta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : semiTrailers.length > 0 ? (
-                        semiTrailers.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="secondTrailerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2ª Carreta</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a 2ª carreta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : semiTrailers.length > 0 ? (
+                          semiTrailers.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         )}
 
@@ -427,107 +431,109 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos do Bitrem</h3>
             
-            <FormField
-              control={form.control}
-              name="tractorUnitId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unidade Tratora</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a unidade tratora" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : tractorUnits.length > 0 ? (
-                        tractorUnits.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="tractorUnitId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidade Tratora</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a unidade tratora" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : tractorUnits.length > 0 ? (
+                          tractorUnits.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="firstTrailerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>1ª Carreta</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a 1ª carreta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : semiTrailers.length > 0 ? (
-                        semiTrailers.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="firstTrailerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>1ª Carreta</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a 1ª carreta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : semiTrailers.length > 0 ? (
+                          semiTrailers.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="secondTrailerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>2ª Carreta</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a 2ª carreta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : semiTrailers.length > 0 ? (
-                        semiTrailers.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="secondTrailerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2ª Carreta</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a 2ª carreta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : semiTrailers.length > 0 ? (
+                          semiTrailers.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         )}
 
@@ -536,73 +542,75 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos da Prancha</h3>
             
-            <FormField
-              control={form.control}
-              name="tractorUnitId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unidade Tratora</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a unidade tratora" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : tractorUnits.length > 0 ? (
-                        tractorUnits.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="tractorUnitId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidade Tratora</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a unidade tratora" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : tractorUnits.length > 0 ? (
+                          tractorUnits.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="flatbedId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prancha</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a prancha" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : flatbeds.length > 0 ? (
-                        flatbeds.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="flatbedId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prancha</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a prancha" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : flatbeds.length > 0 ? (
+                          flatbeds.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         )}
 
@@ -697,26 +705,26 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {brazilianStates.map((state) => (
                 <FormField
-                  key={state.value}
+                  key={state.code}
                   control={form.control}
                   name="requestedStates"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value?.includes(state.value)}
+                          checked={field.value?.includes(state.code)}
                           onCheckedChange={(checked) => {
                             const currentValue = field.value || [];
                             return checked
-                              ? field.onChange([...currentValue, state.value])
+                              ? field.onChange([...currentValue, state.code])
                               : field.onChange(
-                                  currentValue.filter((value) => value !== state.value)
+                                  currentValue.filter((value) => value !== state.code)
                                 );
                           }}
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
-                        {state.label}
+                        {state.name}
                       </FormLabel>
                     </FormItem>
                   )}
