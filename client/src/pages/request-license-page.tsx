@@ -7,6 +7,15 @@ import { LicenseRequest, InsertLicenseRequest } from "@shared/schema";
 import { LicenseForm } from "@/components/licenses/license-form";
 import { LicenseList } from "@/components/licenses/license-list";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogClose,
+  DialogFooter
+} from "@/components/ui/dialog";
 
 export default function RequestLicensePage() {
   const [showForm, setShowForm] = useState(false);
@@ -65,6 +74,29 @@ export default function RequestLicensePage() {
 
   return (
     <MainLayout>
+      {/* Dialog para o formulário */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {currentDraft ? "Editar Solicitação" : "Solicitar AET"}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha os dados abaixo para solicitar uma Autorização Especial de Transporte
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <LicenseForm
+              draft={currentDraft}
+              onComplete={handleFormComplete}
+              onCancel={() => setShowForm(false)}
+              preSelectedTransporterId={preSelectedTransporterId}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Solicitar Licença</h1>
         <Button onClick={handleNewRequest} className="w-full sm:w-auto">
@@ -72,32 +104,18 @@ export default function RequestLicensePage() {
         </Button>
       </div>
 
-      {!showForm ? (
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-800">AETs Pendentes de Envio</h2>
-          </div>
-          <LicenseList 
-            licenses={draftLicenses || []} 
-            isLoading={isLoading}
-            isDraftList
-            onEdit={handleEditDraft}
-            onRefresh={refetch}
-          />
+      <div className="bg-white rounded-lg shadow mb-8">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-800">AETs Pendentes de Envio</h2>
         </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-medium text-gray-800 mb-6">
-            {currentDraft ? "Editar Solicitação" : "Solicitar AET"}
-          </h2>
-          <LicenseForm
-            draft={currentDraft}
-            onComplete={handleFormComplete}
-            onCancel={() => setShowForm(false)}
-            preSelectedTransporterId={preSelectedTransporterId}
-          />
-        </div>
-      )}
+        <LicenseList 
+          licenses={draftLicenses || []} 
+          isLoading={isLoading}
+          isDraftList
+          onEdit={handleEditDraft}
+          onRefresh={refetch}
+        />
+      </div>
     </MainLayout>
   );
 }
