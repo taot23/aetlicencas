@@ -158,27 +158,63 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   // Mutation para enviar o pedido
   const submitRequestMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      console.log("Enviando dados:", data);
-      const res = await apiRequest("POST", "/api/licenses/submit", data);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Erro ao enviar solicitação");
+      try {
+        console.log("Enviando dados:", data);
+        
+        // Certifique-se de que os dados estão no formato esperado
+        const formattedData = {
+          ...data,
+          // Use states explicitamente se requestedStates estiver presente
+          states: data.requestedStates || [],
+          // Se não houver tractorUnitId, defina uma placa padrão
+          mainVehiclePlate: data.mainVehiclePlate || "Não especificado",
+          // Defina um comprimento padrão se não existir
+          length: data.length || 2000,
+          // Indica que não é um rascunho
+          isDraft: false
+        };
+        
+        console.log("Dados formatados:", formattedData);
+        
+        const res = await apiRequest("POST", "/api/licenses/submit", formattedData);
+        
+        // Verifica se a requisição foi bem-sucedida
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Erro ao enviar solicitação");
+        }
+        
+        // Retorna os dados da resposta
+        return await res.json();
+      } catch (error) {
+        console.error("Erro na mutação:", error);
+        throw error;
       }
-      return await res.json();
     },
     onSuccess: (data) => {
-      console.log("Sucesso:", data);
+      console.log("Solicitação enviada com sucesso:", data);
+      
+      // Notifica o usuário
       toast({
         title: "Solicitação enviada",
         description: "A solicitação de licença foi enviada com sucesso.",
       });
-      onComplete();
+      
+      // Fecha o formulário e redireciona
+      setTimeout(() => {
+        onComplete();
+        
+        // Atualiza a cache da query
+        queryClient.invalidateQueries({
+          queryKey: ["/api/licenses"],
+        });
+      }, 500);
     },
     onError: (error: Error) => {
       console.error("Erro ao enviar solicitação:", error);
       toast({
         title: "Erro ao enviar solicitação",
-        description: error.message,
+        description: error.message || "Ocorreu um erro ao processar sua solicitação",
         variant: "destructive",
       });
     },
