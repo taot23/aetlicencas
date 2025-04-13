@@ -147,7 +147,11 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
                 <span className={sizeConfig.font}>{step.number}</span>
               )}
             </div>
-            <span className={cn("text-center mt-1 whitespace-normal", sizeConfig.label)}>
+            <span className={cn(
+              "text-center mt-1 whitespace-normal", 
+              sizeConfig.label,
+              step.value === "canceled" ? "text-[#B22222] font-medium" : ""
+            )}>
               {step.label}
             </span>
           </div>
