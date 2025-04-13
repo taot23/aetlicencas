@@ -280,469 +280,457 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           )}
         />
 
-        {/* Nova seção de composição de veículos com interface visual */}
+        {/* Nova seção de composição de veículos em formato horizontal */}
         <div className="border border-gray-200 rounded-md p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium text-gray-800">Composição de Veículos</h3>
-            <div className="flex gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                className="bg-gray-100"
-                onClick={() => {
-                  // Lógica para adicionar veículo trator
-                  if (tractorUnits.length === 0) {
-                    toast({
-                      title: "Atenção",
-                      description: "Não há unidades tratoras cadastradas",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                }}
-              >
-                Adicionar Veículo Trator
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                className="bg-blue-100"
-                onClick={() => {
-                  // Lógica para adicionar carreta
-                  if (semiTrailers.length === 0) {
-                    toast({
-                      title: "Atenção",
-                      description: "Não há semirreboques cadastrados",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                }}
-              >
-                Adicionar Carreta
-              </Button>
+          </div>
+
+          {/* Controles de navegação e veículos em formato horizontal como na imagem */}
+          <div className="grid grid-cols-1 gap-2">
+            {/* Linha 1: Controles de navegação com setas */}
+            <div className="flex items-center justify-between">
+              {/* Controle para Cavalo/Trator */}
+              <div className="flex items-center">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-green-100 h-8 w-8 rounded-full"
+                >
+                  <span className="text-green-600 font-medium">➕</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-red-100 h-8 w-8 ml-1 rounded-full"
+                >
+                  <span className="text-red-600 font-medium">➖</span>
+                </Button>
+              </div>
+
+              {/* Controle para 1ª Carreta/Dolly */}
+              <div className="flex items-center">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-green-100 h-8 w-8 rounded-full"
+                >
+                  <span className="text-green-600 font-medium">➕</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-red-100 h-8 w-8 ml-1 rounded-full"
+                >
+                  <span className="text-red-600 font-medium">➖</span>
+                </Button>
+              </div>
+
+              {/* Controle para 2ª Carreta */}
+              <div className="flex items-center">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-green-100 h-8 w-8 rounded-full"
+                >
+                  <span className="text-green-600 font-medium">➕</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-red-100 h-8 w-8 ml-1 rounded-full"
+                >
+                  <span className="text-red-600 font-medium">➖</span>
+                </Button>
+              </div>
+
+              {/* Controle para 3ª Carreta ou Dolly */}
+              <div className="flex items-center">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-green-100 h-8 w-8 rounded-full"
+                >
+                  <span className="text-green-600 font-medium">➕</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="bg-red-100 h-8 w-8 ml-1 rounded-full"
+                >
+                  <span className="text-red-600 font-medium">➖</span>
+                </Button>
+              </div>
             </div>
-          </div>
 
-          {/* Container para a visualização do conjunto */}
-          <div className="relative mb-6 flex flex-col md:flex-row gap-2 items-center md:items-stretch">
-            {/* Componente visual para o Veículo Trator */}
-            {form.watch("tractorUnitId") && (
-              <div className="relative flex-1 border border-gray-300 rounded-md p-3 bg-gray-50 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1 mb-2">
-                      Unidade Tratora
-                    </h4>
-                    <div className="text-sm">
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Placa:</span>
-                        {vehicles?.find(v => v.id === form.watch("tractorUnitId"))?.plate || ""}
-                      </p>
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Tara:</span>
-                        {vehicles?.find(v => v.id === form.watch("tractorUnitId"))?.tare || "0"} kg
-                      </p>
-                      <p>
-                        <span className="font-medium mr-1">Ano CRLV:</span>
-                        {vehicles?.find(v => v.id === form.watch("tractorUnitId"))?.crlvYear || ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => {
-                      form.setValue("tractorUnitId", undefined);
-                      form.setValue("mainVehiclePlate", "");
-                    }}
-                  >
-                    <X size={16} className="text-gray-500" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Seta de conexão para o primeiro semirreboque */}
-            {form.watch("tractorUnitId") && form.watch("firstTrailerId") && (
-              <div className="flex items-center justify-center p-1">
-                <div className="h-0.5 w-5 bg-gray-400"></div>
-                <div className="text-gray-400">→</div>
-              </div>
-            )}
-
-            {/* Componente visual para o 1º Semirreboque */}
-            {form.watch("firstTrailerId") && (
-              <div className="relative flex-1 border border-gray-300 rounded-md p-3 bg-gray-50 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1 mb-2">
-                      1º Semirreboque
-                    </h4>
-                    <div className="text-sm">
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Placa:</span>
-                        {vehicles?.find(v => v.id === form.watch("firstTrailerId"))?.plate || ""}
-                      </p>
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Tara:</span>
-                        {vehicles?.find(v => v.id === form.watch("firstTrailerId"))?.tare || "0"} kg
-                      </p>
-                      <p>
-                        <span className="font-medium mr-1">Ano CRLV:</span>
-                        {vehicles?.find(v => v.id === form.watch("firstTrailerId"))?.crlvYear || ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => {
-                      form.setValue("firstTrailerId", undefined);
-                    }}
-                  >
-                    <X size={16} className="text-gray-500" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Seta de conexão para o Dolly (apenas para Rodotrem) */}
-            {form.watch("firstTrailerId") && form.watch("dollyId") && licenseType === 'roadtrain_9_axles' && (
-              <div className="flex items-center justify-center p-1">
-                <div className="h-0.5 w-5 bg-gray-400"></div>
-                <div className="text-gray-400">→</div>
-              </div>
-            )}
-
-            {/* Componente visual para o Dolly (apenas para Rodotrem) */}
-            {form.watch("dollyId") && licenseType === 'roadtrain_9_axles' && (
-              <div className="relative flex-1 border border-gray-300 rounded-md p-3 bg-gray-50 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1 mb-2">
-                      Dolly
-                    </h4>
-                    <div className="text-sm">
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Placa:</span>
-                        {vehicles?.find(v => v.id === form.watch("dollyId"))?.plate || ""}
-                      </p>
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Tara:</span>
-                        {vehicles?.find(v => v.id === form.watch("dollyId"))?.tare || "0"} kg
-                      </p>
-                      <p>
-                        <span className="font-medium mr-1">Ano CRLV:</span>
-                        {vehicles?.find(v => v.id === form.watch("dollyId"))?.crlvYear || ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => {
-                      form.setValue("dollyId", undefined);
-                    }}
-                  >
-                    <X size={16} className="text-gray-500" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Seta de conexão para o segundo semirreboque */}
-            {((form.watch("firstTrailerId") && form.watch("secondTrailerId") && 
-              (licenseType === 'bitrain_9_axles' || licenseType === 'bitrain_7_axles' || licenseType === 'bitrain_6_axles')) ||
-             (form.watch("dollyId") && form.watch("secondTrailerId") && licenseType === 'roadtrain_9_axles')) && (
-              <div className="flex items-center justify-center p-1">
-                <div className="h-0.5 w-5 bg-gray-400"></div>
-                <div className="text-gray-400">→</div>
-              </div>
-            )}
-
-            {/* Componente visual para o 2º Semirreboque */}
-            {form.watch("secondTrailerId") && (
-              <div className="relative flex-1 border border-gray-300 rounded-md p-3 bg-gray-50 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1 mb-2">
-                      2º Semirreboque
-                    </h4>
-                    <div className="text-sm">
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Placa:</span>
-                        {vehicles?.find(v => v.id === form.watch("secondTrailerId"))?.plate || ""}
-                      </p>
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Tara:</span>
-                        {vehicles?.find(v => v.id === form.watch("secondTrailerId"))?.tare || "0"} kg
-                      </p>
-                      <p>
-                        <span className="font-medium mr-1">Ano CRLV:</span>
-                        {vehicles?.find(v => v.id === form.watch("secondTrailerId"))?.crlvYear || ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => {
-                      form.setValue("secondTrailerId", undefined);
-                    }}
-                  >
-                    <X size={16} className="text-gray-500" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Componente visual para a Prancha (apenas para tipo Prancha) */}
-            {form.watch("flatbedId") && licenseType === 'flatbed' && (
-              <div className="relative flex-1 border border-gray-300 rounded-md p-3 bg-gray-50 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-300 pb-1 mb-2">
-                      Prancha
-                    </h4>
-                    <div className="text-sm">
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Placa:</span>
-                        {vehicles?.find(v => v.id === form.watch("flatbedId"))?.plate || ""}
-                      </p>
-                      <p className="mb-1">
-                        <span className="font-medium mr-1">Tara:</span>
-                        {vehicles?.find(v => v.id === form.watch("flatbedId"))?.tare || "0"} kg
-                      </p>
-                      <p>
-                        <span className="font-medium mr-1">Ano CRLV:</span>
-                        {vehicles?.find(v => v.id === form.watch("flatbedId"))?.crlvYear || ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => {
-                      form.setValue("flatbedId", undefined);
-                    }}
-                  >
-                    <X size={16} className="text-gray-500" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Seletores de veículos escondidos em um accordeon */}
-          <div className="border border-gray-200 rounded-md p-3 bg-white">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Selecione os veículos do conjunto</h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {/* Seletor para Unidade Tratora */}
-              <FormField
-                control={form.control}
-                name="tractorUnitId"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs">Unidade Tratora</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(parseInt(value));
-                        // Também atualizar a placa principal
-                        const selectedVehicle = vehicles?.find(v => v.id === parseInt(value));
-                        if (selectedVehicle) {
-                          form.setValue("mainVehiclePlate", selectedVehicle.plate);
-                        }
-                      }}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
+            {/* Linha 2: Campos para os veículos */}
+            <div className="flex gap-2">
+              {/* Campo para veículo trator */}
+              <div className="flex-1">
+                <FormField
+                  control={form.control}
+                  name="tractorUnitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex">
+                        <Input
+                          placeholder="Veículo Trator (Placa/UF)"
+                          value={vehicles?.find(v => v.id === field.value)?.plate || ""}
+                          readOnly
+                          className="rounded-r-none"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-l-none border-l-0 px-2"
+                          onClick={() => {
+                            // Mostrar modal ou dropdown para selecionar
+                            const dropdown = document.getElementById("tractor-dropdown");
+                            if (dropdown) {
+                              dropdown.click();
+                            }
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                          </svg>
+                        </Button>
+                      </div>
+                      <Select 
+                        id="tractor-dropdown"
+                        onValueChange={(value) => {
+                          field.onChange(parseInt(value));
+                          // Também atualizar a placa principal
+                          const selectedVehicle = vehicles?.find(v => v.id === parseInt(value));
+                          if (selectedVehicle) {
+                            form.setValue("mainVehiclePlate", selectedVehicle.plate);
+                          }
+                        }}
+                        value={field.value?.toString()}
+                        className="hidden"
+                      >
                         <SelectTrigger className="h-9 text-sm">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : tractorUnits.length > 0 ? (
-                          tractorUnits.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
+                        <SelectContent>
+                          {isLoadingVehicles ? (
+                            <SelectItem value="loading">Carregando...</SelectItem>
+                          ) : tractorUnits.length > 0 ? (
+                            tractorUnits.map((vehicle) => (
+                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                {vehicle.plate}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Campo para 1ª Carreta (todos os tipos exceto Prancha) */}
+              <div className="flex-1">
+                {licenseType !== 'flatbed' && (
+                  <FormField
+                    control={form.control}
+                    name="firstTrailerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex">
+                          <Input
+                            placeholder="1ª Carreta/Dolly (Placa/UF)"
+                            value={vehicles?.find(v => v.id === field.value)?.plate || ""}
+                            readOnly
+                            className="rounded-r-none"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-l-none border-l-0 px-2"
+                            onClick={() => {
+                              // Mostrar modal ou dropdown para selecionar
+                              const dropdown = document.getElementById("trailer1-dropdown");
+                              if (dropdown) {
+                                dropdown.click();
+                              }
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                          </Button>
+                        </div>
+                        <Select 
+                          id="trailer1-dropdown"
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                          className="hidden"
+                        >
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : semiTrailers.length > 0 ? (
+                              semiTrailers.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
+              </div>
 
-              {/* Seletor para 1ª Carreta (todos os tipos exceto Prancha) */}
-              {licenseType !== 'flatbed' && (
-                <FormField
-                  control={form.control}
-                  name="firstTrailerId"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">1ª Carreta</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
+              {/* Campo para Dolly ou 2ª Carreta */}
+              <div className="flex-1">
+                {(licenseType === 'roadtrain_9_axles' || 
+                  licenseType === 'bitrain_9_axles' || 
+                  licenseType === 'bitrain_7_axles' || 
+                  licenseType === 'bitrain_6_axles') && (
+                  <FormField
+                    control={form.control}
+                    name={licenseType === 'roadtrain_9_axles' ? "dollyId" : "secondTrailerId"}
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex">
+                          <Input
+                            placeholder={licenseType === 'roadtrain_9_axles' ? "Dolly (Placa/UF)" : "2ª Carreta (Placa/UF)"}
+                            value={vehicles?.find(v => v.id === field.value)?.plate || ""}
+                            readOnly
+                            className="rounded-r-none"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-l-none border-l-0 px-2"
+                            onClick={() => {
+                              // Mostrar modal ou dropdown para selecionar
+                              const dropdown = document.getElementById(licenseType === 'roadtrain_9_axles' ? "dolly-dropdown" : "trailer2-dropdown");
+                              if (dropdown) {
+                                dropdown.click();
+                              }
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                          </Button>
+                        </div>
+                        <Select 
+                          id={licenseType === 'roadtrain_9_axles' ? "dolly-dropdown" : "trailer2-dropdown"}
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                          className="hidden"
+                        >
                           <SelectTrigger className="h-9 text-sm">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : semiTrailers.length > 0 ? (
-                            semiTrailers.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              )}
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : (
+                              (licenseType === 'roadtrain_9_axles' ? dollys : semiTrailers).length > 0 ? (
+                                (licenseType === 'roadtrain_9_axles' ? dollys : semiTrailers).map((vehicle) => (
+                                  <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                    {vehicle.plate}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no_vehicle">
+                                  {licenseType === 'roadtrain_9_axles' ? 
+                                    "Nenhum dolly cadastrado" : 
+                                    "Nenhum semirreboque cadastrado"}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
 
-              {/* Seletor para Dolly (apenas para Rodotrem) */}
-              {licenseType === 'roadtrain_9_axles' && (
-                <FormField
-                  control={form.control}
-                  name="dollyId"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Dolly</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
+              {/* Campo para 3ª Carreta ou 2ª carreta no caso de Rodotrem */}
+              <div className="flex-1">
+                {licenseType === 'roadtrain_9_axles' && (
+                  <FormField
+                    control={form.control}
+                    name="secondTrailerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex">
+                          <Input
+                            placeholder="2ª Carreta (Placa/UF)"
+                            value={vehicles?.find(v => v.id === field.value)?.plate || ""}
+                            readOnly
+                            className="rounded-r-none"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-l-none border-l-0 px-2"
+                            onClick={() => {
+                              // Mostrar modal ou dropdown para selecionar
+                              const dropdown = document.getElementById("trailer2-rodotrem-dropdown");
+                              if (dropdown) {
+                                dropdown.click();
+                              }
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                          </Button>
+                        </div>
+                        <Select 
+                          id="trailer2-rodotrem-dropdown"
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                          className="hidden"
+                        >
                           <SelectTrigger className="h-9 text-sm">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : dollys.length > 0 ? (
-                            dollys.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              )}
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : semiTrailers.length > 0 ? (
+                              semiTrailers.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
-              {/* Seletor para 2ª Carreta (Bitrem e Rodotrem) */}
-              {(licenseType === 'roadtrain_9_axles' || 
-                licenseType === 'bitrain_9_axles' || 
-                licenseType === 'bitrain_7_axles' || 
-                licenseType === 'bitrain_6_axles') && (
-                <FormField
-                  control={form.control}
-                  name="secondTrailerId"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">2ª Carreta</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
+                {licenseType === 'flatbed' && (
+                  <FormField
+                    control={form.control}
+                    name="flatbedId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex">
+                          <Input
+                            placeholder="Prancha (Placa/UF)"
+                            value={vehicles?.find(v => v.id === field.value)?.plate || ""}
+                            readOnly
+                            className="rounded-r-none"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-l-none border-l-0 px-2"
+                            onClick={() => {
+                              // Mostrar modal ou dropdown para selecionar
+                              const dropdown = document.getElementById("flatbed-dropdown");
+                              if (dropdown) {
+                                dropdown.click();
+                              }
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                          </Button>
+                        </div>
+                        <Select 
+                          id="flatbed-dropdown"
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                          className="hidden"
+                        >
                           <SelectTrigger className="h-9 text-sm">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : semiTrailers.length > 0 ? (
-                            semiTrailers.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              )}
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : flatbeds.length > 0 ? (
+                              flatbeds.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </div>
 
-              {/* Seletor para Prancha (apenas para tipo Prancha) */}
-              {licenseType === 'flatbed' && (
-                <FormField
-                  control={form.control}
-                  name="flatbedId"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Prancha</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-9 text-sm">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : flatbeds.length > 0 ? (
-                            flatbeds.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              )}
+            {/* Linha 3: Rótulos */}
+            <div className="flex gap-2 mt-2">
+              <div className="flex-1 text-center text-sm text-gray-500">
+                {form.watch("tractorUnitId") ? 
+                  vehicles?.find(v => v.id === form.watch("tractorUnitId"))?.plate || "" : 
+                  "—"
+                }
+              </div>
+              <div className="flex-1 text-center text-sm text-gray-500">
+                {form.watch("firstTrailerId") ? 
+                  vehicles?.find(v => v.id === form.watch("firstTrailerId"))?.plate || "" : 
+                  "—"
+                }
+              </div>
+              <div className="flex-1 text-center text-sm text-gray-500">
+                {licenseType === 'roadtrain_9_axles' ? 
+                  (form.watch("dollyId") ? 
+                    vehicles?.find(v => v.id === form.watch("dollyId"))?.plate || "" : 
+                    "—") :
+                  (form.watch("secondTrailerId") ? 
+                    vehicles?.find(v => v.id === form.watch("secondTrailerId"))?.plate || "" : 
+                    "—")
+                }
+              </div>
+              <div className="flex-1 text-center text-sm text-gray-500">
+                {licenseType === 'roadtrain_9_axles' ? 
+                  (form.watch("secondTrailerId") ? 
+                    vehicles?.find(v => v.id === form.watch("secondTrailerId"))?.plate || "" : 
+                    "—") :
+                  (licenseType === 'flatbed' ? 
+                    (form.watch("flatbedId") ? 
+                      vehicles?.find(v => v.id === form.watch("flatbedId"))?.plate || "" : 
+                      "—") :
+                    "—")
+                }
+              </div>
             </div>
             
             {/* Total de unidades */}
