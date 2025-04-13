@@ -26,7 +26,7 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
   // Estados excepcionais que só são mostrados quando são o status atual
   const specialSteps: ProgressFlowStep[] = [
     { label: "Reprovado", value: "rejected", number: 3 },
-    { label: "Cancelado", value: "canceled", number: 6 }
+    { label: "Cancelado", value: "canceled", number: 0 }
   ];
   
   // Verificar se o status atual é um dos especiais
@@ -47,10 +47,10 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
         currentSpecialStep
       ];
     } else if (currentStatus === "canceled") {
-      // Para "Cancelado", mostramos todos os passos normais + Cancelado
+      // Para "Cancelado", mostramos apenas ele, seguido pelos passos normais
       steps = [
-        ...normalSteps,
-        currentSpecialStep
+        currentSpecialStep,
+        ...normalSteps
       ];
     } else {
       steps = normalSteps;
@@ -124,7 +124,7 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
           if (isRejected) {
             bgColor = "bg-red-500";
           } else if (isCanceled) {
-            bgColor = "bg-gray-500";
+            bgColor = "bg-[#B22222]"; // Cor vermelho escuro conforme solicitado
           } else {
             bgColor = "bg-blue-500";
           }
