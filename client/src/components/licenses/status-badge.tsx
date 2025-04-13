@@ -37,7 +37,7 @@ export function StatusBadge({ status, className, showIcon = true }: StatusBadgeP
       case "approved":
         return "bg-green-100 text-green-800";
       case "canceled":
-        return "bg-gray-100 text-gray-800";
+        return "bg-[#FFEDED] text-[#B22222]";
       default:
         return "bg-gray-100 text-gray-800";
     }

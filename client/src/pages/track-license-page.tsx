@@ -180,6 +180,7 @@ export default function TrackLicensePage() {
                 <SelectItem value="under_review">Análise do Órgão</SelectItem>
                 <SelectItem value="pending_approval">Pendente Liberação</SelectItem>
                 <SelectItem value="approved">Liberada</SelectItem>
+                <SelectItem value="canceled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
           </div>
