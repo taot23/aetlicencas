@@ -730,8 +730,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <FormItem>
                 <div className="flex flex-col space-y-4">
                   {form.getValues("additionalPlates")?.map((plate, index) => (
-                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md">
-                      <div className="flex items-center space-x-2">
+                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md mx-auto max-w-4xl">
+                      <div className="flex items-center space-x-2 mx-auto max-w-3xl">
                         <Input
                           placeholder="Placa do Veículo"
                           value={plate.plate}
@@ -740,7 +740,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                             updatedPlates[index].plate = e.target.value;
                             form.setValue("additionalPlates", updatedPlates);
                           }}
-                          className="flex-grow"
+                          className="flex-grow h-9"
                         />
                         
                         <Select
@@ -751,10 +751,10 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                             form.setValue("additionalPlates", updatedPlates);
                           }}
                         >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Tipo de Veículo" />
+                          <SelectTrigger className="w-[140px] h-9">
+                            <SelectValue placeholder="Tipo" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent align="center">
                             <SelectItem value="tractor_unit">Cavalo</SelectItem>
                             <SelectItem value="semi_trailer">Semirreboque</SelectItem>
                             <SelectItem value="trailer">Reboque</SelectItem>
@@ -768,6 +768,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           variant="ghost"
                           size="icon"
                           onClick={() => removeAdditionalPlate(index)}
+                          className="h-9 w-9 p-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -788,16 +789,18 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                     </div>
                   ))}
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addAdditionalPlate}
-                    className="flex items-center"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar Placa
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addAdditionalPlate}
+                      className="flex items-center w-auto px-3 py-1 h-8 text-sm"
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      Adicionar Placa
+                    </Button>
+                  </div>
                 </div>
               </FormItem>
             )}
