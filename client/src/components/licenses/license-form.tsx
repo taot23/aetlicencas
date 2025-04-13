@@ -158,10 +158,16 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   // Mutation para enviar o pedido
   const submitRequestMutation = useMutation({
     mutationFn: async (data: FormValues) => {
+      console.log("Enviando dados:", data);
       const res = await apiRequest("POST", `/api/licenses/submit${draft?.id ? `/${draft.id}` : ""}`, data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao enviar solicitação");
+      }
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Sucesso:", data);
       toast({
         title: "Solicitação enviada",
         description: "A solicitação de licença foi enviada com sucesso.",
@@ -169,6 +175,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       onComplete();
     },
     onError: (error: Error) => {
+      console.error("Erro ao enviar solicitação:", error);
       toast({
         title: "Erro ao enviar solicitação",
         description: error.message,
@@ -193,6 +200,64 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
   // Função de submit
   const onSubmit = (data: FormValues) => {
+    // Verificar valores obrigatórios
+    if (!data.transporterId) {
+      toast({
+        title: "Erro de validação",
+        description: "Selecione um transportador",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.type) {
+      toast({
+        title: "Erro de validação",
+        description: "Selecione um tipo de conjunto",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (data.requestedStates.length === 0) {
+      toast({
+        title: "Erro de validação",
+        description: "Selecione pelo menos um estado",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Verificar veículos de acordo com o tipo
+    if (data.type === 'roadtrain_9_axles' || 
+        data.type === 'bitrain_9_axles' || 
+        data.type === 'bitrain_7_axles' || 
+        data.type === 'bitrain_6_axles') {
+      if (!data.tractorUnitId) {
+        toast({
+          title: "Erro de validação",
+          description: "Selecione uma unidade tratora",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // Definir placa principal
+    const mainVehicle = vehicles.find(v => v.id === data.tractorUnitId);
+    if (mainVehicle) {
+      data.mainVehiclePlate = mainVehicle.plate;
+    } else {
+      data.mainVehiclePlate = "Não especificado";
+    }
+    
+    // Definir comprimento padrão se não for especificado
+    if (!data.length) {
+      data.length = 2000; // 20 metros em centímetros
+    }
+    
+    console.log("Dados processados para envio:", data);
+    
     if (data.isDraft) {
       saveAsDraftMutation.mutate(data);
     } else {
