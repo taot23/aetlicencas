@@ -675,6 +675,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro ao enviar solicitação de licença' });
     }
   });
+  
+  // Novo endpoint específico para submissão de formulário de licença
+  app.post('/api/licenses/submit', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      console.log("Recebendo dados do formulário:", req.body);
+      
+      const licenseData = { ...req.body };
+      
+      // Se tiver um ID de rascunho, usa o fluxo de submissão de rascunho
+      if (licenseData.id) {
+        const draftId = licenseData.id;
+        const existingDraft = await storage.getLicenseRequestById(draftId);
+        
+        if (!existingDraft) {
+          return res.status(404).json({ message: 'Rascunho não encontrado' });
+        }
+        
+        if (existingDraft.userId !== userId || !existingDraft.isDraft) {
+          return res.status(403).json({ message: 'Acesso negado' });
+        }
+        
+        // Generate a real request number
+        const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+        
+        // Update the draft with the new data
+        await storage.updateLicenseDraft(draftId, {
+          ...licenseData,
+          isDraft: false,
+        });
+        
+        // Submit the updated draft as a real license request
+        const licenseRequest = await storage.submitLicenseDraft(draftId, requestNumber);
+        
+        console.log("Licença submetida com sucesso:", licenseRequest.id);
+        return res.json(licenseRequest);
+      } 
+      // Caso contrário, cria uma nova licença
+      else {
+        // Faz as validações básicas necessárias
+        if (!licenseData.transporterId) {
+          return res.status(400).json({ message: 'Transportador é obrigatório' });
+        }
+        
+        if (!licenseData.type) {
+          return res.status(400).json({ message: 'Tipo de conjunto é obrigatório' });
+        }
+        
+        if (!licenseData.requestedStates || licenseData.requestedStates.length === 0) {
+          return res.status(400).json({ message: 'Selecione pelo menos um estado' });
+        }
+        
+        // Prepara dados para criar a licença
+        const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+        
+        // Converte estados solicitados para o formato esperado no backend
+        licenseData.states = licenseData.requestedStates;
+        
+        // Define valores padrão se necessário
+        if (!licenseData.mainVehiclePlate) {
+          licenseData.mainVehiclePlate = "Não especificado";
+        }
+        
+        if (!licenseData.length) {
+          licenseData.length = 2000; // 20 metros em centímetros
+        }
+        
+        console.log("Dados processados para envio:", {
+          ...licenseData,
+          requestNumber,
+          isDraft: false
+        });
+        
+        // Cria a licença
+        const licenseRequest = await storage.createLicenseRequest(userId, {
+          ...licenseData,
+          requestNumber,
+          isDraft: false,
+        });
+        
+        console.log("Nova licença criada com sucesso:", licenseRequest.id);
+        return res.json(licenseRequest);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar solicitação de licença:', error);
+      res.status(500).json({ message: 'Erro ao enviar solicitação de licença' });
+    }
+  });
 
   // License request endpoints
   app.get('/api/licenses', requireAuth, async (req, res) => {
@@ -714,6 +802,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating license request:', error);
       res.status(500).json({ message: 'Erro ao criar solicitação de licença' });
+    }
+  });
+  
+  // Endpoint para enviar um pedido de licença (usado no formulário frontened)
+  app.post('/api/licenses/submit', requireAuth, async (req, res) => {
+    try {
+      console.log('Received submit request with data:', req.body);
+      
+      const userId = req.user!.id;
+      const licenseData = { ...req.body };
+      
+      // Se é um rascunho existente, redireciona para a rota correspondente
+      if (licenseData.id) {
+        const draftId = licenseData.id;
+        
+        // Check if draft exists and belongs to the user
+        const existingDraft = await storage.getLicenseRequestById(draftId);
+        if (!existingDraft) {
+          return res.status(404).json({ message: 'Rascunho não encontrado' });
+        }
+        
+        if (existingDraft.userId !== userId) {
+          return res.status(403).json({ message: 'Acesso negado' });
+        }
+        
+        // Generate a real request number
+        const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+        
+        // Submit the draft as a real license request
+        const licenseRequest = await storage.submitLicenseDraft(draftId, requestNumber);
+        
+        return res.json(licenseRequest);
+      }
+      
+      // Caso seja uma criação direta
+      // Definindo valores padrão para campos obrigatórios, se não existirem
+      if (!licenseData.status) {
+        licenseData.status = 'pending_registration';
+      }
+      
+      if (!licenseData.states || !Array.isArray(licenseData.states)) {
+        licenseData.states = licenseData.requestedStates || [];
+      }
+      
+      // Preparando estado das solicitações por estado
+      if (!licenseData.stateStatuses) {
+        licenseData.stateStatuses = licenseData.states.map((state: string) => `${state}:pending_registration`);
+      }
+      
+      // Ensure additionalPlates is properly formatted
+      licenseData.additionalPlates = licenseData.additionalPlates || [];
+      
+      // Generate a request number
+      const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+      
+      // Validate license data (partially - since we're more permissive with client-side submissions)
+      try {
+        // Vamos fazer somente algumas validações básicas
+        if (!licenseData.transporterId) {
+          return res.status(400).json({ message: "Um transportador deve ser selecionado" });
+        }
+        
+        if (!licenseData.type) {
+          return res.status(400).json({ message: "O tipo é obrigatório" });
+        }
+        
+        if (!licenseData.states || licenseData.states.length === 0) {
+          return res.status(400).json({ message: "Selecione pelo menos um estado" });
+        }
+        
+        if (!licenseData.mainVehiclePlate) {
+          return res.status(400).json({ message: "A placa principal é obrigatória" });
+        }
+        
+        if (!licenseData.length || licenseData.length <= 0) {
+          return res.status(400).json({ message: "O comprimento deve ser positivo" });
+        }
+      } catch (error: any) {
+        console.error('Validation error:', error);
+        return res.status(400).json({ message: error.message || "Erro de validação" });
+      }
+      
+      console.log('Creating license request with data:', {
+        ...licenseData,
+        requestNumber,
+        isDraft: false
+      });
+      
+      const licenseRequest = await storage.createLicenseRequest(userId, {
+        ...licenseData,
+        requestNumber,
+        isDraft: false,
+      });
+      
+      res.json(licenseRequest);
+    } catch (error) {
+      console.error('Error submitting license request:', error);
+      res.status(500).json({ message: 'Erro ao enviar solicitação de licença', error: String(error) });
     }
   });
 

@@ -159,7 +159,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   const submitRequestMutation = useMutation({
     mutationFn: async (data: FormValues) => {
       console.log("Enviando dados:", data);
-      const res = await apiRequest("POST", `/api/licenses/submit${draft?.id ? `/${draft.id}` : ""}`, data);
+      const res = await apiRequest("POST", "/api/licenses/submit", data);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Erro ao enviar solicitação");
