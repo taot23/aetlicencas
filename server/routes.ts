@@ -732,7 +732,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
         
         // Converte estados solicitados para o formato esperado no backend
-        licenseData.states = licenseData.requestedStates;
+        licenseData.states = licenseData.requestedStates || licenseData.states || [];
+        console.log("Estados processados para envio:", licenseData.states);
         
         // Define valores padrão se necessário
         if (!licenseData.mainVehiclePlate) {

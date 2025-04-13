@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   insertLicenseRequestSchema, 
@@ -816,16 +816,16 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           checked={field.value?.includes(state.code)}
                           onCheckedChange={(checked) => {
                             const currentValue = field.value || [];
-                            return checked
-                              ? field.onChange([...currentValue, state.code])
-                              : field.onChange(
-                                  currentValue.filter((value) => value !== state.code)
-                                );
+                            const newValue = checked
+                              ? [...currentValue, state.code]
+                              : currentValue.filter((value) => value !== state.code);
+                            console.log(`Estados selecionados:`, newValue);
+                            return field.onChange(newValue);
                           }}
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
-                        {state.name}
+                        {state.name} ({state.code})
                       </FormLabel>
                     </FormItem>
                   )}
