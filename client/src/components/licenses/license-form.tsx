@@ -54,6 +54,7 @@ const formSchema = insertDraftLicenseSchema.extend({
     type: z.string().min(1, "Tipo é obrigatório"),
   })).default([]),
   requestedStates: z.array(z.string()).default([]),
+  states: z.array(z.string()).optional().default([]),
   additionalInfo: z.string().optional(),
 });
 
@@ -164,8 +165,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         // Certifique-se de que os dados estão no formato esperado
         const formattedData = {
           ...data,
-          // Use states explicitamente se requestedStates estiver presente
-          states: data.requestedStates || [],
+          // Importante: o backend espera o campo 'states' e não 'requestedStates'
+          states: data.states || data.requestedStates || [],
           // Se não houver tractorUnitId, defina uma placa padrão
           mainVehiclePlate: data.mainVehiclePlate || "Não especificado",
           // Defina um comprimento padrão se não existir
@@ -263,6 +264,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       });
       return;
     }
+    
+    // Garante que o campo states receba os valores de requestedStates 
+    data.states = [...data.requestedStates];
     
     // Verificar veículos de acordo com o tipo
     if (data.type === 'roadtrain_9_axles' || 
