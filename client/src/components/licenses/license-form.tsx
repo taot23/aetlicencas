@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoaderCircle, X, Plus } from "lucide-react";
+import { LoaderCircle, X, Plus, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 // Interface para as propriedades do componente
@@ -392,73 +392,77 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Veículos do Rodotrem</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="tractorUnitId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">Unidade Tratora</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione a unidade tratora" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : tractorUnits.length > 0 ? (
-                          tractorUnits.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-base mb-2">Unidade Tratora</FormLabel>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="DVQ0234"
+                      value={form.watch("mainVehiclePlate") || ""}
+                      onChange={(e) => form.setValue("mainVehiclePlate", e.target.value)}
+                      className="pl-8 h-11"
+                    />
+                    <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      <i className="h-5 w-5">🚛</i>
+                    </span>
+                  </div>
+                  <Button 
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="h-11 w-11"
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="h-11 w-11"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                {form.formState.errors.mainVehiclePlate && (
+                  <p className="text-sm text-red-500">{form.formState.errors.mainVehiclePlate?.message}</p>
                 )}
-              />
+              </FormItem>
 
-              <FormField
-                control={form.control}
-                name="firstTrailerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">1ª Carreta</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione a 1ª carreta" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : semiTrailers.length > 0 ? (
-                          semiTrailers.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-base mb-2">1ª Carreta</FormLabel>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="RCH3H90"
+                      value={form.watch("firstTrailerPlate") || ""}
+                      onChange={(e) => form.setValue("firstTrailerPlate", e.target.value)}
+                      className="pl-8 h-11"
+                    />
+                    <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      <i className="h-5 w-5">🚛</i>
+                    </span>
+                  </div>
+                  <Button 
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="h-11 w-11"
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="h-11 w-11"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                {form.formState.errors.firstTrailerPlate && (
+                  <p className="text-sm text-red-500">{form.formState.errors.firstTrailerPlate?.message}</p>
                 )}
-              />
+              </FormItem>
 
               <FormField
                 control={form.control}
