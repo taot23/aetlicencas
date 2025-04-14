@@ -35,10 +35,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoaderCircle, X, Plus, Search } from "lucide-react";
+import { LoaderCircle, X, Plus, Truck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
-// Interface para as propriedades do componente
 interface LicenseFormProps {
   draft?: LicenseRequest | null;
   onComplete: () => void;
@@ -46,266 +45,163 @@ interface LicenseFormProps {
   preSelectedTransporterId?: number | null;
 }
 
-// Esquema para validação do formulário
-const formSchema = insertDraftLicenseSchema.extend({
-  isDraft: z.boolean().default(true),
-  additionalPlates: z.array(z.object({
-    plate: z.string().min(1, "Placa é obrigatória"),
-    type: z.string().min(1, "Tipo é obrigatório"),
-  })).default([]),
-  requestedStates: z.array(z.string()).default([]),
-  states: z.array(z.string()).optional().default([]),
-  additionalInfo: z.string().optional(),
-});
-
-// Tipo para os valores do formulário
-type FormValues = z.infer<typeof formSchema>;
-
 export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporterId }: LicenseFormProps) {
   const { toast } = useToast();
-  const [licenseType, setLicenseType] = useState<string | undefined>(draft?.type);
+  const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
+
+  // Fetch vehicles for the dropdown selectors
+  const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
+    queryKey: ["/api/vehicles"],
+  });
   
-  // Form com valores padrão
-  const form = useForm<FormValues>({
+  // Fetch transporters linked to the user
+  const { data: transporters = [], isLoading: isLoadingTransporters } = useQuery<Transporter[]>({
+    queryKey: ["/api/user/transporters"],
+  });
+
+  // Define filtered vehicle lists based on type
+  const tractorUnits = vehicles?.filter(v => v.type === "tractor_unit") || [];
+  const semiTrailers = vehicles?.filter(v => v.type === "semi_trailer") || [];
+  const dollys = vehicles?.filter(v => v.type === "dolly") || [];
+  const flatbeds = vehicles?.filter(v => v.type === "flatbed") || [];
+
+  // Define a schema that can be validated partially (for drafts)
+  const formSchema = draft?.isDraft 
+    ? insertDraftLicenseSchema 
+    : insertLicenseRequestSchema;
+
+  // Usar o transportador pré-selecionado quando disponível
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      transporterId: draft?.transporterId || preSelectedTransporterId || undefined,
-      type: draft?.type || undefined,
-      tractorUnitId: draft?.tractorUnitId || undefined,
-      firstTrailerId: draft?.firstTrailerId || undefined,
-      secondTrailerId: draft?.secondTrailerId || undefined,
-      dollyId: draft?.dollyId || undefined,
-      flatbedId: draft?.flatbedId || undefined,
-      additionalInfo: draft?.additionalInfo || "",
-      requestedStates: draft?.requestedStates || [],
-      additionalPlates: draft?.additionalPlates || [],
+    defaultValues: draft ? {
+      type: draft.type,
+      transporterId: draft.transporterId || undefined,
+      mainVehiclePlate: draft.mainVehiclePlate,
+      tractorUnitId: draft.tractorUnitId || undefined,
+      firstTrailerId: draft.firstTrailerId || undefined,
+      dollyId: draft.dollyId || undefined,
+      secondTrailerId: draft.secondTrailerId || undefined,
+      flatbedId: draft.flatbedId || undefined,
+      length: draft.length / 100, // Convert from cm to meters for display
+      additionalPlates: draft.additionalPlates || [],
+      additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
+      states: draft.states,
+      isDraft: draft.isDraft,
+      comments: draft.comments || undefined,
+    } : {
+      type: "",
+      transporterId: preSelectedTransporterId || undefined, // Usar o transportador pré-selecionado
+      mainVehiclePlate: "",
+      tractorUnitId: undefined,
+      firstTrailerId: undefined,
+      dollyId: undefined,
+      secondTrailerId: undefined,
+      flatbedId: undefined,
+      length: 0,
+      additionalPlates: [],
+      states: [],
+      additionalPlatesDocuments: [],
       isDraft: true,
+      comments: "",
     },
   });
 
-  // Atualiza o tipo de licença quando o valor muda no formulário
+  // Efeito para mostrar notificação quando tiver transportador pré-selecionado
+  useEffect(() => {
+    if (preSelectedTransporterId && transporters && transporters.length > 0) {
+      const selectedTransporter = transporters.find(t => t.id === preSelectedTransporterId);
+      if (selectedTransporter) {
+        toast({
+          title: "Transportador selecionado",
+          description: `Usando ${selectedTransporter.name} como transportador para esta solicitação`,
+        });
+      }
+    }
+  }, [preSelectedTransporterId, transporters, toast]);
+
+  // Watch for type changes to conditionally render fields
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "type") {
-        setLicenseType(value.type);
+        setLicenseType(value.type as string);
+      }
+      
+      // Set main vehicle plate based on tractor unit selection
+      if (name === "tractorUnitId" && value.tractorUnitId) {
+        const selectedVehicle = vehicles?.find(v => v.id === value.tractorUnitId);
+        if (selectedVehicle) {
+          form.setValue("mainVehiclePlate", selectedVehicle.plate);
+        }
       }
     });
+    
     return () => subscription.unsubscribe();
-  }, [form.watch]);
+  }, [form, vehicles]);
 
-  // Atualiza o form quando o transportador pré-selecionado muda
-  useEffect(() => {
-    if (preSelectedTransporterId) {
-      form.setValue("transporterId", preSelectedTransporterId);
-    }
-  }, [preSelectedTransporterId, form]);
-
-  // Busca transportadores
-  const { data: transporters = [], isLoading: isLoadingTransporters } = useQuery<Transporter[]>({
-    queryKey: ["/api/user/transporters"],
-    queryFn: async () => {
-      const res = await fetch("/api/user/transporters", {
-        credentials: "include"
-      });
-      if (!res.ok) {
-        throw new Error("Erro ao buscar transportadores");
-      }
-      return res.json();
-    }
-  });
-
-  // Busca veículos
-  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
-    queryKey: ["/api/vehicles"],
-    queryFn: async () => {
-      const res = await fetch("/api/vehicles", {
-        credentials: "include"
-      });
-      if (!res.ok) {
-        throw new Error("Erro ao buscar veículos");
-      }
-      return res.json();
-    }
-  });
-
-  // Filtra veículos por tipo
-  const tractorUnits = vehicles.filter(v => v.type === "tractor_unit");
-  const semiTrailers = vehicles.filter(v => v.type === "semi_trailer");
-  const dollys = vehicles.filter(v => v.type === "dolly");
-  const flatbeds = vehicles.filter(v => v.type === "flatbed");
-
-  // Mutation para salvar como rascunho
+  // Handle form submissions
   const saveAsDraftMutation = useMutation({
-    mutationFn: async (data: FormValues) => {
-      const res = await apiRequest("POST", `/api/licenses/drafts${draft?.id ? `/${draft.id}` : ""}`, data);
+    mutationFn: async (data: z.infer<typeof insertDraftLicenseSchema>) => {
+      const url = draft ? `/api/licenses/drafts/${draft.id}` : '/api/licenses/drafts';
+      const method = draft ? "PATCH" : "POST";
+      const res = await apiRequest(method, url, data);
       return await res.json();
     },
     onSuccess: () => {
       toast({
         title: "Rascunho salvo",
-        description: "O rascunho foi salvo com sucesso.",
+        description: "O rascunho da licença foi salvo com sucesso",
       });
       onComplete();
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao salvar rascunho",
-        description: error.message,
+        title: "Erro",
+        description: error.message || "Não foi possível salvar o rascunho",
         variant: "destructive",
       });
     },
   });
 
-  // Mutation para enviar o pedido
   const submitRequestMutation = useMutation({
-    mutationFn: async (data: FormValues) => {
-      try {
-        console.log("Enviando dados:", data);
-        
-        // Certifique-se de que os dados estão no formato esperado
-        const formattedData = {
-          ...data,
-          // Importante: o backend espera o campo 'states' e não 'requestedStates'
-          states: data.states || data.requestedStates || [],
-          // Se não houver tractorUnitId, defina uma placa padrão
-          mainVehiclePlate: data.mainVehiclePlate || "Não especificado",
-          // Defina um comprimento padrão se não existir
-          length: data.length || 2000,
-          // Indica que não é um rascunho
-          isDraft: false
-        };
-        
-        console.log("Dados formatados:", formattedData);
-        
-        const res = await apiRequest("POST", "/api/licenses/submit", formattedData);
-        
-        // Verifica se a requisição foi bem-sucedida
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || "Erro ao enviar solicitação");
-        }
-        
-        // Retorna os dados da resposta
-        return await res.json();
-      } catch (error) {
-        console.error("Erro na mutação:", error);
-        throw error;
-      }
+    mutationFn: async (data: z.infer<typeof insertLicenseRequestSchema>) => {
+      const url = draft ? `/api/licenses/drafts/${draft.id}/submit` : '/api/licenses';
+      const method = "POST";
+      const res = await apiRequest(method, url, data);
+      return await res.json();
     },
-    onSuccess: (data) => {
-      console.log("Solicitação enviada com sucesso:", data);
-      
-      // Notifica o usuário
+    onSuccess: () => {
       toast({
         title: "Solicitação enviada",
-        description: "A solicitação de licença foi enviada com sucesso.",
+        description: "A solicitação de licença foi enviada com sucesso",
       });
-      
-      // Fecha o formulário e redireciona
-      setTimeout(() => {
-        onComplete();
-        
-        // Atualiza a cache da query
-        queryClient.invalidateQueries({
-          queryKey: ["/api/licenses"],
-        });
-      }, 500);
+      onComplete();
     },
     onError: (error: Error) => {
-      console.error("Erro ao enviar solicitação:", error);
       toast({
-        title: "Erro ao enviar solicitação",
-        description: error.message || "Ocorreu um erro ao processar sua solicitação",
+        title: "Erro",
+        description: error.message || "Não foi possível enviar a solicitação",
         variant: "destructive",
       });
     },
   });
 
-  // Adiciona uma placa adicional
-  const addAdditionalPlate = () => {
-    const currentPlates = form.getValues("additionalPlates") || [];
-    form.setValue("additionalPlates", [...currentPlates, { plate: "", type: "" }]);
-  };
-
-  // Remove uma placa adicional
-  const removeAdditionalPlate = (index: number) => {
-    const currentPlates = form.getValues("additionalPlates");
-    if (currentPlates) {
-      form.setValue("additionalPlates", currentPlates.filter((_, i) => i !== index));
-    }
-  };
-
-  // Função de submit
-  const onSubmit = (data: FormValues) => {
-    // Verificar valores obrigatórios
-    if (!data.transporterId) {
-      toast({
-        title: "Erro de validação",
-        description: "Selecione um transportador",
-        variant: "destructive",
-      });
-      return;
-    }
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    // Adjust length from meters to centimeters for storage
+    const dataToSubmit = {
+      ...values,
+      length: Math.round((values.length || 0) * 100), // Convert to centimeters
+    };
     
-    if (!data.type) {
-      toast({
-        title: "Erro de validação",
-        description: "Selecione um tipo de conjunto",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (data.requestedStates.length === 0) {
-      toast({
-        title: "Erro de validação",
-        description: "Selecione pelo menos um estado",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Garante que o campo states receba os valores de requestedStates 
-    data.states = [...data.requestedStates];
-    
-    // Verificar veículos de acordo com o tipo
-    if (data.type === 'roadtrain_9_axles' || 
-        data.type === 'bitrain_9_axles' || 
-        data.type === 'bitrain_7_axles' || 
-        data.type === 'bitrain_6_axles') {
-      if (!data.tractorUnitId) {
-        toast({
-          title: "Erro de validação",
-          description: "Selecione uma unidade tratora",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    
-    // Definir placa principal
-    const mainVehicle = vehicles.find(v => v.id === data.tractorUnitId);
-    if (mainVehicle) {
-      data.mainVehiclePlate = mainVehicle.plate;
+    if (values.isDraft) {
+      // Cast to appropriate types to satisfy TypeScript
+      saveAsDraftMutation.mutate(dataToSubmit as any);
     } else {
-      data.mainVehiclePlate = "Não especificado";
-    }
-    
-    // Definir comprimento padrão se não for especificado
-    if (!data.length) {
-      data.length = 2000; // 20 metros em centímetros
-    }
-    
-    console.log("Dados processados para envio:", data);
-    
-    if (data.isDraft) {
-      saveAsDraftMutation.mutate(data);
-    } else {
-      submitRequestMutation.mutate(data);
+      // Remove isDraft from payload when submitting a license request
+      const { isDraft, ...requestData } = dataToSubmit;
+      submitRequestMutation.mutate(requestData as any);
     }
   };
 
-  // Funções de manipulação
   const handleSaveDraft = () => {
     form.setValue("isDraft", true);
     form.handleSubmit(onSubmit)();
@@ -388,169 +284,24 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Rodotrem 9 eixos */}
         {licenseType === 'roadtrain_9_axles' && (
-          <div className="border border-gray-200 rounded-lg p-6 space-y-6 mx-auto max-w-6xl shadow-sm">
-            <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Veículos do Rodotrem</h3>
+          <div className="border border-gray-200 rounded-lg p-6 mx-auto max-w-6xl shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-xl text-center mb-5">Veículos do Rodotrem</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="tractorUnitId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">Unidade Tratora</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione a unidade tratora" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : tractorUnits.length > 0 ? (
-                          tractorUnits.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="firstTrailerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">1ª Carreta</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione a 1ª carreta" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : semiTrailers.length > 0 ? (
-                          semiTrailers.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="dollyId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">Dolly</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione o dolly" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : dollys.length > 0 ? (
-                          dollys.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="secondTrailerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">2ª Carreta</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione a 2ª carreta" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : semiTrailers.length > 0 ? (
-                          semiTrailers.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Dynamic fields for Bitrem */}
-        {(licenseType === 'bitrain_9_axles' || licenseType === 'bitrain_7_axles' || licenseType === 'bitrain_6_axles') && (
-          <div className="border border-gray-200 rounded-lg p-6 space-y-6 mx-auto max-w-6xl shadow-sm">
-            <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Veículos do Bitrem</h3>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <div>
+            <div className="space-y-5">
+              <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+                <div className="flex-1">
                   <FormField
                     control={form.control}
                     name="tractorUnitId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-medium mb-2">Unidade Tratora</FormLabel>
+                        <FormLabel className="text-base font-medium mb-2 block">Unidade Tratora</FormLabel>
                         <Select 
                           onValueChange={(value) => field.onChange(parseInt(value))} 
                           defaultValue={field.value?.toString()}
                         >
                           <FormControl>
-                            <SelectTrigger className="h-11">
+                            <SelectTrigger className="h-12">
                               <SelectValue placeholder="Selecione a unidade tratora" />
                             </SelectTrigger>
                           </FormControl>
@@ -574,19 +325,19 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                   />
                 </div>
                 
-                <div>
+                <div className="flex-1">
                   <FormField
                     control={form.control}
                     name="firstTrailerId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-medium mb-2">1ª Carreta</FormLabel>
+                        <FormLabel className="text-base font-medium mb-2 block">1ª Carreta</FormLabel>
                         <Select 
                           onValueChange={(value) => field.onChange(parseInt(value))} 
                           defaultValue={field.value?.toString()}
                         >
                           <FormControl>
-                            <SelectTrigger className="h-11">
+                            <SelectTrigger className="h-12">
                               <SelectValue placeholder="Selecione a 1ª carreta" />
                             </SelectTrigger>
                           </FormControl>
@@ -611,19 +362,176 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 </div>
               </div>
               
-              <div>
+              <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="dollyId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium mb-2 block">Dolly</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          defaultValue={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Selecione o dolly" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : dollys.length > 0 ? (
+                              dollys.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="secondTrailerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium mb-2 block">2ª Carreta</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          defaultValue={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Selecione a 2ª carreta" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : semiTrailers.length > 0 ? (
+                              semiTrailers.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic fields for Bitrem */}
+        {(licenseType === 'bitrain_9_axles' || licenseType === 'bitrain_7_axles' || licenseType === 'bitrain_6_axles') && (
+          <div className="border border-gray-200 rounded-lg p-6 mx-auto max-w-6xl shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-xl text-center mb-5">Veículos do Bitrem</h3>
+            
+            <div className="space-y-5">
+              <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="tractorUnitId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium mb-2 block">Unidade Tratora</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          defaultValue={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Selecione a unidade tratora" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : tractorUnits.length > 0 ? (
+                              tractorUnits.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="firstTrailerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium mb-2 block">1ª Carreta</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          defaultValue={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Selecione a 1ª carreta" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingVehicles ? (
+                              <SelectItem value="loading">Carregando...</SelectItem>
+                            ) : semiTrailers.length > 0 ? (
+                              semiTrailers.map((vehicle) => (
+                                <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                  {vehicle.plate}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="mx-auto max-w-md">
                 <FormField
                   control={form.control}
                   name="secondTrailerId"
                   render={({ field }) => (
-                    <FormItem className="md:w-1/2 mx-auto">
-                      <FormLabel className="text-base font-medium mb-2">2ª Carreta</FormLabel>
+                    <FormItem>
+                      <FormLabel className="text-base font-medium mb-2 block">2ª Carreta</FormLabel>
                       <Select 
                         onValueChange={(value) => field.onChange(parseInt(value))} 
                         defaultValue={field.value?.toString()}
                       >
                         <FormControl>
-                          <SelectTrigger className="h-11">
+                          <SelectTrigger className="h-12">
                             <SelectValue placeholder="Selecione a 2ª carreta" />
                           </SelectTrigger>
                         </FormControl>
@@ -652,178 +560,94 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Prancha */}
         {licenseType === 'flatbed' && (
-          <div className="border border-gray-200 rounded-lg p-5 space-y-4 mx-auto max-w-6xl shadow-sm">
-            <h3 className="font-semibold text-gray-800 text-xl text-center mb-3">Veículos da Prancha</h3>
+          <div className="border border-gray-200 rounded-lg p-6 mx-auto max-w-6xl shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-xl text-center mb-5">Veículos da Prancha</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="tractorUnitId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium mb-1">Unidade Tratora</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Selecione a unidade tratora" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : tractorUnits.length > 0 ? (
-                          tractorUnits.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="flatbedId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium mb-1">Prancha</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Selecione a prancha" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : flatbeds.length > 0 ? (
-                          flatbeds.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+              <div className="flex-1">
+                <FormField
+                  control={form.control}
+                  name="tractorUnitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium mb-2 block">Unidade Tratora</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))} 
+                        defaultValue={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Selecione a unidade tratora" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isLoadingVehicles ? (
+                            <SelectItem value="loading">Carregando...</SelectItem>
+                          ) : tractorUnits.length > 0 ? (
+                            tractorUnits.map((vehicle) => (
+                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                {vehicle.plate}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="flex-1">
+                <FormField
+                  control={form.control}
+                  name="flatbedId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium mb-2 block">Prancha</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))} 
+                        defaultValue={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Selecione a prancha" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isLoadingVehicles ? (
+                            <SelectItem value="loading">Carregando...</SelectItem>
+                          ) : flatbeds.length > 0 ? (
+                            flatbeds.map((vehicle) => (
+                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                                {vehicle.plate}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_flatbed">Nenhuma prancha cadastrada</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
           </div>
         )}
 
         <div className="border border-gray-200 rounded-lg p-6 space-y-6 mx-auto max-w-6xl shadow-sm">
-          <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Relação de Placas Adicionais</h3>
-          <div className="text-sm text-muted-foreground mb-4 text-center">Adicione as placas que fazem parte da composição mas não constam da listagem acima</div>
-          
-          <FormField
-            control={form.control}
-            name="additionalPlates"
-            render={() => (
-              <FormItem>
-                <div className="flex flex-col space-y-4">
-                  {form.getValues("additionalPlates")?.map((plate, index) => (
-                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md mx-auto max-w-3xl">
-                      <div className="grid grid-cols-3 gap-2" style={{ gridTemplateColumns: '3fr 1fr auto' }}>
-                        <Input
-                          placeholder="Placa do Veículo"
-                          value={plate.plate}
-                          onChange={(e) => {
-                            const updatedPlates = [...form.getValues("additionalPlates")];
-                            updatedPlates[index].plate = e.target.value;
-                            form.setValue("additionalPlates", updatedPlates);
-                          }}
-                          className="h-9"
-                        />
-                        
-                        <Select
-                          value={plate.type}
-                          onValueChange={(value) => {
-                            const updatedPlates = [...form.getValues("additionalPlates")];
-                            updatedPlates[index].type = value;
-                            form.setValue("additionalPlates", updatedPlates);
-                          }}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Tipo" />
-                          </SelectTrigger>
-                          <SelectContent align="center">
-                            <SelectItem value="tractor_unit">Cavalo</SelectItem>
-                            <SelectItem value="semi_trailer">Semi</SelectItem>
-                            <SelectItem value="trailer">Reboque</SelectItem>
-                            <SelectItem value="dolly">Dolly</SelectItem>
-                            <SelectItem value="flatbed">Prancha</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        
-                        <Button 
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeAdditionalPlate(index)}
-                          className="h-9 w-9 p-0 justify-self-start"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="mt-2">
-                        {form.formState.errors.additionalPlates?.[index]?.plate && (
-                          <div className="text-sm text-red-500">
-                            {form.formState.errors.additionalPlates[index]?.plate?.message}
-                          </div>
-                        )}
-                        {form.formState.errors.additionalPlates?.[index]?.type && (
-                          <div className="text-sm text-red-500">
-                            {form.formState.errors.additionalPlates[index]?.type?.message}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addAdditionalPlate}
-                      className="flex items-center w-auto px-3 py-1 h-8 text-sm"
-                    >
-                      <Plus className="mr-1 h-3.5 w-3.5" />
-                      Adicionar Placa
-                    </Button>
-                  </div>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="border border-gray-200 rounded-lg p-6 space-y-6 mx-auto max-w-6xl shadow-sm">
           <div className="mb-4">
-            <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Estados Solicitados*</h3>
+            <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Estados Solicitados</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {brazilianStates.map((state) => (
                 <FormField
                   key={state.code}
                   control={form.control}
-                  name="requestedStates"
+                  name="states"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
@@ -834,7 +658,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                             const newValue = checked
                               ? [...currentValue, state.code]
                               : currentValue.filter((value) => value !== state.code);
-                            console.log(`Estados selecionados:`, newValue);
                             return field.onChange(newValue);
                           }}
                         />
@@ -851,13 +674,13 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
           <FormField
             control={form.control}
-            name="additionalInfo"
+            name="comments"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Informações Adicionais</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Qualquer informação relevante para o pedido..."
+                    placeholder="Informações adicionais para esta solicitação de licença..."
                     className="resize-none"
                     {...field}
                   />
@@ -871,33 +694,32 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-end gap-4 sm:space-x-4 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
           <Button 
             type="button" 
             variant="outline" 
             onClick={onCancel}
-            className="w-full sm:w-auto order-3 sm:order-1"
           >
             Cancelar
           </Button>
-          <Button
-            type="button"
-            variant="outline"
+          
+          <Button 
+            type="button" 
+            variant="secondary" 
             onClick={handleSaveDraft}
             disabled={isProcessing}
-            className="w-full sm:w-auto order-2"
           >
-            {saveAsDraftMutation.isPending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+            {saveAsDraftMutation.isPending ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
             Salvar Rascunho
           </Button>
-          <Button
-            type="button"
+          
+          <Button 
+            type="button" 
             onClick={handleSubmitRequest}
             disabled={isProcessing}
-            className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto order-1 sm:order-3"
           >
-            {submitRequestMutation.isPending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-            Enviar Pedido
+            {submitRequestMutation.isPending ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Enviar Solicitação
           </Button>
         </div>
       </form>
