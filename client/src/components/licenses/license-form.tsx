@@ -533,22 +533,22 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Bitrem */}
         {(licenseType === 'bitrain_9_axles' || licenseType === 'bitrain_7_axles' || licenseType === 'bitrain_6_axles') && (
-          <div className="border border-gray-200 rounded-lg p-6 space-y-6 mx-auto max-w-6xl shadow-sm">
-            <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Veículos do Bitrem</h3>
+          <div className="border border-gray-200 rounded-lg p-5 space-y-4 mx-auto max-w-6xl shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-xl text-center mb-3">Veículos do Bitrem</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="tractorUnitId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">Unidade Tratora</FormLabel>
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium mb-1">Unidade Tratora</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       defaultValue={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11">
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Selecione a unidade tratora" />
                         </SelectTrigger>
                       </FormControl>
@@ -575,14 +575,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 control={form.control}
                 name="firstTrailerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">1ª Carreta</FormLabel>
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium mb-1">1ª Carreta</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       defaultValue={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11">
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Selecione a 1ª carreta" />
                         </SelectTrigger>
                       </FormControl>
@@ -609,14 +609,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 control={form.control}
                 name="secondTrailerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col md:col-span-2 md:w-1/2 md:mx-auto">
-                    <FormLabel className="text-base mb-2">2ª Carreta</FormLabel>
+                  <FormItem className="md:col-span-2 md:w-1/2 md:mx-auto">
+                    <FormLabel className="text-sm font-medium mb-1">2ª Carreta</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       defaultValue={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11">
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Selecione a 2ª carreta" />
                         </SelectTrigger>
                       </FormControl>
@@ -644,22 +644,22 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Prancha */}
         {licenseType === 'flatbed' && (
-          <div className="border border-gray-200 rounded-lg p-6 space-y-6 mx-auto max-w-6xl shadow-sm">
-            <h3 className="font-semibold text-gray-800 text-xl text-center mb-4">Veículos da Prancha</h3>
+          <div className="border border-gray-200 rounded-lg p-5 space-y-4 mx-auto max-w-6xl shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-xl text-center mb-3">Veículos da Prancha</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="tractorUnitId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">Unidade Tratora</FormLabel>
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium mb-1">Unidade Tratora</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       defaultValue={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11">
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Selecione a unidade tratora" />
                         </SelectTrigger>
                       </FormControl>
@@ -686,14 +686,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 control={form.control}
                 name="flatbedId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-base mb-2">Prancha</FormLabel>
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium mb-1">Prancha</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       defaultValue={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11">
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Selecione a prancha" />
                         </SelectTrigger>
                       </FormControl>
@@ -731,7 +731,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 <div className="flex flex-col space-y-4">
                   {form.getValues("additionalPlates")?.map((plate, index) => (
                     <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md mx-auto max-w-4xl">
-                      <div className="flex items-center space-x-2 mx-auto max-w-3xl">
+                      <div className="flex items-center space-x-1 mx-auto max-w-3xl">
                         <Input
                           placeholder="Placa do Veículo"
                           value={plate.plate}
@@ -751,7 +751,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                             form.setValue("additionalPlates", updatedPlates);
                           }}
                         >
-                          <SelectTrigger className="w-[140px] h-9">
+                          <SelectTrigger className="w-[120px] h-9">
                             <SelectValue placeholder="Tipo" />
                           </SelectTrigger>
                           <SelectContent align="center">
