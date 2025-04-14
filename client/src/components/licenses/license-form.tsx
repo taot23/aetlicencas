@@ -730,8 +730,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <FormItem>
                 <div className="flex flex-col space-y-4">
                   {form.getValues("additionalPlates")?.map((plate, index) => (
-                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md mx-auto max-w-4xl">
-                      <div className="grid grid-cols-[minmax(80px,_1fr)_80px_auto] gap-1 mx-auto max-w-3xl">
+                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md mx-auto max-w-3xl">
+                      <div className="grid grid-cols-3 gap-2" style={{ gridTemplateColumns: '3fr 1fr auto' }}>
                         <Input
                           placeholder="Placa do Veículo"
                           value={plate.plate}
