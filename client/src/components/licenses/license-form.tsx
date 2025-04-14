@@ -731,83 +731,47 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 <div className="flex flex-col space-y-4">
                   {form.getValues("additionalPlates")?.map((plate, index) => (
                     <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md mx-auto max-w-3xl">
-                      <div className="flex flex-col space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            placeholder="Placa do Veículo"
-                            value={plate.plate}
-                            onChange={(e) => {
-                              const updatedPlates = [...form.getValues("additionalPlates")];
-                              updatedPlates[index].plate = e.target.value;
-                              form.setValue("additionalPlates", updatedPlates);
-                            }}
-                            className="h-9 w-full"
-                          />
-                          <Button 
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeAdditionalPlate(index)}
-                            className="h-9 w-9 p-0"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      <div className="grid grid-cols-3 gap-2" style={{ gridTemplateColumns: '3fr 1fr auto' }}>
+                        <Input
+                          placeholder="Placa do Veículo"
+                          value={plate.plate}
+                          onChange={(e) => {
+                            const updatedPlates = [...form.getValues("additionalPlates")];
+                            updatedPlates[index].plate = e.target.value;
+                            form.setValue("additionalPlates", updatedPlates);
+                          }}
+                          className="h-9"
+                        />
                         
-                        <div className="flex justify-between space-x-2">
-                          <Button
-                            type="button"
-                            variant={plate.type === "tractor_unit" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              const updatedPlates = [...form.getValues("additionalPlates")];
-                              updatedPlates[index].type = "tractor_unit";
-                              form.setValue("additionalPlates", updatedPlates);
-                            }}
-                            className={`h-9 flex-1 ${plate.type === "tractor_unit" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
-                          >
-                            Unidade Tratora
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={plate.type === "semi_trailer" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              const updatedPlates = [...form.getValues("additionalPlates")];
-                              updatedPlates[index].type = "semi_trailer";
-                              form.setValue("additionalPlates", updatedPlates);
-                            }}
-                            className={`h-9 flex-1 ${plate.type === "semi_trailer" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
-                          >
-                            1ª Carreta
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={plate.type === "dolly" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              const updatedPlates = [...form.getValues("additionalPlates")];
-                              updatedPlates[index].type = "dolly";
-                              form.setValue("additionalPlates", updatedPlates);
-                            }}
-                            className={`h-9 flex-1 ${plate.type === "dolly" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
-                          >
-                            Dolly
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={plate.type === "trailer" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              const updatedPlates = [...form.getValues("additionalPlates")];
-                              updatedPlates[index].type = "trailer";
-                              form.setValue("additionalPlates", updatedPlates);
-                            }}
-                            className={`h-9 flex-1 ${plate.type === "trailer" ? "bg-blue-600 hover:bg-blue-700" : ""}`}
-                          >
-                            2ª Carreta
-                          </Button>
-                        </div>
+                        <Select
+                          value={plate.type}
+                          onValueChange={(value) => {
+                            const updatedPlates = [...form.getValues("additionalPlates")];
+                            updatedPlates[index].type = value;
+                            form.setValue("additionalPlates", updatedPlates);
+                          }}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Tipo" />
+                          </SelectTrigger>
+                          <SelectContent align="center">
+                            <SelectItem value="tractor_unit">Cavalo</SelectItem>
+                            <SelectItem value="semi_trailer">Semi</SelectItem>
+                            <SelectItem value="trailer">Reboque</SelectItem>
+                            <SelectItem value="dolly">Dolly</SelectItem>
+                            <SelectItem value="flatbed">Prancha</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Button 
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeAdditionalPlate(index)}
+                          className="h-9 w-9 p-0 justify-self-start"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                       
                       <div className="mt-2">
