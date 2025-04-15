@@ -61,11 +61,15 @@ export function MultiplePlatesField({
           value={vehiclePlates}
           onChange={setVehiclePlates}
           suggestions={plateSuggestions}
-          placeholder="Digite ou cole placas (ex: AAA1234, AAA1B34)"
+          placeholder="Digite as placas e pressione Enter (ex: AAA1234, AAA1B34)"
         />
       </FormControl>
-      {description && (
+      {description ? (
         <p className="text-sm text-muted-foreground">{description}</p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Adicione placas de veículos que fazem parte da composição mas não foram selecionados acima
+        </p>
       )}
       <FormMessage />
     </FormItem>

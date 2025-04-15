@@ -174,8 +174,8 @@ export function LicensePlatesInput({
       {label && <div className="text-sm font-medium">{label}</div>}
       
       <div className="flex flex-col space-y-2">
-        {/* Campo de entrada */}
-        <div className="flex">
+        {/* Campo de entrada estilo observação */}
+        <div className="w-full">
           <Input
             ref={inputRef}
             type="text"
@@ -184,25 +184,18 @@ export function LicensePlatesInput({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onFocus={() => setShowSuggestions(filteredSuggestions.length > 0)}
+            onBlur={() => {
+              // Quando perde o foco, se tiver uma placa válida, adiciona automaticamente
+              setTimeout(() => {
+                if (inputValue && isValidLicensePlate(formatLicensePlate(inputValue))) {
+                  addPlate(inputValue);
+                }
+              }, 200); // Pequeno delay para permitir que o clique em uma sugestão funcione
+            }}
             placeholder={placeholder}
-            className={`flex-1 ${inputValue && !isValidLicensePlate(inputValue) ? 'border-red-500' : ''}`}
+            className={`w-full ${inputValue && !isValidLicensePlate(inputValue) ? 'border-red-500' : ''}`}
             maxLength={7}
           />
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              if (isValidLicensePlate(formatLicensePlate(inputValue))) {
-                addPlate(inputValue);
-              }
-            }}
-            disabled={!inputValue || !isValidLicensePlate(formatLicensePlate(inputValue))}
-            className="ml-2"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
         
         {/* Lista de sugestões */}
