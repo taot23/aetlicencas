@@ -142,10 +142,7 @@ export default function VehiclesPage() {
       />
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogTitle>
-            {currentVehicle ? "Editar Veículo" : "Cadastrar Veículo"}
-          </DialogTitle>
+        <DialogContent className="sm:max-w-[600px]" hideCloseButton>
           <VehicleForm 
             vehicle={currentVehicle} 
             onSuccess={handleFormSuccess} 
