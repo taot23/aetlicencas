@@ -46,6 +46,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
     axleCount: z.coerce.number().optional(),
   });
 
+  // Estado para controlar os placeholders dinâmicos
+  const [vehicleType, setVehicleType] = useState<string>(vehicle?.type || "tractor_unit");
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: vehicle ? {
@@ -259,7 +262,10 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             <FormItem>
               <FormLabel>Tipo de Veículo</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  setVehicleType(value);
+                }} 
                 value={field.value}
                 defaultValue={field.value}>
                 <FormControl>
@@ -302,7 +308,16 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               <FormItem>
                 <FormLabel>Marca</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex.: Scania" {...field} />
+                  <Input 
+                    placeholder={
+                      vehicleType === "tractor_unit" 
+                        ? "Ex.: Scania" 
+                        : vehicleType === "semi_trailer" || vehicleType === "trailer"
+                          ? "Ex.: RANDON"
+                          : "Marca do veículo"
+                    } 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -316,7 +331,16 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               <FormItem>
                 <FormLabel>Modelo</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex.: R450" {...field} />
+                  <Input 
+                    placeholder={
+                      vehicleType === "tractor_unit" 
+                        ? "Ex.: R450" 
+                        : vehicleType === "semi_trailer" || vehicleType === "trailer"
+                          ? "Ex.: SR BA"
+                          : "Modelo do veículo"
+                    } 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -332,7 +356,13 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               <FormItem>
                 <FormLabel>Ano</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="2023" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                  <Input 
+                    type="number" 
+                    placeholder="" 
+                    {...field} 
+                    value={field.value || ''} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -346,7 +376,13 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               <FormItem>
                 <FormLabel>Quantidade de Eixos</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="2" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                  <Input 
+                    type="number" 
+                    placeholder="" 
+                    {...field} 
+                    value={field.value || ''} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -360,7 +396,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               <FormItem>
                 <FormLabel>Ano do CRLV</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="2023" {...field} />
+                  <Input 
+                    type="number" 
+                    placeholder="" 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
