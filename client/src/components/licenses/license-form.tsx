@@ -12,6 +12,7 @@ import {
   Vehicle,
   LicenseRequest,
   Transporter,
+  insertVehicleSchema
 } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -50,6 +51,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface LicenseFormProps {
   draft?: LicenseRequest | null;
@@ -61,6 +70,7 @@ interface LicenseFormProps {
 export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporterId }: LicenseFormProps) {
   const { toast } = useToast();
   const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
+  const [showVehicleDialog, setShowVehicleDialog] = useState(false);
 
   // Fetch vehicles for the dropdown selectors
   const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
@@ -227,9 +237,211 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
   const isProcessing = saveAsDraftMutation.isPending || submitRequestMutation.isPending;
 
+  // Mutation para criar um novo veículo
+  const createVehicleMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof insertVehicleSchema>) => {
+      const res = await apiRequest("POST", "/api/vehicles", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Veículo cadastrado",
+        description: "O veículo foi cadastrado com sucesso",
+      });
+      
+      // Atualizar a lista de veículos
+      queryClient.invalidateQueries({
+        queryKey: ["/api/vehicles"]
+      });
+      
+      setShowVehicleDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível cadastrar o veículo",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Formulário para cadastro de veículo
+  const vehicleForm = useForm<z.infer<typeof insertVehicleSchema>>({
+    resolver: zodResolver(insertVehicleSchema),
+    defaultValues: {
+      plate: "",
+      type: "",
+      brand: "",
+      model: "",
+      year: undefined,
+      renavam: ""
+    }
+  });
+  
+  const handleCreateVehicle = (data: z.infer<typeof insertVehicleSchema>) => {
+    createVehicleMutation.mutate(data);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      
+      <Dialog open={showVehicleDialog} onOpenChange={setShowVehicleDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Cadastrar Novo Veículo</DialogTitle>
+            <DialogDescription>
+              Preencha as informações do veículo para adicioná-lo ao sistema
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...vehicleForm}>
+            <form onSubmit={vehicleForm.handleSubmit(handleCreateVehicle)} className="space-y-4">
+              <FormField
+                control={vehicleForm.control}
+                name="plate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Placa</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ABC-1234" {...field} className="uppercase" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={vehicleForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Veículo</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="tractor_unit">Unidade Tratora (Cavalo)</SelectItem>
+                        <SelectItem value="semi_trailer">Semirreboque</SelectItem>
+                        <SelectItem value="dolly">Dolly</SelectItem>
+                        <SelectItem value="flatbed">Prancha</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={vehicleForm.control}
+                  name="brand"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Marca</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Marca" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={vehicleForm.control}
+                  name="model"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modelo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Modelo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={vehicleForm.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ano</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="2023" 
+                          {...field}
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={vehicleForm.control}
+                  name="renavam"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Renavam</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Renavam" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={vehicleForm.control}
+                name="remarks"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Observações sobre o veículo..." 
+                        className="resize-none" 
+                        {...field} 
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowVehicleDialog(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={createVehicleMutation.isPending}
+                >
+                  {createVehicleMutation.isPending && (
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Cadastrar Veículo
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
         <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
             <Building2 className="mr-2 h-5 w-5" />
@@ -909,7 +1121,16 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               </h4>
               <p className="text-sm text-blue-600 mb-3">
                 Os CRLVs dos veículos serão vinculados automaticamente a partir do cadastro de veículos.
-                Caso não encontre algum veículo, cadastre-o primeiro na seção de veículos.
+                Caso não encontre algum veículo, cadastre-o aqui:
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-1 h-6 px-2 inline-flex items-center"
+                  onClick={() => setShowVehicleDialog(true)}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Veículo
+                </Button>
               </p>
               <div className="text-xs text-gray-500">
                 Formatos aceitos: PDF, JPG, PNG
