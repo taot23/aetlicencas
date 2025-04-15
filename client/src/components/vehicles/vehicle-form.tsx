@@ -331,7 +331,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           )}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="brand"
@@ -377,15 +377,13 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               </FormItem>
             )}
           />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
           <FormField
             control={form.control}
-            name="year"
+            name="axleCount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ano</FormLabel>
+                <FormLabel>Quantidade de Eixos</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -399,13 +397,15 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               </FormItem>
             )}
           />
-          
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="axleCount"
+            name="year"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantidade de Eixos</FormLabel>
+                <FormLabel>Ano</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
