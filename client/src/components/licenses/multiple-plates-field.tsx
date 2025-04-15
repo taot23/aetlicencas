@@ -78,7 +78,7 @@ export function MultiplePlatesField({
   });
   
   // Buscar veículos para validação - usando API pública para garantir acesso
-  const { data: vehicles = [] } = useQuery<Vehicle[]>({
+  const { data: vehicles = [], isSuccess: vehiclesLoaded } = useQuery<Vehicle[]>({
     queryKey: ['/api/vehicles'],
     queryFn: async () => {
       try {
@@ -92,7 +92,9 @@ export function MultiplePlatesField({
           return [];
         }
         
-        return await response.json();
+        const result = await response.json();
+        console.log("Veículos carregados da API:", result);
+        return result;
       } catch (error) {
         console.error('Erro ao buscar veículos:', error);
         return [];
@@ -274,13 +276,16 @@ export function MultiplePlatesField({
                   type="button"
                   size="sm"
                   variant="outline"
-                  className={`px-2 py-0.5 h-7 text-xs font-medium ${
-                    vehiclePlates.includes(plate)
-                      ? 'bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-500' // Placa selecionada (sempre azul)
-                      : isRegistered
-                        ? 'bg-green-500 hover:bg-green-400 text-white border-green-500' // Veículo cadastrado (verde)
-                        : 'bg-red-500 hover:bg-red-400 text-white border-red-500' // Veículo não cadastrado (vermelho)
-                  }`}
+                  className={`px-2 py-0.5 h-7 text-xs font-medium 
+                    ${vehiclesLoaded ? (
+                      vehiclePlates.includes(plate)
+                        ? 'bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-500' // Placa selecionada (sempre azul)
+                        : isRegistered
+                          ? 'bg-green-500 hover:bg-green-400 text-white border-green-500' // Veículo cadastrado (verde)
+                          : 'bg-red-500 hover:bg-red-400 text-white border-red-500' // Veículo não cadastrado (vermelho)
+                      ) : 'bg-gray-500 hover:bg-gray-400 text-white' // Estado de carregamento
+                    }
+                  `}
                   onClick={() => togglePlateSelection(plate)}
                 >
                   {plate}
@@ -308,11 +313,13 @@ export function MultiplePlatesField({
                   type="button"
                   size="sm"
                   variant="outline"
-                  className={`px-2 py-0.5 h-7 text-xs font-medium ${
-                    isRegistered
-                      ? 'bg-green-600 hover:bg-green-500 text-white border-green-600' // Veículo cadastrado (verde)
-                      : 'bg-red-600 hover:bg-red-500 text-white border-red-600' // Veículo não cadastrado (vermelho)
-                  } flex justify-between`}
+                  className={`px-2 py-0.5 h-7 text-xs font-medium 
+                    ${vehiclesLoaded ? (
+                      isRegistered
+                        ? 'bg-green-600 hover:bg-green-500 text-white border-green-600' // Veículo cadastrado (verde)
+                        : 'bg-red-600 hover:bg-red-500 text-white border-red-600' // Veículo não cadastrado (vermelho)
+                      ) : 'bg-gray-500 hover:bg-gray-400 text-white' // Estado de carregamento
+                    } flex justify-between`}
                   onClick={() => {}}
                 >
                   <span className="truncate mr-1">{plate}</span>
