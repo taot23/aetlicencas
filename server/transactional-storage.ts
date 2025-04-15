@@ -5,7 +5,7 @@ import {
   licenseRequests, type LicenseRequest, type InsertLicenseRequest, type UpdateLicenseStatus, 
   type UpdateLicenseState, LicenseStatus, LicenseType
 } from "@shared/schema";
-import { eq, and, desc, asc, sql, gt, lt, like, not, isNull } from "drizzle-orm";
+import { eq, and, desc, asc, sql, gt, lt, like, not, isNull, or } from "drizzle-orm";
 import { db, pool, withTransaction } from "./db";
 import { IStorage, DashboardStats, ChartData } from "./storage";
 import {
@@ -26,7 +26,7 @@ const PostgresSessionStore = connectPg(session);
  * Implementação de armazenamento usando PostgreSQL com suporte a transações
  */
 export class TransactionalStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
@@ -157,6 +157,32 @@ export class TransactionalStorage implements IStorage {
     return updatedTransporter;
   }
   
+  async linkTransporterToUser(transporterId: number, userId: number | null): Promise<Transporter> {
+    // Verificar se o transportador existe
+    const transporter = await this.getTransporterById(transporterId);
+    if (!transporter) {
+      throw new Error("Transportador não encontrado");
+    }
+    
+    // Se userId for null, estamos apenas removendo a vinculação
+    if (userId !== null) {
+      // Verificar se o usuário existe
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error("Usuário não encontrado");
+      }
+    }
+    
+    // Atualizar o transportador
+    const [updatedTransporter] = await db
+      .update(transporters)
+      .set({ userId })
+      .where(eq(transporters.id, transporterId))
+      .returning();
+    
+    return updatedTransporter;
+  }
+  
   async deleteTransporter(id: number): Promise<void> {
     // Usando transação para garantir que todas as operações sejam concluídas
     // ou nenhuma delas seja
@@ -213,11 +239,11 @@ export class TransactionalStorage implements IStorage {
     return await db.select().from(vehicles);
   }
   
-  async createVehicle(vehicleData: InsertVehicle & { userId: number }): Promise<Vehicle> {
+  async createVehicle(userId: number, vehicleData: InsertVehicle & { crlvUrl?: string | null }): Promise<Vehicle> {
     const [vehicle] = await db
       .insert(vehicles)
       .values({
-        userId: vehicleData.userId,
+        userId: userId,
         plate: vehicleData.plate,
         type: vehicleData.type,
         brand: vehicleData.brand || null,
@@ -317,23 +343,13 @@ export class TransactionalStorage implements IStorage {
       .orderBy(desc(licenseRequests.createdAt));
   }
   
-  async createLicenseRequest(licenseData: InsertLicenseRequest & { userId: number }): Promise<LicenseRequest> {
-    // Gerar número de pedido único: AET-ANO-XXXXX
-    const year = new Date().getFullYear();
-    const countResult = await db
-      .select({ count: sql`COUNT(*)` })
-      .from(licenseRequests)
-      .where(like(licenseRequests.requestNumber, `AET-${year}-%`));
-    
-    const count = Number(countResult[0].count) + 1;
-    const requestNumber = `AET-${year}-${count.toString().padStart(5, '0')}`;
-    
+  async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
     const [licenseRequest] = await db
       .insert(licenseRequests)
       .values({
-        userId: licenseData.userId,
+        userId,
         transporterId: licenseData.transporterId,
-        requestNumber,
+        requestNumber: licenseData.requestNumber,
         type: licenseData.type,
         mainVehiclePlate: licenseData.mainVehiclePlate,
         tractorUnitId: licenseData.tractorUnitId,
@@ -350,31 +366,144 @@ export class TransactionalStorage implements IStorage {
         stateFiles: licenseData.stateFiles || [],
         createdAt: new Date(),
         updatedAt: new Date(),
-        isDraft: licenseData.isDraft || false,
+        isDraft: licenseData.isDraft,
         comments: licenseData.comments,
-        licenseFileUrl: licenseData.licenseFileUrl || "",
-        validUntil: licenseData.validUntil
+        licenseFileUrl: licenseData.licenseFileUrl || null,
+        validUntil: licenseData.validUntil || null
       })
       .returning();
     
     return licenseRequest;
   }
   
-  async updateLicenseRequest(id: number, licenseData: Partial<LicenseRequest>): Promise<LicenseRequest> {
+  async createLicenseDraft(userId: number, draftData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
+    // Assegurar que é um rascunho
+    draftData.isDraft = true;
+    return this.createLicenseRequest(userId, draftData);
+  }
+  
+  async updateLicenseDraft(id: number, draftData: Partial<LicenseRequest>): Promise<LicenseRequest> {
     const updateData = {
-      ...licenseData,
+      ...draftData,
       updatedAt: new Date()
     };
     
-    const [updatedLicense] = await db
+    const [updatedDraft] = await db
       .update(licenseRequests)
       .set(updateData)
+      .where(
+        and(
+          eq(licenseRequests.id, id),
+          eq(licenseRequests.isDraft, true)
+        )
+      )
+      .returning();
+    
+    if (!updatedDraft) {
+      throw new Error("Rascunho de licença não encontrado");
+    }
+    
+    return updatedDraft;
+  }
+  
+  async submitLicenseDraft(id: number, requestNumber: string): Promise<LicenseRequest> {
+    // Verificar se o rascunho existe
+    const draft = await this.getLicenseRequestById(id);
+    if (!draft || !draft.isDraft) {
+      throw new Error("Rascunho de licença não encontrado");
+    }
+    
+    // Atualizar o rascunho para um pedido real
+    const [licenseRequest] = await db
+      .update(licenseRequests)
+      .set({
+        isDraft: false,
+        requestNumber,
+        status: "pending_registration",
+        updatedAt: new Date()
+      })
       .where(eq(licenseRequests.id, id))
       .returning();
     
-    if (!updatedLicense) {
+    return licenseRequest;
+  }
+  
+  async getLicenseDraftsByUserId(userId: number): Promise<LicenseRequest[]> {
+    return await db
+      .select()
+      .from(licenseRequests)
+      .where(
+        and(
+          eq(licenseRequests.userId, userId),
+          eq(licenseRequests.isDraft, true)
+        )
+      )
+      .orderBy(desc(licenseRequests.createdAt));
+  }
+  
+  async getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]> {
+    return await db
+      .select()
+      .from(licenseRequests)
+      .where(
+        and(
+          eq(licenseRequests.userId, userId),
+          eq(licenseRequests.isDraft, false),
+          or(
+            eq(licenseRequests.status, "approved"),
+            // Incluir licenças que tenham pelo menos um estado com status 'approved'
+            sql`EXISTS (
+              SELECT 1 FROM unnest(${licenseRequests.stateStatuses}) as state_status
+              WHERE state_status LIKE '%:approved'
+            )`
+          )
+        )
+      )
+      .orderBy(desc(licenseRequests.createdAt));
+  }
+  
+  async updateLicenseStateStatus(data: UpdateLicenseState): Promise<LicenseRequest> {
+    // Verificar se a licença existe
+    const license = await this.getLicenseRequestById(data.licenseId);
+    if (!license) {
       throw new Error("Pedido de licença não encontrado");
     }
+    
+    // Preparar os dados de atualização
+    let stateStatuses = [...(license.stateStatuses || [])];
+    const newStateStatus = `${data.state}:${data.status}`;
+    
+    // Verificar se o estado já existe na lista
+    const existingIndex = stateStatuses.findIndex(s => s.startsWith(`${data.state}:`));
+    if (existingIndex >= 0) {
+      stateStatuses[existingIndex] = newStateStatus;
+    } else {
+      stateStatuses.push(newStateStatus);
+    }
+    
+    // Atualizar arquivo do estado se fornecido
+    let stateFiles = [...(license.stateFiles || [])];
+    if (data.stateFile && typeof data.stateFile !== 'string') {
+      const newStateFile = `${data.state}:${data.stateFile.path}`;
+      
+      const existingFileIndex = stateFiles.findIndex(s => s.startsWith(`${data.state}:`));
+      if (existingFileIndex >= 0) {
+        stateFiles[existingFileIndex] = newStateFile;
+      } else {
+        stateFiles.push(newStateFile);
+      }
+    }
+    
+    // Executar a atualização
+    const [updatedLicense] = await db
+      .update(licenseRequests)
+      .set({
+        stateStatuses,
+        stateFiles,
+        updatedAt: new Date()
+      })
+      .where(eq(licenseRequests.id, data.licenseId))
+      .returning();
     
     return updatedLicense;
   }
@@ -456,15 +585,22 @@ export class TransactionalStorage implements IStorage {
   }
   
   // Métodos para obter estatísticas
-  async getDashboardStats(): Promise<DashboardStats> {
+  async getDashboardStats(userId: number): Promise<DashboardStats> {
     // Usar a nova função otimizada para estatísticas
     const stats = await getDashboardStatsCombined();
     
-    // Buscar as licenças recentes
-    const recentLicenses = await db
+    // Se for um usuário específico (não admin), filtrar adequadamente
+    let recentLicensesQuery = db
       .select()
       .from(licenseRequests)
-      .where(eq(licenseRequests.isDraft, false))
+      .where(eq(licenseRequests.isDraft, false));
+    
+    // Se não for usuário admin (userId 0), aplicar filtro por userId
+    if (userId !== 0) {
+      recentLicensesQuery = recentLicensesQuery.where(eq(licenseRequests.userId, userId));
+    }
+    
+    const recentLicenses = await recentLicensesQuery
       .orderBy(desc(licenseRequests.createdAt))
       .limit(5);
     
@@ -474,22 +610,72 @@ export class TransactionalStorage implements IStorage {
     };
   }
   
-  async getVehicleStats(): Promise<ChartData[]> {
-    const result = await getVehicleStatsByType();
+  async getVehicleStats(userId: number): Promise<ChartData[]> {
+    // Admin (userId 0) vê todos os veículos 
+    // Usuários comuns veem apenas os seus
+    let query = sql`
+      SELECT type, COUNT(*) as count
+      FROM ${vehicles}
+    `;
+    
+    if (userId !== 0) {
+      query = sql`
+        SELECT type, COUNT(*) as count
+        FROM ${vehicles}
+        WHERE user_id = ${userId}
+      `;
+    }
+    
+    query = sql`${query} GROUP BY type ORDER BY count DESC`;
+    
+    const result = await db.execute(query);
     
     return result.rows.map((row: any) => ({
-      name: row.type,
+      name: this.getVehicleTypeLabel(row.type),
       value: Number(row.count)
     }));
   }
   
-  async getStateStats(): Promise<ChartData[]> {
-    const result = await getLicenseStatsByState();
+  async getStateStats(userId: number): Promise<ChartData[]> {
+    // Admin (userId 0) vê todos os estados
+    // Usuários comuns veem apenas os seus
+    let query = sql`
+      WITH expanded_states AS (
+        SELECT id, unnest(states) as state
+        FROM ${licenseRequests}
+        WHERE is_draft = false
+    `;
+    
+    if (userId !== 0) {
+      query = sql`${query} AND user_id = ${userId}`;
+    }
+    
+    query = sql`${query})
+      SELECT state, COUNT(*) as count
+      FROM expanded_states
+      GROUP BY state
+      ORDER BY count DESC
+    `;
+    
+    const result = await db.execute(query);
     
     return result.rows.map((row: any) => ({
       name: row.state,
       value: Number(row.count)
     }));
+  }
+  
+  // Método auxiliar para converter códigos de tipo de veículo para rótulos legíveis
+  private getVehicleTypeLabel(type: string): string {
+    const typeMap: Record<string, string> = {
+      'tractor': 'Unidade Tratora',
+      'semi_trailer': 'Semirreboque',
+      'trailer': 'Reboque',
+      'dolly': 'Dolly',
+      'flatbed': 'Prancha'
+    };
+    
+    return typeMap[type] || type;
   }
   
   // Método para pesquisa global
