@@ -47,19 +47,18 @@ async function addVehicles() {
     // Criar 20 veículos com as placas geradas
     for (const placa of placas) {
       await db.insert(vehicles).values({
-        userId: user.id,
+        user_id: user.id,  // Coluna no banco é user_id, não userId
         plate: placa,
-        type: 'Semirreboque',
-        brand: 'Randon',
-        model: 'SR',
+        type: 'semi_trailer',  // Valor correto conforme exemplo do banco
+        brand: 'RANDON',
+        model: 'SR BA',
         year: 2023,
         renavam: Math.floor(10000000000 + Math.random() * 90000000000).toString(),
-        axles: 3,
-        capacity: 30000,
-        tare: 8000,
-        crlvYear: 2023,
-        status: 'active',
-        createdAt: new Date()
+        axle_count: 3,  // Coluna no banco é axle_count, não axles
+        tare: 7500,
+        crlv_year: 2023,  // Coluna no banco é crlv_year, não crlvYear 
+        remarks: 'Semirreboque graneleiro',
+        status: 'active'
       });
       console.log(`Veículo com placa ${placa} adicionado com sucesso`);
     }
