@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { VehicleList } from "@/components/vehicles/vehicle-list";
-import { VehicleForm } from "@/components/vehicles/vehicle-form";
+import { VehicleForm } from "@/components/vehicles/vehicle-form-responsive";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
