@@ -6,13 +6,11 @@ import {
   type UpdateLicenseState, LicenseStatus, LicenseType
 } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
-// @ts-ignore - Suprime erro de tipagem
+// Configuração do store de sessão PostgreSQL
 const PostgresSessionStore = connectPg(session);
 
 // Define o tipo de estatísticas do painel
@@ -28,7 +26,7 @@ export interface DashboardStats {
     mainVehiclePlate: string;
     states: string[];
     status: string;
-    createdAt: string;
+    createdAt: Date;
   }>;
 }
 
