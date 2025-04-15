@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -44,10 +44,12 @@ import {
   Upload, 
   Building2, 
   Link as LinkIcon,
-  FileUp
+  FileUp,
+  Check
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
+import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 
 interface LicenseFormProps {
   draft?: LicenseRequest | null;
@@ -715,74 +717,168 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <FormField
             control={form.control}
             name="additionalPlates"
-            render={({ field }) => (
-              <FormItem>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {field.value?.map((plate, index) => (
-                      <div key={index} className="bg-gray-50 p-3 border border-gray-200 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <Input 
-                            value={plate} 
-                            onChange={(e) => {
-                              // Formatar placa automaticamente
-                              let value = e.target.value.toUpperCase();
-                              
-                              // Remover caracteres não alfanuméricos
-                              value = value.replace(/[^A-Z0-9]/g, '');
-                              
-                              // Formatar para o padrão atual
-                              if (value.length > 3) {
-                                value = value.substring(0, 3) + '-' + value.substring(3);
-                              }
-                              
-                              const newPlates = [...field.value || []];
-                              newPlates[index] = value;
-                              field.onChange(newPlates);
-                            }}
-                            placeholder="AAA-0000"
-                            className="h-10 uppercase font-medium text-center"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              // Remove placa e documento associado
-                              const newPlates = [...field.value || []];
-                              newPlates.splice(index, 1);
-                              field.onChange(newPlates);
-                              
-                              const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                              newDocs.splice(index, 1);
-                              form.setValue('additionalPlatesDocuments', newDocs);
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            render={({ field }) => {
+              // Componente de autocompletar para placas
+              const PlateAutocomplete = ({ index, plate }: { index: number, plate: string }) => {
+                const [inputValue, setInputValue] = useState(plate);
+                const [isOpen, setIsOpen] = useState(false);
+                const [suggestions, setSuggestions] = useState<Vehicle[]>([]);
+                const dropdownRef = useRef<HTMLDivElement>(null);
+                
+                // Fechar o dropdown ao clicar fora
+                useOnClickOutside(dropdownRef, () => setIsOpen(false));
+                
+                // Filtrar por tipo de veículo baseado no licenseType
+                const getVehicleTypeFilter = () => {
+                  if (licenseType.includes('bitrain') || licenseType === 'roadtrain_9_axles') {
+                    return ['tractor_unit', 'semi_trailer', 'dolly'];
+                  } else if (licenseType === 'flatbed') {
+                    return ['tractor_unit', 'flatbed'];
+                  }
+                  return [];
+                };
+                
+                // Filtrar sugestões quando o valor do input muda
+                const updateSuggestions = (value: string) => {
+                  if (!value) {
+                    setSuggestions([]);
+                    return;
+                  }
                   
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-2 w-full md:w-auto"
-                    onClick={() => {
-                      field.onChange([...field.value || [], '']);
-                      // Adicionar slot vazio para documento
-                      const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                      newDocs.push('');
-                      form.setValue('additionalPlatesDocuments', newDocs);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Adicionar Placa
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
+                  const allowedTypes = getVehicleTypeFilter();
+                  const upperValue = value.toUpperCase();
+                  
+                  // Filtramos veículos por tipo e placa
+                  const filtered = vehicles?.filter(v => 
+                    allowedTypes.includes(v.type) && 
+                    v.plate.toUpperCase().includes(upperValue)
+                  ) || [];
+                  
+                  setSuggestions(filtered);
+                };
+                
+                // Formatar placa para padrão AAA-0000
+                const formatPlate = (value: string) => {
+                  let formatted = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                  if (formatted.length > 3) {
+                    formatted = formatted.substring(0, 3) + '-' + formatted.substring(3);
+                  }
+                  return formatted;
+                };
+                
+                const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                  const value = e.target.value;
+                  setInputValue(value);
+                  
+                  // Formatar e atualizar o input
+                  const formatted = formatPlate(value);
+                  setInputValue(formatted);
+                  
+                  // Atualizar estado no form
+                  const newPlates = [...field.value || []];
+                  newPlates[index] = formatted;
+                  field.onChange(newPlates);
+                  
+                  // Mostrar sugestões
+                  updateSuggestions(formatted);
+                  setIsOpen(true);
+                };
+                
+                const selectSuggestion = (vehicle: Vehicle) => {
+                  setInputValue(vehicle.plate);
+                  const newPlates = [...field.value || []];
+                  newPlates[index] = vehicle.plate;
+                  field.onChange(newPlates);
+                  setIsOpen(false);
+                };
+                
+                return (
+                  <div className="relative" ref={dropdownRef}>
+                    <Input 
+                      value={inputValue} 
+                      onChange={handleInputChange}
+                      onFocus={() => {
+                        if (inputValue) updateSuggestions(inputValue);
+                        setIsOpen(true);
+                      }}
+                      placeholder="AAA-0000"
+                      className="h-10 uppercase font-medium"
+                    />
+                    
+                    {isOpen && suggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {suggestions.map((vehicle) => (
+                          <div 
+                            key={vehicle.id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                            onClick={() => selectSuggestion(vehicle)}
+                          >
+                            <div>
+                              <div className="font-medium">{vehicle.plate}</div>
+                              <div className="text-xs text-gray-500">
+                                {vehicle.type === 'tractor_unit' ? 'Cavalo Mecânico' : 
+                                 vehicle.type === 'semi_trailer' ? 'Semirreboque' :
+                                 vehicle.type === 'dolly' ? 'Dolly' : 'Prancha'}
+                              </div>
+                            </div>
+                            <Check className="h-4 w-4 text-green-500" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              };
+              
+              return (
+                <FormItem>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {field.value?.map((plate, index) => (
+                        <div key={index} className="bg-gray-50 p-3 border border-gray-200 rounded-md">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex-1">
+                              <PlateAutocomplete index={index} plate={plate} />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                const newPlates = [...field.value || []];
+                                newPlates.splice(index, 1);
+                                field.onChange(newPlates);
+                                
+                                const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                                newDocs.splice(index, 1);
+                                form.setValue('additionalPlatesDocuments', newDocs);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-2 w-full md:w-auto"
+                      onClick={() => {
+                        field.onChange([...field.value || [], '']);
+                        const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                        newDocs.push('');
+                        form.setValue('additionalPlatesDocuments', newDocs);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Adicionar Placa
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         </div>
 
