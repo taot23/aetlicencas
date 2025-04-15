@@ -437,6 +437,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro ao buscar veículos' });
     }
   });
+  
+  // Endpoint para buscar todos os veículos (para sugestões de placas)
+  app.get('/api/vehicles/all', requireAuth, async (req, res) => {
+    try {
+      // Retorna uma lista simplificada de todos os veículos (apenas id, placa e tipo)
+      const vehicles = await storage.getAllVehicles();
+      const simplifiedVehicles = vehicles.map(v => ({
+        id: v.id,
+        plate: v.plate,
+        type: v.type
+      }));
+      res.json(simplifiedVehicles);
+    } catch (error) {
+      console.error('Error fetching all vehicles:', error);
+      res.status(500).json({ message: 'Erro ao buscar lista de veículos' });
+    }
+  });
 
   app.post('/api/vehicles', requireAuth, upload.single('crlvFile'), processVehicleData, async (req, res) => {
     try {

@@ -1,15 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Input } from "./input";
-import { Label } from "./label";
-import { cn } from "@/lib/utils";
-import { X, Check } from "lucide-react";
-import { Badge } from "./badge";
-import { z } from "zod";
-
-// Esquemas de validação para placas
-const oldFormatPlateSchema = z.string().regex(/^[A-Z]{3}[0-9]{4}$/);
-const mercosulFormatPlateSchema = z.string().regex(/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/);
-const plateSchema = z.union([oldFormatPlateSchema, mercosulFormatPlateSchema]);
+import React, { useState, useRef, useEffect, KeyboardEvent, ClipboardEvent } from 'react';
+import { X, Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LicensePlatesInputProps {
   value: string[];
@@ -21,197 +14,252 @@ interface LicensePlatesInputProps {
   className?: string;
 }
 
+// Função para validar o formato da placa
+const isValidLicensePlate = (plate: string): boolean => {
+  // Validar formato Mercosul (AAA1A11) ou formato antigo (AAA1111)
+  return /^[A-Z]{3}\d[A-Z0-9]\d\d$/.test(plate);
+};
+
+// Função para formatar a placa (tudo em maiúsculo)
+const formatLicensePlate = (plate: string): string => {
+  return plate.toUpperCase().trim();
+};
+
 export function LicensePlatesInput({
-  value,
+  value = [],
   onChange,
   label,
-  placeholder = "Digite as placas (AAA1234 ou AAA1B23)",
+  placeholder = 'Digite uma placa',
   error,
   suggestions = [],
   className,
 }: LicensePlatesInputProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isValid, setIsValid] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Função para validar e formatar uma placa
-  const formatAndValidatePlate = (plate: string): { formattedPlate: string; isValid: boolean } => {
-    // Remover espaços e converter para maiúsculas
-    let formattedPlate = plate.trim().toUpperCase();
-    
-    // Verificar se corresponde a algum dos formatos
-    try {
-      plateSchema.parse(formattedPlate);
-      return { formattedPlate, isValid: true };
-    } catch (error) {
-      return { formattedPlate, isValid: false };
-    }
-  };
-
-  // Processar múltiplas placas de uma vez (para colar)
-  const processMultiplePlates = (text: string) => {
-    // Dividir por qualquer combinação de separadores comuns
-    const plates = text.split(/[\s,;|\n]+/);
-    
-    // Filtrar placas válidas
-    const processedPlates = plates
-      .map(plate => formatAndValidatePlate(plate))
-      .filter(({ isValid }) => isValid)
-      .map(({ formattedPlate }) => formattedPlate);
-    
-    // Adicionar placas únicas (que ainda não existem na lista)
-    const uniqueNewPlates = processedPlates.filter(plate => !value.includes(plate));
-    if (uniqueNewPlates.length > 0) {
-      onChange([...value, ...uniqueNewPlates]);
-    }
-  };
-
-  // Atualizar sugestões filtradas quando o input muda
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  
+  // Atualizar as sugestões filtradas quando o input muda
   useEffect(() => {
-    if (inputValue.length > 0) {
-      const normalizedInput = inputValue.toUpperCase();
-      const filtered = suggestions.filter(
-        (plate) => plate.toUpperCase().includes(normalizedInput) && !value.includes(plate)
-      );
+    if (inputValue && suggestions.length > 0) {
+      const filtered = suggestions
+        .filter(plate => 
+          plate.startsWith(inputValue.toUpperCase()) && 
+          !value.includes(plate)
+        )
+        .slice(0, 5); // Mostrar no máximo 5 sugestões
+      
       setFilteredSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
-      
-      // Validar o formato atual
-      try {
-        const testValue = inputValue.toUpperCase();
-        
-        // Validar formato completo somente se o comprimento for suficiente
-        if (testValue.length >= 7) {
-          plateSchema.parse(testValue);
-          setIsValid(true);
-        } else {
-          // Para entradas parciais, verificamos se está no caminho certo
-          const partialOldFormat = /^[A-Z]{0,3}[0-9]{0,4}$/;
-          const partialMercosulFormat = /^[A-Z]{0,3}[0-9]{0,1}[A-Z]{0,1}[0-9]{0,2}$/;
-          setIsValid(partialOldFormat.test(testValue) || partialMercosulFormat.test(testValue));
-        }
-      } catch (error) {
-        setIsValid(false);
-      }
     } else {
       setFilteredSuggestions([]);
       setShowSuggestions(false);
-      setIsValid(true);
     }
   }, [inputValue, suggestions, value]);
-
-  // Lidar com a tecla Enter para adicionar placa
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue) {
+  
+  // Fechar sugestões quando clica fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current && 
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Adicionar placa à lista
+  const addPlate = (plate: string) => {
+    const formattedPlate = formatLicensePlate(plate);
+    if (formattedPlate && !value.includes(formattedPlate)) {
+      onChange([...value, formattedPlate]);
+      setInputValue('');
+    }
+  };
+  
+  // Remover placa da lista
+  const removePlate = (plate: string) => {
+    onChange(value.filter(p => p !== plate));
+  };
+  
+  // Manipular tecla Enter para adicionar placa
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && inputValue) {
       e.preventDefault();
-      const { formattedPlate, isValid } = formatAndValidatePlate(inputValue);
       
-      if (isValid && !value.includes(formattedPlate)) {
-        onChange([...value, formattedPlate]);
-        setInputValue("");
+      const formatted = formatLicensePlate(inputValue);
+      if (isValidLicensePlate(formatted)) {
+        addPlate(formatted);
+      }
+    }
+    // Navegação pelas sugestões com setas
+    else if (e.key === 'ArrowDown' && showSuggestions) {
+      e.preventDefault();
+      const firstSuggestion = document.querySelector('.suggestion-item') as HTMLElement;
+      if (firstSuggestion) firstSuggestion.focus();
+    }
+  };
+  
+  // Manipular eventos do campo de entrada
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(formatLicensePlate(e.target.value));
+  };
+  
+  // Manipular tecla Enter nas sugestões
+  const handleSuggestionKeyDown = (e: KeyboardEvent<HTMLDivElement>, plate: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addPlate(plate);
+    } 
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      
+      const items = Array.from(document.querySelectorAll('.suggestion-item'));
+      const currentIndex = items.indexOf(e.currentTarget);
+      
+      if (e.key === 'ArrowUp') {
+        const prevIndex = currentIndex - 1;
+        if (prevIndex >= 0) {
+          (items[prevIndex] as HTMLElement).focus();
+        } else {
+          inputRef.current?.focus();
+        }
+      } else if (e.key === 'ArrowDown') {
+        const nextIndex = currentIndex + 1;
+        if (nextIndex < items.length) {
+          (items[nextIndex] as HTMLElement).focus();
+        }
       }
     }
   };
-
-  // Lidar com colagem (paste)
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  
+  // Manipular colar múltiplas placas
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedText = e.clipboardData.getData("text");
-    processMultiplePlates(pastedText);
-    setInputValue("");
-  };
-
-  // Remover uma placa da lista
-  const removePlate = (plate: string) => {
-    onChange(value.filter((p) => p !== plate));
-  };
-
-  // Adicionar uma sugestão
-  const addSuggestion = (plate: string) => {
-    if (!value.includes(plate)) {
-      onChange([...value, plate]);
-      setInputValue("");
-      setShowSuggestions(false);
+    const pastedText = e.clipboardData.getData('text');
+    
+    if (!pastedText) return;
+    
+    // Verificar se o texto colado contém múltiplas placas (separadas por espaço, vírgula, ou quebra de linha)
+    const plateRegex = /[A-Z0-9]{7}/g;
+    const matches = pastedText.toUpperCase().match(plateRegex);
+    
+    if (matches && matches.length > 1) {
+      // Múltiplas placas encontradas
+      const validPlates = matches
+        .map(formatLicensePlate)
+        .filter(isValidLicensePlate)
+        .filter(plate => !value.includes(plate));
+      
+      if (validPlates.length > 0) {
+        onChange([...value, ...validPlates]);
+      }
+    } else {
+      // Apenas uma placa ou texto não reconhecido como placa
+      setInputValue(formatLicensePlate(pastedText));
     }
   };
-
+  
   return (
-    <div className={cn("space-y-2", className)}>
-      {label && <Label>{label}</Label>}
-      <div className="relative">
-        <Input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          onFocus={() => setShowSuggestions(!!filteredSuggestions.length)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          placeholder={placeholder}
-          className={cn(
-            "pr-8",
-            isValid ? "border-input" : "border-destructive",
-            inputValue && isValid && "border-green-500"
-          )}
-        />
-        {inputValue && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            {isValid ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <X className="h-4 w-4 text-destructive" />
-            )}
-          </div>
-        )}
-
-        {/* Dropdown de sugestões */}
+    <div className={`space-y-2 ${className || ''}`}>
+      {label && <div className="text-sm font-medium">{label}</div>}
+      
+      <div className="flex flex-col space-y-2">
+        {/* Campo de entrada */}
+        <div className="flex">
+          <Input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            onFocus={() => setShowSuggestions(filteredSuggestions.length > 0)}
+            placeholder={placeholder}
+            className={`flex-1 ${inputValue && !isValidLicensePlate(inputValue) ? 'border-red-500' : ''}`}
+            maxLength={7}
+          />
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              if (isValidLicensePlate(formatLicensePlate(inputValue))) {
+                addPlate(inputValue);
+              }
+            }}
+            disabled={!inputValue || !isValidLicensePlate(formatLicensePlate(inputValue))}
+            className="ml-2"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Lista de sugestões */}
         {showSuggestions && (
-          <div className="absolute mt-1 w-full max-h-48 overflow-auto z-10 bg-background border border-border rounded-md shadow-md">
-            <ul className="py-1">
-              {filteredSuggestions.map((plate) => (
-                <li
+          <div 
+            ref={suggestionsRef}
+            className="border rounded-md mt-1 max-h-[150px] overflow-auto bg-white dark:bg-gray-800 shadow-lg absolute z-10 w-[calc(100%-48px)]"
+          >
+            <ScrollArea className="max-h-[150px]">
+              {filteredSuggestions.map((plate, index) => (
+                <div
                   key={plate}
-                  className="px-3 py-2 hover:bg-muted cursor-pointer flex items-center"
-                  onClick={() => addSuggestion(plate)}
+                  className="suggestion-item px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                  tabIndex={0}
+                  onClick={() => addPlate(plate)}
+                  onKeyDown={(e) => handleSuggestionKeyDown(e, plate)}
                 >
                   {plate}
-                </li>
+                </div>
               ))}
-            </ul>
+            </ScrollArea>
           </div>
         )}
+        
+        {/* Lista de placas selecionadas */}
+        {value.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {value.map((plate) => (
+              <div
+                key={plate}
+                className={`flex items-center rounded-md py-1 px-2 text-sm ${
+                  isValidLicensePlate(plate)
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+                }`}
+              >
+                <span>{plate}</span>
+                <button
+                  type="button"
+                  onClick={() => removePlate(plate)}
+                  className="ml-1 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Mensagem de erro */}
+        {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+        
+        {/* Mensagem informativa */}
+        <p className="text-xs text-gray-500 mt-1">
+          Formatos válidos: Mercosul (AAA1A11) ou antigo (AAA1111)
+        </p>
       </div>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      {/* Lista de placas */}
-      <div className="flex flex-wrap gap-2 mt-2">
-        {value.map((plate) => (
-          <Badge
-            key={plate}
-            variant="outline"
-            className="pl-2 pr-1 py-1 flex items-center gap-1"
-          >
-            {plate}
-            <button
-              type="button"
-              onClick={() => removePlate(plate)}
-              className="ml-1 rounded-full hover:bg-muted p-1"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
-      </div>
-
-      {/* Instruções */}
-      <p className="text-xs text-muted-foreground mt-1">
-        Digite as placas e pressione Enter, ou cole várias placas de uma vez separadas por espaço, 
-        vírgula, ponto e vírgula ou nova linha.
-      </p>
     </div>
   );
 }

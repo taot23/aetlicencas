@@ -236,6 +236,12 @@ export class TransactionalStorage implements IStorage {
   }
   
   async getAllVehicles(): Promise<Vehicle[]> {
+    return await db
+      .select()
+      .from(vehicles);
+  }
+  
+  async getAllVehicles(): Promise<Vehicle[]> {
     return await db.select().from(vehicles);
   }
   

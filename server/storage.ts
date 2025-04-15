@@ -58,6 +58,7 @@ export interface IStorage {
   // Vehicle methods
   getVehicleById(id: number): Promise<Vehicle | undefined>;
   getVehiclesByUserId(userId: number): Promise<Vehicle[]>;
+  getAllVehicles(): Promise<Vehicle[]>;
   createVehicle(userId: number, vehicle: InsertVehicle & { crlvUrl?: string | null }): Promise<Vehicle>;
   updateVehicle(id: number, vehicle: Partial<Vehicle>): Promise<Vehicle>;
   deleteVehicle(id: number): Promise<void>;

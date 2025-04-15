@@ -11,6 +11,12 @@ interface MultiplePlatesFieldProps {
   required?: boolean;
 }
 
+interface Vehicle {
+  id: number;
+  plate: string;
+  type: string;
+}
+
 export function MultiplePlatesField({
   name,
   label,
@@ -21,14 +27,15 @@ export function MultiplePlatesField({
   const [vehiclePlates, setVehiclePlates] = useState<string[]>([]);
   
   // Buscar todos os veículos para sugestões de placas
-  const { data: vehicles = [] } = useQuery({
+  const { data } = useQuery<Vehicle[]>({
     queryKey: ['/api/vehicles/all'],
+    initialData: [],
   });
   
   // Extrair placas únicas para sugestões
-  const plateSuggestions = vehicles
-    ? Array.from(new Set(vehicles.map((vehicle: any) => vehicle.plate)))
-    : [];
+  const plateSuggestions = data ? 
+    Array.from(new Set(data.map(vehicle => vehicle.plate))) : 
+    [];
   
   // Inicializar o valor do campo se já houver placas salvas
   useEffect(() => {
