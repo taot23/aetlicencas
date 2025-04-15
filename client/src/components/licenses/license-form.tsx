@@ -597,14 +597,28 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       pattern="[0-9]*[.,]?[0-9]*"
                       placeholder="Ex.: 19.80" 
                       {...field}
+                      className="mobile-input h-10"
                       value={field.value || ''}
+                      onFocus={(e) => {
+                        // Adicionar a classe ao body quando o input receber foco
+                        document.body.classList.add('keyboard-active');
+                        // Rolar a página para cima quando o input receber foco
+                        window.scrollTo(0, 0);
+                        // Adicionar pequeno atraso para garantir que o teclado apareça antes de reposicionar
+                        setTimeout(() => {
+                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                      }}
+                      onBlur={() => {
+                        // Remover a classe do body quando o input perder o foco
+                        document.body.classList.remove('keyboard-active');
+                      }}
                       onChange={(e) => {
                         // Permite apenas números e um único separador decimal (ponto ou vírgula)
                         const value = e.target.value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
                         // Converte para número e atualiza o campo
                         field.onChange(parseFloat(value) || 0);
                       }}
-                      className="h-10"
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-muted-foreground mt-1">
