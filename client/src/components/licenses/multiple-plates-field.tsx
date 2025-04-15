@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -41,6 +41,33 @@ export function MultiplePlatesField({
   const [vehiclePlates, setVehiclePlates] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Efeito para adicionar e remover a classe ao body quando o input está com foco
+  useEffect(() => {
+    const handleFocus = () => {
+      document.body.classList.add('keyboard-active');
+    };
+    
+    const handleBlur = () => {
+      document.body.classList.remove('keyboard-active');
+    };
+    
+    const input = inputRef.current;
+    if (input) {
+      input.addEventListener('focus', handleFocus);
+      input.addEventListener('blur', handleBlur);
+    }
+    
+    return () => {
+      if (input) {
+        input.removeEventListener('focus', handleFocus);
+        input.removeEventListener('blur', handleBlur);
+      }
+      // Garantir que a classe seja removida quando o componente for desmontado
+      document.body.classList.remove('keyboard-active');
+    };
+  }, []);
   
   // Buscar sugestões de placas usando a nova rota pública
   const { data: plateSuggestions = [], isLoading, isError } = useQuery<string[]>({
@@ -193,16 +220,28 @@ export function MultiplePlatesField({
       <div className="flex flex-col sm:flex-row gap-2 mb-2">
         <FormControl className="w-full">
           <Input
+            ref={inputRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
             placeholder="Digite uma placa (ex: AAA1234)"
             maxLength={7}
             autoComplete="off"
-            className="mobile-input h-10"
+            className="mobile-input-plate h-10"
             // Ajuste para dispositivos móveis - usar teclado específico
             inputMode="text"
             pattern="[A-Za-z0-9]*"
+            id="license-plate-input"
+            onFocus={() => {
+              // Rolar a página para cima quando o input receber foco
+              window.scrollTo(0, 0);
+              // Adicionar pequeno atraso para garantir que o teclado apareça antes de reposicionar
+              setTimeout(() => {
+                if (inputRef.current) {
+                  inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 300);
+            }}
           />
         </FormControl>
         <Button 
