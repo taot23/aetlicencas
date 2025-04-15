@@ -244,7 +244,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="relative w-full mx-auto">
-        <div className="flex justify-between items-center py-1 px-3 border-b bg-primary text-white">
+        <div className="flex justify-between items-center py-1 px-3 border-b bg-primary text-white sticky top-0 z-10">
           <h2 className="text-xs font-medium">{vehicle ? "Editar Veículo" : "Cadastrar Novo Veículo"}</h2>
           <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-5 w-5 text-white hover:bg-primary/90">
             <X className="h-3 w-3" />
@@ -501,7 +501,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           </div>
         </div>
         
-        <div className="flex justify-end gap-2 py-2 px-3 border-t">
+        <div className="flex justify-end gap-2 py-2 px-3 border-t sticky bottom-0 z-10 bg-white">
           <Button type="button" variant="outline" onClick={onCancel} className="h-8 px-3 text-xs">
             Cancelar
           </Button>
