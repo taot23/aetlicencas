@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { LoaderCircle, UploadCloud } from "lucide-react";
+import { LoaderCircle, UploadCloud, X } from "lucide-react";
 import { getVehicleTypeLabel } from "@/lib/utils";
 
 interface VehicleFormProps {
@@ -47,7 +47,10 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   });
 
   // Estado para controlar os placeholders dinâmicos
-  const [vehicleType, setVehicleType] = useState<string>(vehicle?.type || "tractor_unit");
+  const [vehicleType, setVehicleType] = useState<string>(vehicle?.type || "");
+  
+  // Estado para o CMT (Capacidade Máxima de Tração)
+  const [cmt, setCmt] = useState<number | undefined>(undefined);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,7 +67,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       remarks: vehicle.remarks || "",
     } : {
       plate: "",
-      type: "tractor_unit", // Valor padrão para o tipo (Unidade Tratora)
+      type: "", // Sem valor padrão para o tipo
       tare: 0,
       crlvYear: new Date().getFullYear(),
       brand: "",
@@ -244,6 +247,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         <div className="w-full bg-white py-3 mb-3">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Cadastro de Veículo</h3>
+            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         
@@ -308,19 +314,35 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="tare"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tara (peso em kg)</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="8500" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="tare"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tara (peso em kg)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="8500" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {vehicleType === "tractor_unit" && (
+            <div className="flex items-end">
+              <div className="w-full">
+                <FormLabel>CMT (Capacidade Máxima Tração)</FormLabel>
+                <Input 
+                  type="number" 
+                  placeholder="Ex: 60000" 
+                  value={cmt || ''} 
+                  onChange={(e) => setCmt(e.target.valueAsNumber || undefined)} 
+                />
+              </div>
+            </div>
           )}
-        />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
@@ -439,7 +461,12 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             <FormItem>
               <FormLabel>Observações</FormLabel>
               <FormControl>
-                <Textarea placeholder="Observações sobre o veículo..." className="resize-none" {...field} value={field.value || ''} />
+                <Textarea 
+                  placeholder="Observações sobre o veículo..." 
+                  className="resize-none h-20" 
+                  {...field} 
+                  value={field.value || ''} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
