@@ -515,10 +515,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         </div>
         
         <div className="flex justify-end gap-2 pt-4 pb-2 mt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="min-w-[100px]">
             {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             {vehicle ? "Atualizar" : "Salvar"}
           </Button>
