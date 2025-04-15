@@ -760,18 +760,23 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 // Formatar placa para padrão AAA-0000
                 const formatPlate = (value: string) => {
                   let formatted = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                  if (formatted.length > 3) {
+                  
+                  // Permitir digitação livre, mas aplicar formatação quando possível
+                  if (formatted.length > 3 && !formatted.includes('-')) {
                     formatted = formatted.substring(0, 3) + '-' + formatted.substring(3);
                   }
+                  
                   return formatted;
                 };
                 
                 const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   const value = e.target.value;
-                  setInputValue(value);
                   
-                  // Formatar e atualizar o input
-                  const formatted = formatPlate(value);
+                  // Converter para maiúsculas
+                  const upperValue = value.toUpperCase();
+                  
+                  // Aplicar formatação básica mas permitir entrada livre
+                  const formatted = upperValue.replace(/[^A-Z0-9\-]/g, '');
                   setInputValue(formatted);
                   
                   // Atualizar estado no form
@@ -779,9 +784,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                   newPlates[index] = formatted;
                   field.onChange(newPlates);
                   
-                  // Mostrar sugestões
-                  updateSuggestions(formatted);
-                  setIsOpen(true);
+                  // Mostrar sugestões apenas se tiver algum conteúdo
+                  if (formatted.length > 0) {
+                    updateSuggestions(formatted);
+                    setIsOpen(true);
+                  } else {
+                    setSuggestions([]);
+                    setIsOpen(false);
+                  }
                 };
                 
                 const selectSuggestion = (vehicle: Vehicle) => {
