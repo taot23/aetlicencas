@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -66,6 +66,12 @@ export const transporters = pgTable("transporters", {
   
   userId: integer("user_id").references(() => users.id), // Referência para o usuário vinculado
   createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    documentNumberIdx: uniqueIndex("idx_transporter_document").on(table.documentNumber),
+    userIdIdx: index("idx_transporter_user_id").on(table.userId),
+    nameIdx: index("idx_transporter_name").on(table.name)
+  };
 });
 
 // Esquema JSON para filiais (subsidiárias)
@@ -142,6 +148,11 @@ export const users = pgTable("users", {
   role: text("role").default("user").notNull(), // Novo campo: role como string (enum)
   isAdmin: boolean("is_admin").default(false).notNull(), // Mantido para compatibilidade
   createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    emailIdx: uniqueIndex("idx_user_email").on(table.email),
+    roleIdx: index("idx_user_role").on(table.role)
+  };
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -169,6 +180,13 @@ export const vehicles = pgTable("vehicles", {
   crlvYear: integer("crlv_year").notNull(),
   crlvUrl: text("crlv_url"),
   status: text("status").default("active").notNull(),
+}, (table) => {
+  return {
+    plateIdx: index("idx_vehicle_plate").on(table.plate),
+    userIdIdx: index("idx_vehicle_user_id").on(table.userId),
+    statusIdx: index("idx_vehicle_status").on(table.status),
+    typeIdx: index("idx_vehicle_type").on(table.type)
+  };
 });
 
 export const insertVehicleSchema = createInsertSchema(vehicles)
@@ -235,6 +253,16 @@ export const licenseRequests = pgTable("license_requests", {
   comments: text("comments"),
   licenseFileUrl: text("license_file_url").default(''),
   validUntil: timestamp("valid_until"),
+}, (table) => {
+  return {
+    requestNumberIdx: uniqueIndex("idx_license_request_number").on(table.requestNumber),
+    userIdIdx: index("idx_license_user_id").on(table.userId),
+    transporterIdIdx: index("idx_license_transporter_id").on(table.transporterId),
+    statusIdx: index("idx_license_status").on(table.status),
+    isDraftIdx: index("idx_license_is_draft").on(table.isDraft),
+    createdAtIdx: index("idx_license_created_at").on(table.createdAt),
+    mainVehiclePlateIdx: index("idx_license_main_vehicle").on(table.mainVehiclePlate)
+  };
 });
 
 export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
