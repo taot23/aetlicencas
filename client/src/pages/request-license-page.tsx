@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { LicenseRequest, InsertLicenseRequest } from "@shared/schema";
 import { LicenseForm } from "@/components/licenses/license-form";
@@ -76,7 +76,16 @@ export default function RequestLicensePage() {
     <MainLayout>
       {/* Dialog para o formulário */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent 
+          className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto p-0"
+          onInteractOutside={(e) => {
+            // Previne que o dialog feche automaticamente ao tocar fora em dispositivos móveis
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            // Mantém comportamento padrão para ESC
+          }}
+        >
           <div className="sticky top-0 z-10 bg-white p-6 border-b">
             <DialogHeader>
               <DialogTitle className="text-2xl">
@@ -86,6 +95,16 @@ export default function RequestLicensePage() {
                 Preencha os dados abaixo para solicitar uma Autorização Especial de Transporte
               </DialogDescription>
             </DialogHeader>
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              onClick={() => setShowForm(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span className="sr-only">Fechar</span>
+            </button>
           </div>
           
           <div className="p-6">
@@ -96,6 +115,12 @@ export default function RequestLicensePage() {
               preSelectedTransporterId={preSelectedTransporterId}
             />
           </div>
+          
+          <DialogFooter className="p-4 border-t sticky bottom-0 bg-white">
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
