@@ -1151,13 +1151,12 @@ export class DatabaseStorage implements IStorage {
   
   // Dashboard stats
   async getDashboardStats(userId: number): Promise<DashboardStats> {
-    // Construir a consulta base com base no userId
-    let baseQuery = db.select();
-    
-    if (userId !== 0) {
-      // Para usuários normais, filtrar por userId
-      baseQuery = baseQuery.where(eq(licenseRequests.userId, userId));
-    }
+    // Removendo a consulta base que causava o erro
+    // let baseQuery = db.select();
+    //
+    // if (userId !== 0) {
+    //   baseQuery = baseQuery.where(eq(licenseRequests.userId, userId));
+    // }
     
     // Contar licenças emitidas (status approved)
     const issuedLicensesQuery = db.select({ count: sql`count(*)` })
@@ -1222,7 +1221,7 @@ export class DatabaseStorage implements IStorage {
       mainVehiclePlate: license.mainVehiclePlate,
       states: license.states,
       status: license.status,
-      createdAt: license.createdAt.toISOString()
+      createdAt: license.createdAt
     }));
     
     return {
