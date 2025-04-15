@@ -373,8 +373,11 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Rodotrem 9 eixos */}
         {licenseType === 'roadtrain_9_axles' && (
-          <div className="border border-gray-200 rounded-md p-4 space-y-4">
-            <h3 className="font-medium text-gray-800 mb-2">Veículos do Rodotrem</h3>
+          <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+              <Truck className="mr-2 h-5 w-5" />
+              Veículos do Rodotrem
+            </h3>
             
             <FormField
               control={form.control}
@@ -733,80 +736,67 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             name="additionalPlates"
             render={({ field }) => (
               <FormItem>
-                <div className="flex flex-col space-y-4">
-                  {field.value?.map((plate, index) => (
-                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md">
-                      <div className="flex items-center space-x-2">
-                        <Input 
-                          value={plate} 
-                          onChange={(e) => {
-                            const newPlates = [...field.value || []];
-                            newPlates[index] = e.target.value;
-                            field.onChange(newPlates);
-                          }}
-                          placeholder="ABC1234"
-                          className="uppercase"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => {
-                            // Remove both plate and document
-                            const newPlates = [...field.value || []];
-                            newPlates.splice(index, 1);
-                            field.onChange(newPlates);
-                            
-                            const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                            newDocs.splice(index, 1);
-                            form.setValue('additionalPlatesDocuments', newDocs);
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      {/* Document upload for each plate */}
-                      <div className="mt-2">
-                        <Label htmlFor={`plate-doc-${index}`}>Documento do veículo (CRLV)</Label>
-                        <Input
-                          id={`plate-doc-${index}`}
-                          type="file"
-                          accept="application/pdf,image/*"
-                          className="mt-1"
-                          onChange={(e) => {
-                            const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                            if (e.target.files?.[0]) {
-                              // We store file path reference here
-                              // In a real implementation, you'd upload this to a server and store the URL
-                              newDocs[index] = URL.createObjectURL(e.target.files[0]);
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {field.value?.map((plate, index) => (
+                      <div key={index} className="bg-gray-50 p-3 border border-gray-200 rounded-md">
+                        <div className="flex items-center space-x-2">
+                          <Input 
+                            value={plate} 
+                            onChange={(e) => {
+                              // Formatar placa automaticamente
+                              let value = e.target.value.toUpperCase();
+                              
+                              // Remover caracteres não alfanuméricos
+                              value = value.replace(/[^A-Z0-9]/g, '');
+                              
+                              // Formatar para o padrão atual
+                              if (value.length > 3) {
+                                value = value.substring(0, 3) + '-' + value.substring(3);
+                              }
+                              
+                              const newPlates = [...field.value || []];
+                              newPlates[index] = value;
+                              field.onChange(newPlates);
+                            }}
+                            placeholder="AAA-0000"
+                            className="h-10 uppercase font-medium text-center"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              // Remove placa e documento associado
+                              const newPlates = [...field.value || []];
+                              newPlates.splice(index, 1);
+                              field.onChange(newPlates);
+                              
+                              const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                              newDocs.splice(index, 1);
                               form.setValue('additionalPlatesDocuments', newDocs);
-                            }
-                          }}
-                        />
-                        {form.getValues('additionalPlatesDocuments')?.[index] && (
-                          <div className="text-sm text-green-600 mt-1">
-                            Documento anexado ✓
-                          </div>
-                        )}
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="mt-2 flex items-center"
+                    className="mt-2 w-full md:w-auto"
                     onClick={() => {
                       field.onChange([...field.value || [], '']);
-                      // Add empty document slot
+                      // Adicionar slot vazio para documento
                       const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
                       newDocs.push('');
                       form.setValue('additionalPlatesDocuments', newDocs);
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Placa
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar Placa
                   </Button>
                 </div>
                 <FormMessage />
@@ -815,74 +805,138 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="states"
-          render={() => (
-            <FormItem>
-              <div className="mb-4">
-                <FormLabel>Estados (múltipla escolha)</FormLabel>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {brazilianStates.map((state) => (
-                  <FormField
-                    key={state.code}
-                    control={form.control}
-                    name="states"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={state.code}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={(field.value || []).includes(state.code)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...(field.value || []), state.code])
-                                  : field.onChange((field.value || []).filter((value) => value !== state.code));
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-normal">
-                            {state.code}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12" y2="20"/>
+            </svg>
+            Estados Solicitados
+          </h3>
 
-        <FormField
-          control={form.control}
-          name="comments"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observações</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Adicione observações relevantes para este pedido de licença"
-                  className="min-h-[120px]"
-                  value={field.value as string || ""}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  name={field.name}
-                  ref={field.ref}
-                />
-              </FormControl>
-              <FormDescription>
-                Inclua quaisquer informações adicionais ou detalhes específicos para esta solicitação.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="states"
+            render={() => (
+              <FormItem>
+                <div className="mb-2">
+                  <FormLabel className="text-base font-medium">Selecione os estados para emissão de licença</FormLabel>
+                  <div className="text-sm text-muted-foreground mt-1 mb-3">
+                    Escolha um ou mais estados onde a licença será utilizada
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                  {brazilianStates.map((state) => (
+                    <FormField
+                      key={state.code}
+                      control={form.control}
+                      name="states"
+                      render={({ field }) => {
+                        const isSelected = (field.value || []).includes(state.code);
+                        return (
+                          <FormItem
+                            key={state.code}
+                            className="m-0 p-0"
+                          >
+                            <FormControl>
+                              <div 
+                                className={`cursor-pointer flex flex-col items-center justify-center p-2 rounded-md border ${
+                                  isSelected 
+                                    ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium' 
+                                    : 'border-gray-200 hover:bg-gray-50'
+                                }`}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    field.onChange((field.value || []).filter((value) => value !== state.code));
+                                  } else {
+                                    field.onChange([...(field.value || []), state.code]);
+                                  }
+                                }}
+                              >
+                                <span className="text-base font-medium">{state.code}</span>
+                                <span className="text-xs mt-1 text-center hidden md:block text-gray-500">{state.name}</span>
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+            <FileUp className="mr-2 h-5 w-5" />
+            Documentos
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+              <h4 className="text-blue-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Documentação dos Veículos
+              </h4>
+              <p className="text-sm text-blue-600 mb-3">
+                Os CRLVs dos veículos serão vinculados automaticamente a partir do cadastro de veículos.
+                Caso não encontre algum veículo, cadastre-o primeiro na seção de veículos.
+              </p>
+              <div className="text-xs text-gray-500">
+                Formatos aceitos: PDF, JPG, PNG
+              </div>
+            </div>
+
+            <div className="bg-amber-50 p-4 rounded-md border border-amber-100">
+              <h4 className="text-amber-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                </svg>
+                Tempo de Processamento
+              </h4>
+              <p className="text-sm text-amber-600 mb-3">
+                Após o envio, a solicitação passará por análise do órgão competente.
+                O prazo médio para análise varia de acordo com cada estado.
+              </p>
+              <div className="text-xs text-gray-500">
+                Acompanhe o status na página "Acompanhar Licença"
+              </div>
+            </div>
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="comments"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-base font-medium">Observações</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Adicione observações relevantes para este pedido de licença..."
+                    className="min-h-[120px] resize-y"
+                    value={field.value as string || ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Inclua quaisquer informações adicionais importantes para a análise desta solicitação
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="flex flex-col sm:flex-row justify-end gap-4 sm:space-x-4 pt-4">
           <Button 
