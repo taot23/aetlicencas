@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  LoaderCircle, 
+  LoaderCircle,
   X, 
   Plus, 
   Truck, 
