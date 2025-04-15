@@ -117,12 +117,15 @@ export function MultiplePlatesField({
     // Normaliza a placa para evitar problemas de formatação
     const normalizedPlate = plate.toUpperCase().trim();
     
-    // Verifica diretamente nos veículos carregados por correspondência exata
-    const registeredVehicles = vehicles.map(v => v.plate.toUpperCase().trim());
-    const result = registeredVehicles.includes(normalizedPlate);
+    // Mapeando todas as placas cadastradas para comparação
+    const result = vehicles.some(vehicle => 
+      vehicle.plate.toUpperCase().trim() === normalizedPlate
+    );
     
-    console.log(`Verificando placa ${plate}: ${result ? 'Registrada' : 'Não registrada'}`);
-    console.log(`Placas cadastradas: ${registeredVehicles.join(', ')}`);
+    // Log de debug com informações detalhadas
+    console.log(`Verificando placa ${plate} (normalizada: ${normalizedPlate})`);
+    console.log(`Resultado: ${result ? 'REGISTRADA ✓' : 'NÃO REGISTRADA ✗'}`);
+    console.log(`Total de veículos cadastrados: ${vehicles.length}`);
     
     return result;
   };
