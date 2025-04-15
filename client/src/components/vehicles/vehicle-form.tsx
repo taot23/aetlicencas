@@ -406,7 +406,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Ano</FormLabel>
+                  <FormLabel className="text-sm">Ano de Fabricação</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
