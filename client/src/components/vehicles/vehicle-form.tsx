@@ -367,6 +367,42 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
+              name="tare"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Tara (kg)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="8500" 
+                      {...field}
+                      value={field.value || ''} 
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      className="h-9" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {vehicleType === "tractor_unit" && (
+              <FormItem>
+                <FormLabel className="text-sm">CMT (kg)</FormLabel>
+                <Input 
+                  type="number" 
+                  placeholder="Ex: 60000" 
+                  value={cmt || ''} 
+                  onChange={(e) => setCmt(e.target.valueAsNumber || undefined)}
+                  className="h-9" 
+                />
+              </FormItem>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
               name="year"
               render={({ field }) => (
                 <FormItem>
@@ -406,42 +442,6 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                 </FormItem>
               )}
             />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="tare"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Tara (kg)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="8500" 
-                      {...field}
-                      value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      className="h-9" 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {vehicleType === "tractor_unit" && (
-              <FormItem>
-                <FormLabel className="text-sm">CMT (kg)</FormLabel>
-                <Input 
-                  type="number" 
-                  placeholder="Ex: 60000" 
-                  value={cmt || ''} 
-                  onChange={(e) => setCmt(e.target.valueAsNumber || undefined)}
-                  className="h-9" 
-                />
-              </FormItem>
-            )}
           </div>
           
           <FormField
