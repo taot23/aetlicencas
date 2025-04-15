@@ -265,37 +265,6 @@ export function LicensePlatesInput({
           )}
         </div>
         
-        {/* Lista de sugestões */}
-        {showSuggestions && (
-          <div 
-            ref={suggestionsRef}
-            className="border rounded-md shadow-lg absolute z-50 w-full bg-white dark:bg-gray-800"
-            style={{ 
-              top: 'calc(100% + 4px)',
-              maxHeight: '200px',
-              overflowY: 'auto'
-            }}
-          >
-            <div className="py-1">
-              {filteredSuggestions.length > 0 ? (
-                filteredSuggestions.map((plate, index) => (
-                  <div
-                    key={plate}
-                    className="suggestion-item px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm"
-                    tabIndex={0}
-                    onClick={() => addPlate(plate)}
-                    onKeyDown={(e) => handleSuggestionKeyDown(e, plate)}
-                  >
-                    {plate}
-                  </div>
-                ))
-              ) : (
-                <div className="px-4 py-2 text-gray-500 text-sm">Nenhuma sugestão encontrada</div>
-              )}
-            </div>
-          </div>
-        )}
-        
         {/* Lista de placas selecionadas */}
         {value.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
