@@ -141,13 +141,13 @@ export function MultiplePlatesField({
       </FormLabel>
       
       {/* Campo de entrada com botão de adicionar */}
-      <div className="flex gap-2 mb-2">
-        <FormControl>
+      <div className="flex flex-col sm:flex-row gap-2 mb-2">
+        <FormControl className="w-full">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            placeholder="Digite uma placa (ex: AAA1234, AAA1B34)"
+            placeholder="Digite uma placa (ex: AAA1234)"
             maxLength={7}
             autoComplete="off"
           />
@@ -156,7 +156,7 @@ export function MultiplePlatesField({
           type="button" 
           size="sm" 
           onClick={handleAddPlate}
-          className="whitespace-nowrap"
+          className="whitespace-nowrap sm:w-auto w-full"
         >
           Adicionar
         </Button>
@@ -168,7 +168,7 @@ export function MultiplePlatesField({
       {plateSuggestions.length > 0 && (
         <div className="mt-4 border p-3 rounded-md bg-gray-50">
           <p className="text-sm font-medium mb-2">Placas disponíveis ({plateSuggestions.length}):</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
             {plateSuggestions.map((plate) => {
               // Verifica se a placa é de um veículo cadastrado
               const isRegistered = isRegisteredVehicle(plate);
@@ -200,7 +200,7 @@ export function MultiplePlatesField({
       {vehiclePlates.length > 0 && (
         <div className="mt-4">
           <p className="text-sm font-medium mb-2">Placas selecionadas:</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
             {vehiclePlates.map((plate) => {
               // Verifica se a placa é de um veículo cadastrado
               const isRegistered = isRegisteredVehicle(plate);
@@ -215,12 +215,12 @@ export function MultiplePlatesField({
                     isRegistered
                       ? 'bg-green-600 hover:bg-green-500 text-white border-green-600' // Veículo cadastrado (verde)
                       : 'bg-red-600 hover:bg-red-500 text-white border-red-600' // Veículo não cadastrado (vermelho)
-                  }`}
+                  } flex justify-between`}
                   onClick={() => {}}
                 >
-                  {plate}
+                  <span className="truncate mr-1">{plate}</span>
                   <X
-                    className="w-3 h-3 ml-1"
+                    className="w-3 h-3 flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       togglePlateSelection(plate);
@@ -236,7 +236,7 @@ export function MultiplePlatesField({
       {/* Legenda explicativa das cores */}
       <div className="mt-4 flex flex-col gap-1">
         <p className="text-xs font-medium">Legenda:</p>
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-green-600"></div>
             <span>Veículo cadastrado</span>
