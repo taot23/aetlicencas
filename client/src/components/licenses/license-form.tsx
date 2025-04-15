@@ -788,72 +788,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-              <line x1="12" y1="20" x2="12" y2="20"/>
-            </svg>
-            Estados Solicitados
-          </h3>
-
-          <FormField
-            control={form.control}
-            name="states"
-            render={() => (
-              <FormItem>
-                <div className="mb-2">
-                  <FormLabel className="text-base font-medium">Selecione os estados para emissão de licença</FormLabel>
-                  <div className="text-sm text-muted-foreground mt-1 mb-3">
-                    Escolha um ou mais estados onde a licença será utilizada
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                  {brazilianStates.map((state) => (
-                    <FormField
-                      key={state.code}
-                      control={form.control}
-                      name="states"
-                      render={({ field }) => {
-                        const isSelected = (field.value || []).includes(state.code);
-                        return (
-                          <FormItem
-                            key={state.code}
-                            className="m-0 p-0"
-                          >
-                            <FormControl>
-                              <div 
-                                className={`cursor-pointer flex flex-col items-center justify-center p-2 rounded-md border ${
-                                  isSelected 
-                                    ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium' 
-                                    : 'border-gray-200 hover:bg-gray-50'
-                                }`}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    field.onChange((field.value || []).filter((value) => value !== state.code));
-                                  } else {
-                                    field.onChange([...(field.value || []), state.code]);
-                                  }
-                                }}
-                              >
-                                <span className="text-base font-medium">{state.code}</span>
-                                <span className="text-xs mt-1 text-center hidden md:block text-gray-500">{state.name}</span>
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
-          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
             <FileUp className="mr-2 h-5 w-5" />
             Documentos
           </h3>
@@ -913,6 +847,72 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 <FormDescription>
                   Inclua quaisquer informações adicionais importantes para a análise desta solicitação
                 </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12" y2="20"/>
+            </svg>
+            Estados Solicitados
+          </h3>
+
+          <FormField
+            control={form.control}
+            name="states"
+            render={() => (
+              <FormItem>
+                <div className="mb-2">
+                  <FormLabel className="text-base font-medium">Selecione os estados para emissão de licença</FormLabel>
+                  <div className="text-sm text-muted-foreground mt-1 mb-3">
+                    Escolha um ou mais estados onde a licença será utilizada
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                  {brazilianStates.map((state) => (
+                    <FormField
+                      key={state.code}
+                      control={form.control}
+                      name="states"
+                      render={({ field }) => {
+                        const isSelected = (field.value || []).includes(state.code);
+                        return (
+                          <FormItem
+                            key={state.code}
+                            className="m-0 p-0"
+                          >
+                            <FormControl>
+                              <div 
+                                className={`cursor-pointer flex flex-col items-center justify-center p-2 rounded-md border ${
+                                  isSelected 
+                                    ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium' 
+                                    : 'border-gray-200 hover:bg-gray-50'
+                                }`}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    field.onChange((field.value || []).filter((value) => value !== state.code));
+                                  } else {
+                                    field.onChange([...(field.value || []), state.code]);
+                                  }
+                                }}
+                              >
+                                <span className="text-base font-medium">{state.code}</span>
+                                <span className="text-xs mt-1 text-center hidden md:block text-gray-500">{state.name}</span>
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
