@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   insertLicenseRequestSchema, 
@@ -35,8 +35,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoaderCircle, X, Plus } from "lucide-react";
+import { 
+  LoaderCircle, 
+  X, 
+  Plus, 
+  Truck, 
+  Search, 
+  Upload, 
+  Building2, 
+  Link as LinkIcon,
+  FileUp
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "wouter";
 
 interface LicenseFormProps {
   draft?: LicenseRequest | null;
@@ -217,68 +228,148 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-          control={form.control}
-          name="transporterId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Transportador</FormLabel>
-              <Select 
-                onValueChange={(value) => field.onChange(parseInt(value))} 
-                defaultValue={field.value?.toString()}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o transportador" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {isLoadingTransporters ? (
-                    <SelectItem value="loading">Carregando transportadores...</SelectItem>
-                  ) : transporters.length > 0 ? (
-                    transporters.map((transporter) => (
-                      <SelectItem key={transporter.id} value={transporter.id.toString()}>
-                        {transporter.name} {transporter.documentNumber ? `- ${transporter.documentNumber}` : ''}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no_transporter">Nenhum transportador vinculado</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Selecione o transportador para o qual esta licença será emitida.
-                Caso não encontre o transportador desejado, vá para "Minhas Empresas" e vincule o transportador à sua conta.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+            <Building2 className="mr-2 h-5 w-5" />
+            Dados do Transportador
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-3">
+              <FormField
+                control={form.control}
+                name="transporterId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Transportador</FormLabel>
+                    <div className="relative">
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))} 
+                        defaultValue={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-10 pr-10">
+                            <SelectValue placeholder="Buscar transportador..." />
+                            <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isLoadingTransporters ? (
+                            <SelectItem value="loading">
+                              <div className="flex items-center space-x-2">
+                                <LoaderCircle className="h-4 w-4 animate-spin" />
+                                <span>Carregando transportadores...</span>
+                              </div>
+                            </SelectItem>
+                          ) : transporters.length > 0 ? (
+                            transporters.map((transporter) => (
+                              <SelectItem key={transporter.id} value={transporter.id.toString()}>
+                                <div className="font-medium">{transporter.name}</div>
+                                {transporter.documentNumber && (
+                                  <div className="text-xs text-muted-foreground">{transporter.documentNumber}</div>
+                                )}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_transporter">Nenhum transportador vinculado</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="md:flex md:items-end">
+              <Link to="/my-companies" className="flex items-center justify-center h-10 w-full p-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors border border-blue-200">
+                <LinkIcon className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">Vincular Empresa</span>
+              </Link>
+            </div>
+          </div>
+        </div>
 
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de Conjunto</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tipo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="roadtrain_9_axles">Rodotrem 9 eixos</SelectItem>
-                  <SelectItem value="bitrain_9_axles">Bitrem 9 eixos</SelectItem>
-                  <SelectItem value="bitrain_7_axles">Bitrem 7 eixos</SelectItem>
-                  <SelectItem value="bitrain_6_axles">Bitrem 6 eixos</SelectItem>
-                  <SelectItem value="flatbed">Prancha</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+            <Truck className="mr-2 h-5 w-5" />
+            Tipo de Conjunto
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Tipo de Conjunto</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Selecione um tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="roadtrain_9_axles">
+                        <div className="flex items-center">
+                          <Truck className="mr-2 h-4 w-4" />
+                          <span>Rodotrem 9 eixos</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="bitrain_9_axles">
+                        <div className="flex items-center">
+                          <Truck className="mr-2 h-4 w-4" />
+                          <span>Bitrem 9 eixos</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="bitrain_7_axles">
+                        <div className="flex items-center">
+                          <Truck className="mr-2 h-4 w-4" />
+                          <span>Bitrem 7 eixos</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="bitrain_6_axles">
+                        <div className="flex items-center">
+                          <Truck className="mr-2 h-4 w-4" />
+                          <span>Bitrem 6 eixos</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="flatbed">
+                        <div className="flex items-center">
+                          <Truck className="mr-2 h-4 w-4" />
+                          <span>Prancha</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="length"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Comprimento (metros)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="Ex.: 19.80" 
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                      className="h-10"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         {/* Dynamic fields for Rodotrem 9 eixos */}
         {licenseType === 'roadtrain_9_axles' && (
@@ -628,9 +719,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           )}
         />
 
-        <div className="border border-gray-200 rounded-md p-4 space-y-4">
-          <h3 className="font-medium text-gray-800 mb-2">Relação de Placas Adicionais</h3>
-          <div className="text-sm text-muted-foreground mb-2">Adicione as placas que fazem parte da composição mas não constam da listagem acima</div>
+        <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+            <Truck className="mr-2 h-5 w-5" />
+            Placas Adicionais
+          </h3>
+          <div className="text-sm text-muted-foreground mb-4">
+            Adicione placas de veículos que fazem parte da composição mas não foram selecionados acima
+          </div>
           
           <FormField
             control={form.control}
