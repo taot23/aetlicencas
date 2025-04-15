@@ -104,28 +104,26 @@ export function MultiplePlatesField({
   
   // Função para verificar se a placa pertence a um veículo cadastrado
   const isRegisteredVehicle = (plate: string): boolean => {
-    if (!plate || !vehicles || vehicles.length === 0) {
+    if (!plate || !vehicles) {
+      return false;
+    }
+    
+    // Importante: Garantir que temos um array de veículos para verificar
+    if (!Array.isArray(vehicles) || vehicles.length === 0) {
       console.log(`Nenhum veículo cadastrado para verificar placa ${plate}`);
       return false;
     }
     
-    // Verifica diretamente nos veículos carregados por correspondência exata
-    const result = vehicles.some(vehicle => vehicle.plate === plate);
+    // Normaliza a placa para evitar problemas de formatação
+    const normalizedPlate = plate.toUpperCase().trim();
     
-    // Se não encontrar por correspondência exata, tenta uma correspondência parcial
-    // (útil para quando o usuário digita uma placa similar a uma existente)
-    if (!result && plate.length >= 5) {
-      const partialMatch = vehicles.some(vehicle => 
-        vehicle.plate.includes(plate.substring(0, 5)) || 
-        plate.includes(vehicle.plate.substring(0, 5))
-      );
-      
-      if (partialMatch) {
-        console.log(`Placa ${plate} possui correspondência parcial com veículo cadastrado`);
-      }
-    }
+    // Verifica diretamente nos veículos carregados por correspondência exata
+    const registeredVehicles = vehicles.map(v => v.plate.toUpperCase().trim());
+    const result = registeredVehicles.includes(normalizedPlate);
     
     console.log(`Verificando placa ${plate}: ${result ? 'Registrada' : 'Não registrada'}`);
+    console.log(`Placas cadastradas: ${registeredVehicles.join(', ')}`);
+    
     return result;
   };
   
@@ -263,7 +261,9 @@ export function MultiplePlatesField({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
             {plateSuggestions.map((plate) => {
               // Verifica se a placa é de um veículo cadastrado
+              // Forçar o recálculo toda vez que este componente renderizar
               const isRegistered = isRegisteredVehicle(plate);
+              console.log(`Renderizando placa ${plate}, registrado: ${isRegistered}`);
               
               return (
                 <Button
@@ -275,8 +275,8 @@ export function MultiplePlatesField({
                     vehiclePlates.includes(plate)
                       ? 'bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-500' // Placa selecionada (sempre azul)
                       : isRegistered
-                        ? 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200' // Veículo cadastrado (verde)
-                        : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200' // Veículo não cadastrado (vermelho)
+                        ? 'bg-green-500 hover:bg-green-400 text-white border-green-500' // Veículo cadastrado (verde)
+                        : 'bg-red-500 hover:bg-red-400 text-white border-red-500' // Veículo não cadastrado (vermelho)
                   }`}
                   onClick={() => togglePlateSelection(plate)}
                 >
@@ -295,7 +295,9 @@ export function MultiplePlatesField({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
             {vehiclePlates.map((plate) => {
               // Verifica se a placa é de um veículo cadastrado
+              // Forçar o recálculo toda vez que este componente renderizar
               const isRegistered = isRegisteredVehicle(plate);
+              console.log(`Renderizando placa selecionada ${plate}, registrado: ${isRegistered}`);
               
               return (
                 <Button
