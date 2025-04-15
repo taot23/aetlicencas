@@ -50,6 +50,18 @@ export function MultiplePlatesField({
     refetchOnWindowFocus: true
   });
   
+  // Buscar veículos para validação
+  const { data: vehicles = [] } = useQuery<Vehicle[]>({
+    queryKey: ['/api/vehicles'],
+    refetchOnMount: true,
+    staleTime: 30000
+  });
+  
+  // Função para verificar se a placa pertence a um veículo cadastrado
+  const isRegisteredVehicle = (plate: string): boolean => {
+    return vehicles.some(vehicle => vehicle.plate === plate);
+  };
+  
   // Logar as sugestões de placas para debug
   useEffect(() => {
     console.log("Sugestões de placas recebidas:", plateSuggestions);
@@ -91,6 +103,12 @@ export function MultiplePlatesField({
     if (vehiclePlates.includes(formatted)) {
       setError('Esta placa já foi adicionada.');
       return;
+    }
+    
+    // Se a placa não está nas sugestões, verificamos se é de um veículo cadastrado
+    if (!plateSuggestions.includes(formatted) && !isRegisteredVehicle(formatted)) {
+      // Adicionamos mesmo assim, mas alertamos o usuário
+      console.warn(`Placa ${formatted} não encontrada entre os veículos cadastrados.`);
     }
     
     setVehiclePlates([...vehiclePlates, formatted]);
@@ -151,22 +169,29 @@ export function MultiplePlatesField({
         <div className="mt-4 border p-3 rounded-md bg-gray-50">
           <p className="text-sm font-medium mb-2">Placas disponíveis ({plateSuggestions.length}):</p>
           <div className="flex flex-wrap gap-1.5">
-            {plateSuggestions.map((plate) => (
-              <Button
-                key={plate}
-                type="button"
-                size="sm"
-                variant="outline"
-                className={`px-2 py-0.5 h-7 text-xs font-medium ${
-                  vehiclePlates.includes(plate)
-                    ? 'bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-500'
-                    : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border-cyan-200'
-                }`}
-                onClick={() => togglePlateSelection(plate)}
-              >
-                {plate}
-              </Button>
-            ))}
+            {plateSuggestions.map((plate) => {
+              // Verifica se a placa é de um veículo cadastrado
+              const isRegistered = isRegisteredVehicle(plate);
+              
+              return (
+                <Button
+                  key={plate}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={`px-2 py-0.5 h-7 text-xs font-medium ${
+                    vehiclePlates.includes(plate)
+                      ? 'bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-500' // Placa selecionada (sempre azul)
+                      : isRegistered
+                        ? 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200' // Veículo cadastrado (verde)
+                        : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200' // Veículo não cadastrado (vermelho)
+                  }`}
+                  onClick={() => togglePlateSelection(plate)}
+                >
+                  {plate}
+                </Button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -176,28 +201,56 @@ export function MultiplePlatesField({
         <div className="mt-4">
           <p className="text-sm font-medium mb-2">Placas selecionadas:</p>
           <div className="flex flex-wrap gap-1.5">
-            {vehiclePlates.map((plate) => (
-              <Button
-                key={plate}
-                type="button"
-                size="sm"
-                variant="outline"
-                className="px-2 py-0.5 h-7 text-xs font-medium bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-500"
-                onClick={() => {}}
-              >
-                {plate}
-                <X
-                  className="w-3 h-3 ml-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePlateSelection(plate);
-                  }}
-                />
-              </Button>
-            ))}
+            {vehiclePlates.map((plate) => {
+              // Verifica se a placa é de um veículo cadastrado
+              const isRegistered = isRegisteredVehicle(plate);
+              
+              return (
+                <Button
+                  key={plate}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={`px-2 py-0.5 h-7 text-xs font-medium ${
+                    isRegistered
+                      ? 'bg-green-600 hover:bg-green-500 text-white border-green-600' // Veículo cadastrado (verde)
+                      : 'bg-red-600 hover:bg-red-500 text-white border-red-600' // Veículo não cadastrado (vermelho)
+                  }`}
+                  onClick={() => {}}
+                >
+                  {plate}
+                  <X
+                    className="w-3 h-3 ml-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePlateSelection(plate);
+                    }}
+                  />
+                </Button>
+              );
+            })}
           </div>
         </div>
       )}
+      
+      {/* Legenda explicativa das cores */}
+      <div className="mt-4 flex flex-col gap-1">
+        <p className="text-xs font-medium">Legenda:</p>
+        <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-green-600"></div>
+            <span>Veículo cadastrado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-red-600"></div>
+            <span>Veículo não cadastrado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-cyan-500"></div>
+            <span>Placa selecionada</span>
+          </div>
+        </div>
+      </div>
       
       {description ? (
         <p className="text-sm text-muted-foreground mt-2">{description}</p>
