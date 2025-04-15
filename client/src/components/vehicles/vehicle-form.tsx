@@ -243,11 +243,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-3 max-w-4xl w-full mx-auto px-6 py-4">
-        <div className="w-full bg-white py-3 mb-3">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-2 max-w-4xl w-full mx-auto px-4 py-2">
+        <div className="w-full bg-white py-2 mb-2">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Cadastro de Veículo</h3>
-            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
+            <h3 className="text-md font-medium">Cadastro de Veículo</h3>
+            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-7 w-7">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -473,11 +473,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           )}
         />
         
-        <div className="space-y-2">
+        <div className="space-y-1">
           <FormLabel htmlFor="crlvFile">Upload do CRLV (PDF/imagem)</FormLabel>
-          <div className="mt-1 flex justify-center px-4 py-4 border-2 border-gray-300 border-dashed rounded-md">
+          <div className="mt-1 flex justify-center px-3 py-3 border-2 border-gray-300 border-dashed rounded-md">
             <div className="space-y-1 text-center">
-              <UploadCloud className="mx-auto h-8 w-8 text-gray-400" />
+              <UploadCloud className="mx-auto h-6 w-6 text-gray-400" />
               <div className="flex text-sm text-gray-600">
                 <label
                   htmlFor="crlvFile"
@@ -499,12 +499,12 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                 PDF, JPG, PNG até 10MB
               </p>
               {file && (
-                <p className="text-sm text-green-600">
-                  Arquivo selecionado: {file.name}
+                <p className="text-xs text-green-600">
+                  Arquivo: {file.name}
                 </p>
               )}
               {vehicle?.crlvUrl && !file && (
-                <p className="text-sm text-blue-600">
+                <p className="text-xs text-blue-600">
                   <a href={vehicle.crlvUrl} target="_blank" rel="noopener noreferrer">
                     Visualizar CRLV atual
                   </a>
