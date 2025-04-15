@@ -59,7 +59,10 @@ export function MultiplePlatesField({
   
   // Função para verificar se a placa pertence a um veículo cadastrado
   const isRegisteredVehicle = (plate: string): boolean => {
-    return vehicles.some(vehicle => vehicle.plate === plate);
+    // Verifica diretamente nos veículos carregados
+    const result = vehicles.some(vehicle => vehicle.plate === plate);
+    console.log(`Verificando placa ${plate}: ${result ? 'Registrada' : 'Não registrada'}`);
+    return result;
   };
   
   // Logar as sugestões de placas para debug
@@ -75,6 +78,15 @@ export function MultiplePlatesField({
       console.warn("Nenhuma sugestão de placa disponível");
     }
   }, [plateSuggestions, isError, isLoading]);
+  
+  // Logar os veículos carregados
+  useEffect(() => {
+    console.log("Veículos carregados:", vehicles);
+    console.log("Total de veículos:", vehicles.length);
+    if (vehicles.length > 0) {
+      console.log("Placas dos veículos:", vehicles.map(v => v.plate));
+    }
+  }, [vehicles]);
   
   // Inicializar o valor do campo se já houver placas salvas
   useEffect(() => {
