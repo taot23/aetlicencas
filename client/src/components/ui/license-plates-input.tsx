@@ -45,17 +45,17 @@ export function LicensePlatesInput({
     console.log("Input Value:", inputValue);
     console.log("Suggestions:", suggestions);
     
-    if (inputValue && suggestions.length > 0) {
-      // Melhorar o filtro para usar menos caracteres e ser mais flexível
+    if (inputValue && inputValue.length >= 1 && suggestions.length > 0) {
+      // Filtro melhorado para ser mais flexível e mostrar resultados com apenas 1 caractere
       const filtered = suggestions
         .filter(plate => {
           const upperPlate = plate.toUpperCase();
           const upperInput = inputValue.toUpperCase();
-          // Mostra sugestão mesmo com apenas 2 caracteres e ignora traços
+          // Mostra sugestão mesmo com apenas 1 caractere e ignora traços
           return upperPlate.includes(upperInput.replace(/-/g, '')) && 
                  !value.includes(plate);
         })
-        .slice(0, 5); // Mostrar no máximo 5 sugestões
+        .slice(0, 8); // Mostrar até 8 sugestões para melhor visibilidade
       
       console.log("Filtered Suggestions:", filtered);
       setFilteredSuggestions(filtered);
@@ -183,7 +183,7 @@ export function LicensePlatesInput({
       
       <div className="flex flex-col space-y-2">
         {/* Campo de entrada estilo observação */}
-        <div className="w-full">
+        <div className="w-full relative">
           <Input
             ref={inputRef}
             type="text"
@@ -191,40 +191,108 @@ export function LicensePlatesInput({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            onFocus={() => setShowSuggestions(filteredSuggestions.length > 0)}
+            onFocus={() => {
+              // Mostrar todas as sugestões disponíveis quando o campo recebe foco
+              if (suggestions.length > 0) {
+                console.log("Mostrando todas as sugestões no foco", suggestions.length);
+                if (inputValue) {
+                  // Se já tem texto, filtra normalmente
+                  const filtered = suggestions
+                    .filter(plate => {
+                      const upperPlate = plate.toUpperCase();
+                      const upperInput = inputValue.toUpperCase();
+                      return upperPlate.includes(upperInput.replace(/-/g, '')) && 
+                             !value.includes(plate);
+                    })
+                    .slice(0, 8);
+                  setFilteredSuggestions(filtered);
+                  setShowSuggestions(filtered.length > 0);
+                } else {
+                  // Se não tem texto, mostra todas as sugestões não selecionadas
+                  const availableSuggestions = suggestions
+                    .filter(plate => !value.includes(plate))
+                    .slice(0, 8);
+                  setFilteredSuggestions(availableSuggestions);
+                  setShowSuggestions(availableSuggestions.length > 0);
+                  console.log("Sugestões disponíveis:", availableSuggestions.length);
+                }
+              }
+            }}
             onBlur={() => {
               // Quando perde o foco, se tiver uma placa válida, adiciona automaticamente
               setTimeout(() => {
                 if (inputValue && isValidLicensePlate(formatLicensePlate(inputValue))) {
                   addPlate(inputValue);
                 }
+                setShowSuggestions(false);
               }, 200); // Pequeno delay para permitir que o clique em uma sugestão funcione
             }}
             placeholder={placeholder}
             className={`w-full ${inputValue && !isValidLicensePlate(inputValue) ? 'border-red-500' : ''}`}
             maxLength={7}
+            autoComplete="off" // Desativar autocompletar do navegador
           />
+          
+          {/* Lista de sugestões */}
+          {showSuggestions && (
+            <div 
+              ref={suggestionsRef}
+              className="border rounded-md shadow-lg absolute z-50 w-full bg-white dark:bg-gray-800"
+              style={{ 
+                top: 'calc(100% + 4px)',
+                maxHeight: '200px',
+                overflowY: 'auto'
+              }}
+            >
+              <div className="py-1">
+                {filteredSuggestions.length > 0 ? (
+                  filteredSuggestions.map((plate, index) => (
+                    <div
+                      key={plate}
+                      className="suggestion-item px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm"
+                      tabIndex={0}
+                      onClick={() => addPlate(plate)}
+                      onKeyDown={(e) => handleSuggestionKeyDown(e, plate)}
+                    >
+                      {plate}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-gray-500 text-sm">Nenhuma sugestão encontrada</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Lista de sugestões */}
         {showSuggestions && (
           <div 
             ref={suggestionsRef}
-            className="border rounded-md mt-1 max-h-[150px] overflow-auto bg-white dark:bg-gray-800 shadow-lg absolute z-10 w-[calc(100%-48px)]"
+            className="border rounded-md shadow-lg absolute z-50 w-full bg-white dark:bg-gray-800"
+            style={{ 
+              top: 'calc(100% + 4px)',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}
           >
-            <ScrollArea className="max-h-[150px]">
-              {filteredSuggestions.map((plate, index) => (
-                <div
-                  key={plate}
-                  className="suggestion-item px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
-                  tabIndex={0}
-                  onClick={() => addPlate(plate)}
-                  onKeyDown={(e) => handleSuggestionKeyDown(e, plate)}
-                >
-                  {plate}
-                </div>
-              ))}
-            </ScrollArea>
+            <div className="py-1">
+              {filteredSuggestions.length > 0 ? (
+                filteredSuggestions.map((plate, index) => (
+                  <div
+                    key={plate}
+                    className="suggestion-item px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm"
+                    tabIndex={0}
+                    onClick={() => addPlate(plate)}
+                    onKeyDown={(e) => handleSuggestionKeyDown(e, plate)}
+                  >
+                    {plate}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-gray-500 text-sm">Nenhuma sugestão encontrada</div>
+              )}
+            </div>
           </div>
         )}
         

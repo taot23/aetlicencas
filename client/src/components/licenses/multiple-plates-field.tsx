@@ -29,18 +29,24 @@ export function MultiplePlatesField({
   // Buscar sugestões de placas usando a nova rota pública
   const { data: plateSuggestions = [], isLoading, isError } = useQuery<string[]>({
     queryKey: ['/api/public/vehicle-plates'],
+    refetchOnMount: true,
+    staleTime: 30000, // Considerar dados frescos por 30 segundos
+    refetchOnWindowFocus: true
   });
   
   // Logar as sugestões de placas para debug
   useEffect(() => {
     console.log("Sugestões de placas recebidas:", plateSuggestions);
-    if (isError) console.error("Erro ao carregar sugestões de placas");
-  }, [plateSuggestions, isError]);
+    console.log("Número total de sugestões:", plateSuggestions.length);
     
-  // Logar as sugestões de placas disponíveis
-  useEffect(() => {
-    console.log("Sugestões de placas disponíveis:", plateSuggestions);
-  }, [plateSuggestions]);
+    if (isError) {
+      console.error("Erro ao carregar sugestões de placas");
+    } else if (isLoading) {
+      console.log("Carregando sugestões de placas...");
+    } else if (plateSuggestions.length === 0) {
+      console.warn("Nenhuma sugestão de placa disponível");
+    }
+  }, [plateSuggestions, isError, isLoading]);
   
   // Inicializar o valor do campo se já houver placas salvas
   useEffect(() => {
