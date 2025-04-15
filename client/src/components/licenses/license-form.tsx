@@ -1105,19 +1105,35 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       ))}
                     </div>
                     
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-2 w-full md:w-auto"
-                      onClick={() => {
-                        field.onChange([...field.value || [], '']);
-                        const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                        newDocs.push('');
-                        form.setValue('additionalPlatesDocuments', newDocs);
-                      }}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Adicionar Placa
-                    </Button>
+                    <div className="mt-2 w-full">
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="text"
+                          placeholder="Digite a placa e pressione Enter"
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              
+                              // Obter o valor, formatar e validar
+                              const value = e.currentTarget.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+                              if (value && value.length >= 7) {
+                                field.onChange([...field.value || [], value]);
+                                const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                                newDocs.push('');
+                                form.setValue('additionalPlatesDocuments', newDocs);
+                                
+                                // Limpar o campo
+                                e.currentTarget.value = '';
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Digite a placa e pressione Enter para adicionar
+                      </p>
+                    </div>
                   </div>
                   <FormMessage />
                 </FormItem>
