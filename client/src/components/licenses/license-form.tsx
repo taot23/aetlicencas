@@ -701,26 +701,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           </div>
         )}
 
-        <FormField
-          control={form.control}
-          name="length"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Comprimento do Conjunto (metros)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  placeholder="30.5" 
-                  {...field} 
-                  value={field.value || ''} 
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
 
         <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
