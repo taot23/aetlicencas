@@ -364,6 +364,10 @@ export class MemStorage implements IStorage {
       (vehicle) => vehicle.userId === userId
     );
   }
+  
+  async getAllVehicles(): Promise<Vehicle[]> {
+    return Array.from(this.vehicles.values());
+  }
 
   async createVehicle(userId: number, vehicleData: InsertVehicle & { crlvUrl?: string | null }): Promise<Vehicle> {
     const id = this.currentVehicleId++;
@@ -785,6 +789,10 @@ export class DatabaseStorage implements IStorage {
       pool, 
       createTableIfMissing: true 
     });
+  }
+  
+  async getAllVehicles(): Promise<Vehicle[]> {
+    return await db.select().from(vehicles);
   }
 
   // Métodos de usuário
