@@ -592,14 +592,24 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                   <FormLabel className="text-base font-medium">Comprimento (metros)</FormLabel>
                   <FormControl>
                     <Input 
-                      type="number" 
+                      type="text" 
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,]?[0-9]*"
                       placeholder="Ex.: 19.80" 
                       {...field}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                      onChange={(e) => {
+                        // Permite apenas números e um único separador decimal (ponto ou vírgula)
+                        const value = e.target.value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
+                        // Converte para número e atualiza o campo
+                        field.onChange(parseFloat(value) || 0);
+                      }}
                       className="h-10"
                     />
                   </FormControl>
+                  <FormDescription className="text-xs text-muted-foreground mt-1">
+                    Use o teclado numérico para digitar o comprimento em metros
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
