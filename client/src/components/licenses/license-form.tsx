@@ -274,7 +274,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       brand: "",
       model: "",
       year: undefined,
-      renavam: ""
+      axleCount: undefined,
+      renavam: "",
+      remarks: ""
     }
   });
   
@@ -388,18 +390,38 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 
                 <FormField
                   control={vehicleForm.control}
-                  name="renavam"
+                  name="axleCount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Renavam</FormLabel>
+                      <FormLabel>Quantidade de Eixos</FormLabel>
                       <FormControl>
-                        <Input placeholder="Renavam" {...field} />
+                        <Input 
+                          type="number" 
+                          placeholder="2" 
+                          {...field}
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+              
+              <FormField
+                control={vehicleForm.control}
+                name="renavam"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Renavam</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Renavam" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={vehicleForm.control}

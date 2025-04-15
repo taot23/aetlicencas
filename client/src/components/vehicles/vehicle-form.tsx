@@ -42,6 +42,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   const formSchema = insertVehicleSchema.extend({
     tare: z.coerce.number().min(0.1, "O peso deve ser maior que zero"),
     crlvYear: z.coerce.number().min(1990, "O ano deve ser posterior a 1990"),
+    axleCount: z.coerce.number().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -51,11 +52,23 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       type: vehicle.type,
       tare: vehicle.tare,
       crlvYear: vehicle.crlvYear,
+      brand: vehicle.brand || "",
+      model: vehicle.model || "",
+      year: vehicle.year,
+      renavam: vehicle.renavam || "",
+      axleCount: vehicle.axleCount,
+      remarks: vehicle.remarks || "",
     } : {
       plate: "",
       type: "tractor_unit", // Valor padrão para o tipo (Unidade Tratora)
       tare: 0,
       crlvYear: new Date().getFullYear(),
+      brand: "",
+      model: "",
+      year: undefined,
+      renavam: "",
+      axleCount: undefined,
+      remarks: "",
     },
   });
 

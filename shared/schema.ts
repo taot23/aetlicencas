@@ -159,7 +159,13 @@ export const vehicles = pgTable("vehicles", {
   userId: integer("user_id").notNull().references(() => users.id),
   plate: text("plate").notNull(),
   type: text("type").notNull(), // Unidade Tratora, Semirreboque, Reboque, Dolly, Prancha
+  brand: text("brand"),
+  model: text("model"),
+  year: integer("year"),
+  renavam: text("renavam"),
   tare: integer("tare").notNull(), // peso em kg
+  axleCount: integer("axle_count"), // Quantidade de eixos
+  remarks: text("remarks"),
   crlvYear: integer("crlv_year").notNull(),
   crlvUrl: text("crlv_url"),
   status: text("status").default("active").notNull(),
@@ -169,7 +175,13 @@ export const insertVehicleSchema = createInsertSchema(vehicles)
   .omit({ id: true, userId: true })
   .extend({
     // Substituir validação de tare para aceitar números decimais
-    tare: z.number(),
+    tare: z.number().optional().default(0),
+    axleCount: z.number().optional(),
+    brand: z.string().optional(),
+    model: z.string().optional(),
+    year: z.number().optional(),
+    renavam: z.string().optional(),
+    remarks: z.string().optional(),
     crlvFile: z.any().optional(),
   });
 
