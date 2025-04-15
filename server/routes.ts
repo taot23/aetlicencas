@@ -439,13 +439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint para buscar todos os veículos (para sugestões de placas)
-  // Rota pública para sugestões de placas (sem requireAuth para facilitar o autocompletar)
-  app.get('/api/vehicles/all', async (req, res) => {
+  // Mantemos a rota original que requer autenticação
+  app.get('/api/vehicles/all', requireAuth, async (req, res) => {
     try {
       // Retorna uma lista simplificada de todos os veículos (apenas id, placa e tipo)
-      console.log("Recebida requisição para /api/vehicles/all");
       const vehicles = await storage.getAllVehicles();
-      console.log(`Encontrados ${vehicles.length} veículos para sugestões`);
       const simplifiedVehicles = vehicles.map(v => ({
         id: v.id,
         plate: v.plate,
@@ -455,6 +453,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching all vehicles:', error);
       res.status(500).json({ message: 'Erro ao buscar lista de veículos' });
+    }
+  });
+  
+  // Criamos uma nova rota pública específica para sugestões de placas
+  app.get('/api/public/vehicle-plates', async (req, res) => {
+    try {
+      // Retorna apenas as placas de todos os veículos, sem autenticação
+      console.log("Recebida requisição para sugestões públicas de placas");
+      const vehicles = await storage.getAllVehicles();
+      console.log(`Encontrados ${vehicles.length} veículos para sugestões`);
+      
+      // Extraímos apenas as placas únicas
+      const uniquePlates = Array.from(new Set(vehicles.map(v => v.plate)));
+      console.log(`${uniquePlates.length} placas únicas disponíveis para sugestão`);
+      
+      res.json(uniquePlates);
+    } catch (error) {
+      console.error('Error fetching vehicle plates:', error);
+      res.status(500).json({ message: 'Erro ao buscar sugestões de placas' });
     }
   });
 

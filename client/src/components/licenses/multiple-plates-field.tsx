@@ -26,22 +26,16 @@ export function MultiplePlatesField({
   const { control, setValue, getValues } = useFormContext();
   const [vehiclePlates, setVehiclePlates] = useState<string[]>([]);
   
-  // Buscar todos os veículos para sugestões de placas
-  const { data, isLoading, isError } = useQuery<Vehicle[]>({
-    queryKey: ['/api/vehicles/all'],
-    initialData: [],
+  // Buscar sugestões de placas usando a nova rota pública
+  const { data: plateSuggestions = [], isLoading, isError } = useQuery<string[]>({
+    queryKey: ['/api/public/vehicle-plates'],
   });
   
-  // Logar os dados de veículos para debug
+  // Logar as sugestões de placas para debug
   useEffect(() => {
-    console.log("Dados de veículos recebidos:", data);
-    if (isError) console.error("Erro ao carregar veículos");
-  }, [data, isError]);
-  
-  // Extrair placas únicas para sugestões
-  const plateSuggestions = data ? 
-    Array.from(new Set(data.map(vehicle => vehicle.plate))) : 
-    [];
+    console.log("Sugestões de placas recebidas:", plateSuggestions);
+    if (isError) console.error("Erro ao carregar sugestões de placas");
+  }, [plateSuggestions, isError]);
     
   // Logar as sugestões de placas disponíveis
   useEffect(() => {
