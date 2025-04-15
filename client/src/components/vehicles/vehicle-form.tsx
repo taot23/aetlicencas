@@ -244,9 +244,8 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-2 max-w-4xl w-full mx-auto px-4 py-2">
-        <div className="w-full bg-white py-2 mb-2">
-          <div className="flex justify-between items-center">
-            <h3 className="text-md font-medium">Cadastro de Veículo</h3>
+        <div className="w-full bg-white mb-2">
+          <div className="flex justify-end items-center">
             <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-7 w-7">
               <X className="h-4 w-4" />
             </Button>
