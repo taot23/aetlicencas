@@ -1283,4 +1283,8 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Define qual implementação de armazenamento será usada
-export const storage = new DatabaseStorage();
+// Importar a nova implementação transacional
+import { TransactionalStorage } from "./transactional-storage";
+
+// Use a implementação de armazenamento otimizada com transações
+export const storage = new TransactionalStorage();
