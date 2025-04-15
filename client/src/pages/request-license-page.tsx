@@ -77,20 +77,20 @@ export default function RequestLicensePage() {
       {/* Dialog para o formulário */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent 
-          className="max-w-6xl w-[95vw] max-h-[85vh] overflow-y-auto p-0 mobile-form-dialog"
+          className="max-w-6xl w-[95vw] max-h-[92vh] sm:max-h-[85vh] overflow-y-auto p-0 mobile-form-dialog"
           preventCloseOnMobile={true}
         >
-          <div className="sticky top-0 z-10 bg-white p-6 border-b">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">
+          <div className="sticky top-0 z-20 bg-white p-4 sm:p-6 border-b shadow-sm">
+            <DialogHeader className="mb-0">
+              <DialogTitle className="text-xl sm:text-2xl">
                 {currentDraft ? "Editar Solicitação" : "Solicitar AET"}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm">
                 Preencha os dados abaixo para solicitar uma Autorização Especial de Transporte
               </DialogDescription>
             </DialogHeader>
             <button 
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              className="absolute right-3 top-3 rounded-sm opacity-80 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-gray-100 p-1.5"
               onClick={() => setShowForm(false)}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -101,7 +101,7 @@ export default function RequestLicensePage() {
             </button>
           </div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <LicenseForm
               draft={currentDraft}
               onComplete={handleFormComplete}

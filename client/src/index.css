@@ -10,10 +10,16 @@
   }
   
   .mobile-form-dialog {
-    max-height: 65vh !important;
+    max-height: 92vh !important;
     position: absolute !important;
-    top: 5vh !important;
+    top: 1vh !important;
     transform: translate(-50%, 0) !important;
+    padding: 0 !important;
+  }
+  
+  /* Melhores ajustes para entrada de texto em dispositivos móveis */
+  input, textarea, select {
+    font-size: 16px !important; /* Evita zoom automático no iOS */
   }
   
   /* Específico para campo de placas com a faixa preta */
@@ -26,7 +32,7 @@
   #license-plate-input:focus {
     position: relative;
     z-index: 10;
-    transform: translateY(-100px);
+    transform: translateY(-80px);
     transition: transform 0.2s ease;
   }
   
@@ -35,8 +41,8 @@
   .mobile-input:active,
   .mobile-input-plate:focus,
   .mobile-input-plate:active {
-    margin-bottom: 300px; /* Adiciona espaço extra abaixo do campo quando ele está com foco */
-    margin-top: 50px;
+    margin-bottom: 350px; /* Adiciona espaço extra abaixo do campo quando ele está com foco */
+    margin-top: 100px;
   }
   
   /* Reduzir padding e tamanho de texto em dispositivos móveis */
@@ -44,15 +50,14 @@
     padding: 0.75rem !important;
   }
   
-  /* Melhorar visualização em dispositivos móveis */
-  .mobile-form-dialog {
-    min-height: auto !important;
-    padding-bottom: 4rem !important;
+  /* Cabeçalho mais compacto em dispositivos móveis */
+  .mobile-form-dialog .DialogHeader {
+    margin-bottom: 0 !important;
   }
   
   /* Garantir que botões tenham tamanho adequado para toque em mobile */
   button {
-    min-height: 40px;
+    min-height: 44px; /* Tamanho mínimo recomendado para touch targets */
   }
   
   /* Mais espaço para grids em dispositivos móveis */
@@ -60,25 +65,31 @@
     gap: 8px !important;
   }
   
-  /* Área de scroll em dispositivos móveis */
-  .mobile-form-dialog > div:not(.sticky) {
-    padding-bottom: 5rem;
-  }
-  
-  /* Ajuste para que o formulário tenha rolagem adequada */
-  .mobile-form-dialog {
-    overflow-y: auto !important;
-    scroll-padding-bottom: 20px !important;
-  }
-  
   /* Garantir espaço no final dos formulários para mobile */
-  .mobile-form-dialog > div {
-    padding-bottom: 120px !important;
+  .mobile-form-dialog > div:not(.sticky) {
+    padding-bottom: 150px !important;
   }
   
-  /* Ajuste adicional para diálogo */
-  .mobile-form-dialog:has(#license-plate-input:focus) {
-    max-height: 50vh !important;
+  /* Ajustes específicos para form fields em mobile */
+  .FormItem {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Espaçamento melhorado entre elementos de formulário */
+  .space-y-6 > * {
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+  
+  /* Melhorar visibilidade do cabeçalho flutuante */
+  .sticky.top-0 {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Quando o teclado virtual está aberto */
+  body.keyboard-active .mobile-form-dialog {
+    max-height: 100vh !important;
+    top: 0 !important;
   }
 }
 
