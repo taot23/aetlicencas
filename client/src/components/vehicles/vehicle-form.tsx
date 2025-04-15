@@ -243,13 +243,16 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-2 max-w-4xl w-full mx-auto px-4 py-2">
-        <div className="w-full bg-white mb-2">
-          <div className="flex justify-end items-center">
-            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-7 w-7">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-2 max-w-4xl w-full mx-auto">
+        <div className="w-full bg-blue-900 text-white p-4 mb-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">{vehicle ? "Editar Veículo" : "Cadastrar Veículo"}</h2>
+            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-7 w-7 text-white hover:bg-blue-800">
               <X className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+        <div className="px-4 py-2">
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
