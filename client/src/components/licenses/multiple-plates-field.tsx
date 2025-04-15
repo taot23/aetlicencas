@@ -50,17 +50,54 @@ export function MultiplePlatesField({
     refetchOnWindowFocus: true
   });
   
-  // Buscar veículos para validação
+  // Buscar veículos para validação - usando API pública para garantir acesso
   const { data: vehicles = [] } = useQuery<Vehicle[]>({
     queryKey: ['/api/vehicles'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/vehicles', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          console.error('Erro ao buscar veículos:', response.status);
+          return [];
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Erro ao buscar veículos:', error);
+        return [];
+      }
+    },
     refetchOnMount: true,
     staleTime: 30000
   });
   
   // Função para verificar se a placa pertence a um veículo cadastrado
   const isRegisteredVehicle = (plate: string): boolean => {
-    // Verifica diretamente nos veículos carregados
+    if (!plate || !vehicles || vehicles.length === 0) {
+      console.log(`Nenhum veículo cadastrado para verificar placa ${plate}`);
+      return false;
+    }
+    
+    // Verifica diretamente nos veículos carregados por correspondência exata
     const result = vehicles.some(vehicle => vehicle.plate === plate);
+    
+    // Se não encontrar por correspondência exata, tenta uma correspondência parcial
+    // (útil para quando o usuário digita uma placa similar a uma existente)
+    if (!result && plate.length >= 5) {
+      const partialMatch = vehicles.some(vehicle => 
+        vehicle.plate.includes(plate.substring(0, 5)) || 
+        plate.includes(vehicle.plate.substring(0, 5))
+      );
+      
+      if (partialMatch) {
+        console.log(`Placa ${plate} possui correspondência parcial com veículo cadastrado`);
+      }
+    }
+    
     console.log(`Verificando placa ${plate}: ${result ? 'Registrada' : 'Não registrada'}`);
     return result;
   };
