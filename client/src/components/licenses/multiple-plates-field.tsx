@@ -27,15 +27,26 @@ export function MultiplePlatesField({
   const [vehiclePlates, setVehiclePlates] = useState<string[]>([]);
   
   // Buscar todos os veículos para sugestões de placas
-  const { data } = useQuery<Vehicle[]>({
+  const { data, isLoading, isError } = useQuery<Vehicle[]>({
     queryKey: ['/api/vehicles/all'],
     initialData: [],
   });
+  
+  // Logar os dados de veículos para debug
+  useEffect(() => {
+    console.log("Dados de veículos recebidos:", data);
+    if (isError) console.error("Erro ao carregar veículos");
+  }, [data, isError]);
   
   // Extrair placas únicas para sugestões
   const plateSuggestions = data ? 
     Array.from(new Set(data.map(vehicle => vehicle.plate))) : 
     [];
+    
+  // Logar as sugestões de placas disponíveis
+  useEffect(() => {
+    console.log("Sugestões de placas disponíveis:", plateSuggestions);
+  }, [plateSuggestions]);
   
   // Inicializar o valor do campo se já houver placas salvas
   useEffect(() => {

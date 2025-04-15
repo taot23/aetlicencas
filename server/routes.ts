@@ -439,10 +439,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint para buscar todos os veículos (para sugestões de placas)
-  app.get('/api/vehicles/all', requireAuth, async (req, res) => {
+  // Rota pública para sugestões de placas (sem requireAuth para facilitar o autocompletar)
+  app.get('/api/vehicles/all', async (req, res) => {
     try {
       // Retorna uma lista simplificada de todos os veículos (apenas id, placa e tipo)
+      console.log("Recebida requisição para /api/vehicles/all");
       const vehicles = await storage.getAllVehicles();
+      console.log(`Encontrados ${vehicles.length} veículos para sugestões`);
       const simplifiedVehicles = vehicles.map(v => ({
         id: v.id,
         plate: v.plate,

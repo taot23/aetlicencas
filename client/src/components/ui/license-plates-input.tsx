@@ -42,14 +42,22 @@ export function LicensePlatesInput({
   
   // Atualizar as sugestões filtradas quando o input muda
   useEffect(() => {
+    console.log("Input Value:", inputValue);
+    console.log("Suggestions:", suggestions);
+    
     if (inputValue && suggestions.length > 0) {
+      // Melhorar o filtro para usar menos caracteres e ser mais flexível
       const filtered = suggestions
-        .filter(plate => 
-          plate.startsWith(inputValue.toUpperCase()) && 
-          !value.includes(plate)
-        )
+        .filter(plate => {
+          const upperPlate = plate.toUpperCase();
+          const upperInput = inputValue.toUpperCase();
+          // Mostra sugestão mesmo com apenas 2 caracteres e ignora traços
+          return upperPlate.includes(upperInput.replace(/-/g, '')) && 
+                 !value.includes(plate);
+        })
         .slice(0, 5); // Mostrar no máximo 5 sugestões
       
+      console.log("Filtered Suggestions:", filtered);
       setFilteredSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
     } else {
