@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { LoaderCircle, UploadCloud, X } from "lucide-react";
+import { LoaderCircle, X } from "lucide-react";
 
 interface VehicleFormProps {
   vehicle?: Vehicle | null;
@@ -35,7 +35,6 @@ interface VehicleFormProps {
 
 export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) {
   const { toast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
   const [vehicleType, setVehicleType] = useState<string>(vehicle?.type || "");
   
   // Extend the schema to handle file upload
@@ -73,7 +72,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/vehicles", data);
       return await res.json();
     },
@@ -82,6 +81,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         title: "Veículo cadastrado",
         description: "O veículo foi cadastrado com sucesso",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
       onSuccess();
     },
     onError: (error: Error) => {
@@ -94,7 +94,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("PATCH", `/api/vehicles/${vehicle?.id}`, data);
       return await res.json();
     },
@@ -114,129 +114,41 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       });
     },
   });
-  
-  const createWithoutFileMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/vehicles", data);
-      return await res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Veículo cadastrado",
-        description: "O veículo foi cadastrado com sucesso",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
-      onSuccess();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível cadastrar o veículo",
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const updateWithoutFileMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("PATCH", `/api/vehicles/${vehicle?.id}`, data);
-      return await res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Veículo atualizado", 
-        description: "O veículo foi atualizado com sucesso",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
-      onSuccess();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível atualizar o veículo",
-        variant: "destructive",
-      });
-    },
-  });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (file) {
-      const formData = new FormData();
-      
-      const vehicleData = {
-        plate: values.plate.toUpperCase(),
-        type: values.type,
-        tare: Number(values.tare),
-        crlvYear: Number(values.crlvYear),
-        brand: values.brand,
-        model: values.model,
-        year: values.year,
-        renavam: values.renavam,
-        axleCount: values.axleCount,
-        remarks: values.remarks
-      };
-      
-      formData.append("plate", vehicleData.plate);
-      formData.append("type", vehicleData.type);
-      formData.append("tare", vehicleData.tare.toString());
-      formData.append("crlvYear", vehicleData.crlvYear.toString());
-      
-      if (vehicleData.brand) formData.append("brand", vehicleData.brand);
-      if (vehicleData.model) formData.append("model", vehicleData.model);
-      if (vehicleData.year) formData.append("year", vehicleData.year.toString());
-      if (vehicleData.renavam) formData.append("renavam", vehicleData.renavam);
-      if (vehicleData.axleCount) formData.append("axleCount", vehicleData.axleCount.toString());
-      if (vehicleData.remarks) formData.append("remarks", vehicleData.remarks);
-      
-      formData.append("crlvFile", file);
-      
-      if (vehicle) {
-        updateMutation.mutate(formData);
-      } else {
-        createMutation.mutate(formData);
-      }
+    const vehicleData = {
+      plate: values.plate.toUpperCase(),
+      type: values.type,
+      tare: Number(values.tare),
+      crlvYear: Number(values.crlvYear),
+      brand: values.brand,
+      model: values.model,
+      year: values.year,
+      renavam: values.renavam,
+      axleCount: values.axleCount,
+      remarks: values.remarks
+    };
+    
+    if (vehicle) {
+      updateMutation.mutate(vehicleData);
     } else {
-      const vehicleData = {
-        plate: values.plate.toUpperCase(),
-        type: values.type,
-        tare: Number(values.tare),
-        crlvYear: Number(values.crlvYear),
-        brand: values.brand,
-        model: values.model,
-        year: values.year,
-        renavam: values.renavam,
-        axleCount: values.axleCount,
-        remarks: values.remarks
-      };
-      
-      if (vehicle) {
-        updateWithoutFileMutation.mutate(vehicleData);
-      } else {
-        createWithoutFileMutation.mutate(vehicleData);
-      }
+      createMutation.mutate(vehicleData);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const isSubmitting = createMutation.isPending || updateMutation.isPending || 
-    createWithoutFileMutation.isPending || updateWithoutFileMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-4 w-full max-w-xl mx-auto">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-medium">{vehicle ? "Editar Veículo" : "Cadastrar Novo Veículo"}</h2>
-          <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
-            <X className="h-4 w-4" />
-          </Button>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative w-full">
+        <div className="text-lg font-semibold mb-1">
+          Cadastrar Novo Veículo
         </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          Preencha as informações do veículo para adicioná-lo ao sistema
+        </p>
         
-        <div className="p-4 space-y-4">
+        <div className="space-y-4">
           <FormField
             control={form.control}
             name="plate"
@@ -386,56 +298,14 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               </FormItem>
             )}
           />
-          
-          <div className="space-y-1">
-            <FormLabel htmlFor="crlvFile">Upload do CRLV (PDF/imagem)</FormLabel>
-            <div className="flex justify-center px-3 py-3 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
-                <UploadCloud className="mx-auto h-6 w-6 text-gray-400" />
-                <div className="flex text-sm text-gray-600">
-                  <label
-                    htmlFor="crlvFile"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
-                  >
-                    <span>Carregar arquivo</span>
-                    <input
-                      id="crlvFile"
-                      name="crlvFile"
-                      type="file"
-                      className="sr-only"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                  <p className="pl-1">ou arraste e solte</p>
-                </div>
-                <p className="text-xs text-gray-500">
-                  PDF, JPG, PNG até 10MB
-                </p>
-                {file && (
-                  <p className="text-xs text-green-600">
-                    Arquivo: {file.name}
-                  </p>
-                )}
-                {vehicle?.crlvUrl && !file && (
-                  <p className="text-xs text-blue-600">
-                    <a href={vehicle.crlvUrl} target="_blank" rel="noopener noreferrer">
-                      Visualizar CRLV atual
-                    </a>
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
         
-        <div className="flex justify-end gap-2 pt-4 pb-4 px-4 border-t">
+        <div className="flex justify-end gap-2 mt-6">
           <Button type="button" variant="outline" onClick={onCancel} className="min-w-[100px]">
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting} className="min-w-[100px]">
-            {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-            {vehicle ? "Atualizar" : "Cadastrar Veículo"}
+            Cadastrar Veículo
           </Button>
         </div>
       </form>
