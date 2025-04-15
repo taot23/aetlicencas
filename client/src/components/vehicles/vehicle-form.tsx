@@ -243,19 +243,19 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-2 max-w-4xl w-full mx-auto">
-        <div className="w-full bg-blue-900 text-white p-4 mb-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-2 max-w-4xl w-full mx-auto overflow-hidden">
+        <div className="w-full bg-primary text-white py-2 px-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">{vehicle ? "Editar Veículo" : "Cadastrar Veículo"}</h2>
-            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-7 w-7 text-white hover:bg-blue-800">
-              <X className="h-4 w-4" />
+            <h2 className="text-base font-medium">{vehicle ? "Editar Veículo" : "Cadastrar Veículo"}</h2>
+            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-6 w-6 text-white hover:bg-primary/80">
+              <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
-        <div className="px-4 py-2">
+        <div className="px-4 pt-4 pb-2">
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4">
           <FormField
             control={form.control}
             name="plate"
@@ -285,38 +285,40 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           />
         </div>
         
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de Veículo</FormLabel>
-              <Select 
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setVehicleType(value);
-                }} 
-                value={field.value}
-                defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tipo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {vehicleTypeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="px-4">
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Veículo</FormLabel>
+                <Select 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    setVehicleType(value);
+                  }} 
+                  value={field.value}
+                  defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um tipo" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {vehicleTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4">
           <FormField
             control={form.control}
             name="tare"
@@ -346,7 +348,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4">
           <FormField
             control={form.control}
             name="brand"
@@ -414,7 +416,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4">
           <FormField
             control={form.control}
             name="year"
@@ -456,26 +458,28 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         
         {/* Removemos o campo Renavam daqui pois ele já está no grid junto com a placa */}
         
-        <FormField
-          control={form.control}
-          name="remarks"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observações</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Observações sobre o veículo..." 
-                  className="resize-none h-20" 
-                  {...field} 
-                  value={field.value || ''} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="px-4">
+          <FormField
+            control={form.control}
+            name="remarks"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Observações sobre o veículo..." 
+                    className="resize-none h-16" 
+                    {...field} 
+                    value={field.value || ''} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
-        <div className="space-y-1">
+        <div className="px-4 space-y-1">
           <FormLabel htmlFor="crlvFile">Upload do CRLV (PDF/imagem)</FormLabel>
           <div className="mt-1 flex justify-center px-3 py-3 border-2 border-gray-300 border-dashed rounded-md">
             <div className="space-y-1 text-center">
