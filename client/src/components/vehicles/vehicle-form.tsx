@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -54,9 +55,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       crlvYear: vehicle.crlvYear,
       brand: vehicle.brand || "",
       model: vehicle.model || "",
-      year: vehicle.year,
+      year: vehicle.year || undefined,
       renavam: vehicle.renavam || "",
-      axleCount: vehicle.axleCount,
+      axleCount: vehicle.axleCount || undefined,
       remarks: vehicle.remarks || "",
     } : {
       plate: "",
@@ -169,7 +170,13 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         plate: values.plate.toUpperCase(),
         type: values.type,
         tare: Number(values.tare),
-        crlvYear: Number(values.crlvYear)
+        crlvYear: Number(values.crlvYear),
+        brand: values.brand,
+        model: values.model,
+        year: values.year,
+        renavam: values.renavam,
+        axleCount: values.axleCount,
+        remarks: values.remarks
       };
       
       // Para veículos sem arquivo, enviar diretamente como JSON
@@ -177,6 +184,14 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       formData.append("type", vehicleData.type);
       formData.append("tare", vehicleData.tare.toString());
       formData.append("crlvYear", vehicleData.crlvYear.toString());
+      
+      if (vehicleData.brand) formData.append("brand", vehicleData.brand);
+      if (vehicleData.model) formData.append("model", vehicleData.model);
+      if (vehicleData.year) formData.append("year", vehicleData.year.toString());
+      if (vehicleData.renavam) formData.append("renavam", vehicleData.renavam);
+      if (vehicleData.axleCount) formData.append("axleCount", vehicleData.axleCount.toString());
+      if (vehicleData.remarks) formData.append("remarks", vehicleData.remarks);
+      
       formData.append("crlvFile", file);
       
       console.log("Sending vehicle data with file:", vehicleData);
@@ -192,7 +207,13 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         plate: values.plate.toUpperCase(),
         type: values.type,
         tare: Number(values.tare),
-        crlvYear: Number(values.crlvYear)
+        crlvYear: Number(values.crlvYear),
+        brand: values.brand,
+        model: values.model,
+        year: values.year,
+        renavam: values.renavam,
+        axleCount: values.axleCount,
+        remarks: values.remarks
       };
       
       console.log("Sending vehicle data as JSON:", vehicleData);
@@ -273,14 +294,102 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           )}
         />
         
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="brand"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Marca</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ex.: Scania" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+            
+          <FormField
+            control={form.control}
+            name="model"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Modelo</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ex.: R450" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="year"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ano</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="2023" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="axleCount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantidade de Eixos</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="2" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="crlvYear"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ano do CRLV</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="2023" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
         <FormField
           control={form.control}
-          name="crlvYear"
+          name="renavam"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ano do CRLV</FormLabel>
+              <FormLabel>Renavam</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="2023" {...field} />
+                <Input placeholder="Número do Renavam" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="remarks"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observações</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Observações sobre o veículo..." className="resize-none" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

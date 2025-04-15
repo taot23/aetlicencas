@@ -162,6 +162,18 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
                 
                 <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
                   <div>
+                    <span className="text-gray-500">Marca:</span> {vehicle.brand || "-"}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Modelo:</span> {vehicle.model || "-"}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Eixos:</span> {vehicle.axleCount || "-"}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Ano:</span> {vehicle.year || "-"}
+                  </div>
+                  <div>
                     <span className="text-gray-500">Tara:</span> {vehicle.tare.toLocaleString()} kg
                   </div>
                   <div>
@@ -233,8 +245,10 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
               <TableRow>
                 <TableHead>Placa</TableHead>
                 <TableHead>Tipo de Veículo</TableHead>
+                <TableHead>Marca/Modelo</TableHead>
+                <TableHead>Eixos</TableHead>
                 <TableHead>Tara (kg)</TableHead>
-                <TableHead>Ano CRLV</TableHead>
+                <TableHead>Ano</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Documentação</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -243,7 +257,7 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">
+                  <TableCell colSpan={9} className="text-center py-10">
                     Carregando veículos...
                   </TableCell>
                 </TableRow>
@@ -252,8 +266,14 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
                   <TableRow key={vehicle.id}>
                     <TableCell className="font-medium">{vehicle.plate}</TableCell>
                     <TableCell>{getVehicleTypeLabel(vehicle.type)}</TableCell>
+                    <TableCell>
+                      {vehicle.brand && vehicle.model 
+                        ? `${vehicle.brand} / ${vehicle.model}` 
+                        : vehicle.brand || vehicle.model || "-"}
+                    </TableCell>
+                    <TableCell>{vehicle.axleCount || "-"}</TableCell>
                     <TableCell>{vehicle.tare.toLocaleString()}</TableCell>
-                    <TableCell>{vehicle.crlvYear}</TableCell>
+                    <TableCell>{vehicle.year || "-"}</TableCell>
                     <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
                     <TableCell>
                       {vehicle.crlvUrl ? (
@@ -290,7 +310,7 @@ export function VehicleList({ vehicles, isLoading, onEdit, onRefresh }: VehicleL
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-gray-500">
+                  <TableCell colSpan={9} className="text-center py-10 text-gray-500">
                     <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                     <p>Nenhum veículo cadastrado. Clique em "Cadastrar Veículo" para adicionar.</p>
                   </TableCell>
