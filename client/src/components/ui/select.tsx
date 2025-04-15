@@ -79,6 +79,10 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
+      onInteractOutside={(e) => {
+        // Impede que a interação externa ao SelectContent faça o diálogo principal fechar
+        e.preventDefault();
+      }}
       {...props}
     >
       <SelectScrollUpButton />
