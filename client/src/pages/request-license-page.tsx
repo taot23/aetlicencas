@@ -78,13 +78,7 @@ export default function RequestLicensePage() {
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent 
           className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto p-0"
-          onInteractOutside={(e) => {
-            // Previne que o dialog feche automaticamente ao tocar fora em dispositivos móveis
-            e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            // Mantém comportamento padrão para ESC
-          }}
+          preventCloseOnMobile={true}
         >
           <div className="sticky top-0 z-10 bg-white p-6 border-b">
             <DialogHeader>
