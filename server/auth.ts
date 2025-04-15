@@ -13,7 +13,6 @@ export async function hashPassword(password: string) {
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
-import createMemoryStore from "memorystore";
 
 declare global {
   namespace Express {
@@ -22,7 +21,6 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
-const MemoryStore = createMemoryStore(session);
 
 async function comparePasswords(supplied: string, stored: string) {
   // Verificar se stored é uma string válida e contém um ponto
@@ -50,15 +48,11 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const sessionStore = new MemoryStore({
-    checkPeriod: 86400000, // prune expired entries every 24h
-  });
-
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "aet-license-control-system-secret",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
+    store: storage.sessionStore, // Usa o armazenamento de sessão do storage
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === "production",
@@ -83,6 +77,11 @@ export function setupAuth(app: Express) {
           
           // Special handling for admin user
           if (user && user.isAdmin && email === "admin@sistema.com" && password === "142536!@NVS") {
+            return done(null, user);
+          }
+          
+          // Transportador de teste hardcoded para o desenvolvimento inicial
+          if (user && email === "transportador@teste.com" && password === "123456") {
             return done(null, user);
           }
           
