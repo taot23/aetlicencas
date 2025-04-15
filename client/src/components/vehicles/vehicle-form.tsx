@@ -240,19 +240,10 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-5xl w-full mx-auto pb-16 px-4">
-        <div className="sticky top-0 z-20 w-full bg-white py-3 border-b mb-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-3 max-w-4xl w-full mx-auto px-6 py-4">
+        <div className="w-full bg-white py-3 mb-3">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Cadastro de Veículo</h3>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-                Cancelar
-              </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                {vehicle ? "Atualizar" : "Salvar"}
-              </Button>
-            </div>
           </div>
         </div>
         
@@ -457,9 +448,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
         
         <div className="space-y-2">
           <FormLabel htmlFor="crlvFile">Upload do CRLV (PDF/imagem)</FormLabel>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+          <div className="mt-1 flex justify-center px-4 py-4 border-2 border-gray-300 border-dashed rounded-md">
             <div className="space-y-1 text-center">
-              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+              <UploadCloud className="mx-auto h-8 w-8 text-gray-400" />
               <div className="flex text-sm text-gray-600">
                 <label
                   htmlFor="crlvFile"
@@ -496,11 +487,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           </div>
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 bg-white p-3 border-t shadow-md flex justify-between md:justify-end gap-2 z-10 max-w-full">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel} className="flex-1 md:flex-none">
+        <div className="flex justify-end gap-2 pt-4 pb-2 mt-4 border-t">
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit" size="sm" disabled={isSubmitting} className="flex-1 md:flex-none">
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             {vehicle ? "Atualizar" : "Salvar"}
           </Button>
