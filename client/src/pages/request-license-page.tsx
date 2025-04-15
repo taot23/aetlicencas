@@ -110,11 +110,7 @@ export default function RequestLicensePage() {
             />
           </div>
           
-          <DialogFooter className="p-4 border-t sticky bottom-0 bg-white mobile-footer">
-            <Button variant="outline" onClick={() => setShowForm(false)} className="mobile-cancel-btn">
-              Cancelar
-            </Button>
-          </DialogFooter>
+          {/* Botão de Cancelar removido para melhorar a experiência em mobile */}
         </DialogContent>
       </Dialog>
 
