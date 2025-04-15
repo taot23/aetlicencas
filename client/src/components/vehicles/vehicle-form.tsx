@@ -321,7 +321,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                 <FormItem>
                   <FormLabel className="text-sm">Marca</FormLabel>
                   <FormControl>
-                    <Input placeholder="Marca" {...field} className="h-9" />
+                    <Input placeholder="" {...field} className="h-9" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -335,7 +335,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                 <FormItem>
                   <FormLabel className="text-sm">Modelo</FormLabel>
                   <FormControl>
-                    <Input placeholder="Modelo" {...field} className="h-9" />
+                    <Input placeholder="" {...field} className="h-9" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -351,7 +351,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="2" 
+                      placeholder="" 
                       {...field} 
                       value={field.value || ''} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -374,7 +374,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="8500" 
+                      placeholder="" 
                       {...field}
                       value={field.value || ''} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -391,7 +391,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                 <FormLabel className="text-sm">CMT (kg)</FormLabel>
                 <Input 
                   type="number" 
-                  placeholder="Ex: 60000" 
+                  placeholder="" 
                   value={cmt || ''} 
                   onChange={(e) => setCmt(e.target.valueAsNumber || undefined)}
                   className="h-9" 
@@ -410,7 +410,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="2023" 
+                      placeholder="" 
                       {...field} 
                       value={field.value || ''} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -431,7 +431,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="2023" 
+                      placeholder="" 
                       {...field}
                       value={field.value || ''} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
