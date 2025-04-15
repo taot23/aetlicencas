@@ -243,69 +243,71 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="relative space-y-4 w-full max-w-xl mx-auto">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-medium">{vehicle ? "Editar Veículo" : "Cadastrar Novo Veículo"}</h2>
-          <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative w-full max-w-lg mx-auto">
+        <div className="flex justify-between items-center py-3 px-4 border-b">
+          <h2 className="text-base font-medium">{vehicle ? "Editar Veículo" : "Cadastrar Novo Veículo"}</h2>
+          <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-7 w-7">
             <X className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className="p-4 space-y-4">
-          <FormField
-            control={form.control}
-            name="plate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Placa</FormLabel>
-                <FormControl>
-                  <Input placeholder="ABC-1234" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo de Veículo</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    setVehicleType(value);
-                  }} 
-                  value={field.value}
-                  defaultValue={field.value}>
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="plate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Placa</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
+                    <Input placeholder="ABC-1234" {...field} className="h-9" />
                   </FormControl>
-                  <SelectContent>
-                    {vehicleTypeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Tipo de Veículo</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setVehicleType(value);
+                    }} 
+                    value={field.value}
+                    defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {vehicleTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
               name="brand"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Marca</FormLabel>
+                  <FormLabel className="text-sm">Marca</FormLabel>
                   <FormControl>
-                    <Input placeholder="Marca" {...field} />
+                    <Input placeholder="Marca" {...field} className="h-9" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -317,9 +319,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modelo</FormLabel>
+                  <FormLabel className="text-sm">Modelo</FormLabel>
                   <FormControl>
-                    <Input placeholder="Modelo" {...field} />
+                    <Input placeholder="Modelo" {...field} className="h-9" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -327,20 +329,21 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ano</FormLabel>
+                  <FormLabel className="text-sm">Ano</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
                       placeholder="2023" 
                       {...field} 
                       value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)} 
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      className="h-9" 
                     />
                   </FormControl>
                   <FormMessage />
@@ -353,14 +356,15 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="axleCount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Quantidade de Eixos</FormLabel>
+                  <FormLabel className="text-sm">Quantidade de Eixos</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
                       placeholder="2" 
                       {...field} 
                       value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)} 
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      className="h-9" 
                     />
                   </FormControl>
                   <FormMessage />
@@ -374,9 +378,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             name="renavam"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Renavam</FormLabel>
+                <FormLabel className="text-sm">Renavam</FormLabel>
                 <FormControl>
-                  <Input placeholder="Renavam" {...field} />
+                  <Input placeholder="Renavam" {...field} className="h-9" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -388,11 +392,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             name="remarks"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Observações</FormLabel>
+                <FormLabel className="text-sm">Observações</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Observações sobre o veículo..." 
-                    className="resize-none h-24" 
+                    className="resize-none h-20" 
                     {...field} 
                     value={field.value || ''} 
                   />
@@ -402,12 +406,12 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             )}
           />
           
-          <div className="space-y-1">
-            <FormLabel htmlFor="crlvFile">Upload do CRLV (PDF/imagem)</FormLabel>
-            <div className="flex justify-center px-3 py-3 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
-                <UploadCloud className="mx-auto h-6 w-6 text-gray-400" />
-                <div className="flex text-sm text-gray-600">
+          <div>
+            <FormLabel htmlFor="crlvFile" className="text-sm">Upload do CRLV (PDF/imagem)</FormLabel>
+            <div className="flex justify-center px-3 py-2 border-2 border-gray-300 border-dashed rounded-md">
+              <div className="space-y-1 text-center py-1">
+                <UploadCloud className="mx-auto h-5 w-5 text-gray-400" />
+                <div className="flex text-xs text-gray-600">
                   <label
                     htmlFor="crlvFile"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
@@ -444,11 +448,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
           </div>
         </div>
         
-        <div className="flex justify-end gap-2 pt-4 pb-4 px-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel} className="min-w-[100px]">
+        <div className="flex justify-end gap-2 py-3 px-4 border-t">
+          <Button type="button" variant="outline" onClick={onCancel} className="h-9 px-4">
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="min-w-[100px]">
+          <Button type="submit" disabled={isSubmitting} className="h-9 px-4">
             {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             {vehicle ? "Atualizar" : "Cadastrar Veículo"}
           </Button>
