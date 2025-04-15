@@ -199,13 +199,17 @@ export function MultiplePlatesField({
             placeholder="Digite uma placa (ex: AAA1234)"
             maxLength={7}
             autoComplete="off"
+            className="mobile-input h-10"
+            // Ajuste para dispositivos móveis - usar teclado específico
+            inputMode="text"
+            pattern="[A-Za-z0-9]*"
           />
         </FormControl>
         <Button 
           type="button" 
           size="sm" 
           onClick={handleAddPlate}
-          className="whitespace-nowrap sm:w-auto w-full"
+          className="whitespace-nowrap sm:w-auto w-full h-10"
         >
           Adicionar
         </Button>

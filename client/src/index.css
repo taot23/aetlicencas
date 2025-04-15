@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ajustes específicos para dispositivos móveis */
+@media (max-width: 768px) {
+  .mobile-form-dialog {
+    max-height: 75vh !important;
+    position: absolute !important;
+    top: 10vh !important;
+    transform: translate(-50%, 0) !important;
+  }
+  
+  /* Elementos com foco recebem uma margem extra para evitar a faixa preta */
+  .mobile-input:focus,
+  .mobile-input:active {
+    margin-bottom: 250px; /* Adiciona espaço extra abaixo do campo quando ele está com foco */
+  }
+  
+  /* Reduzir padding e tamanho de texto em dispositivos móveis */
+  .mobile-form-dialog .p-6 {
+    padding: 1rem !important;
+  }
+  
+  /* Melhorar visualização em dispositivos móveis */
+  .mobile-form-dialog {
+    min-height: auto !important;
+    padding-bottom: 4rem !important;
+  }
+  
+  /* Garantir que botões tenham tamanho adequado para toque em mobile */
+  button {
+    min-height: 36px;
+  }
+  
+  /* Mais espaço para grids em dispositivos móveis */
+  .grid-cols-2 {
+    gap: 8px !important;
+  }
+  
+  /* Área de scroll em dispositivos móveis */
+  .mobile-form-dialog > div:not(.sticky) {
+    padding-bottom: 5rem;
+  }
+}
+
 /* Custom CSS para API endpoint personalizado */
 .api-endpoints-external {
   display: none !important;

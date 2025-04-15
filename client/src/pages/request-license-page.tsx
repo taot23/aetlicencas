@@ -77,7 +77,7 @@ export default function RequestLicensePage() {
       {/* Dialog para o formulário */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent 
-          className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto p-0"
+          className="max-w-6xl w-[95vw] max-h-[85vh] overflow-y-auto p-0 mobile-form-dialog"
           preventCloseOnMobile={true}
         >
           <div className="sticky top-0 z-10 bg-white p-6 border-b">
