@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, Home, Truck, FileText, ClipboardList, ListChecks, LogOut, ChevronRight, Building2, ClipboardEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Logo } from "@/components/ui/logo";
 
 interface SidebarProps {
   className?: string;
@@ -38,7 +39,7 @@ export function Sidebar({ className }: SidebarProps) {
   const NavItems = () => (
     <>
       <div className="flex items-center justify-center h-16 px-4 bg-gray-900">
-        <h1 className="text-xl font-bold">Sistema AET</h1>
+        <Logo width={120} className="py-2" />
       </div>
       
       <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
@@ -166,7 +167,7 @@ export function Sidebar({ className }: SidebarProps) {
             <NavItems />
           </SheetContent>
         </Sheet>
-        <h1 className="ml-2 text-lg font-semibold">Sistema AET</h1>
+        <Logo width={100} className="ml-2" />
       </div>
       <div className="pt-16 md:pt-0"></div>
     </>
