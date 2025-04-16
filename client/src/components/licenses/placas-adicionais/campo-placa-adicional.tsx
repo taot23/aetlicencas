@@ -1,22 +1,10 @@
-import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Vehicle } from "@shared/schema";
 import { PlacaAdicionalItem } from './placa-adicional-item';
 import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
-import { 
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check } from 'lucide-react';
-
-// Constante para evitar chamadas repetidas ao setTimeout
-const ADD_PLATE_DELAY = 10;
 
 interface CampoPlacaAdicionalProps {
   form: UseFormReturn<any>;
@@ -34,72 +22,22 @@ const isValidPlateFormat = (plate: string): boolean => {
 export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, licenseType }: CampoPlacaAdicionalProps) {
   const [plateInput, setPlateInput] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
-  const [openSuggestions, setOpenSuggestions] = useState(false);
-  const [suggestedVehicles, setSuggestedVehicles] = useState<Vehicle[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
   
-  // Função para filtrar veículos baseado no tipo de licença
-  const filterVehiclesByLicenseType = () => {
-    if (!vehicles || !Array.isArray(vehicles)) return [];
+  // Verificar se um veículo já está selecionado em outros campos
+  const isVehicleSelectedInOtherFields = (plate: string): boolean => {
+    if (!vehicles) return false;
     
-    // Não exibir unidades tratoras (cavalo) nas sugestões
-    return vehicles.filter(vehicle => 
-      vehicle.type !== "tractor_unit" && 
-      // Verificar se a placa não foi selecionada nos dropdowns
-      !isVehicleSelectedInOtherFields(vehicle)
-    );
-  };
-  
-  // Função para verificar se o veículo já está selecionado em outros campos
-  const isVehicleSelectedInOtherFields = (vehicle: Vehicle): boolean => {
     const tractorUnitId = form.getValues('tractorUnitId');
     const firstTrailerId = form.getValues('firstTrailerId');
     const dollyId = form.getValues('dollyId');
     const secondTrailerId = form.getValues('secondTrailerId');
     const flatbedId = form.getValues('flatbedId');
     
-    return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
-  };
-  
-  // Estado para rastreamento do item atualmente destacado no dropdown
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  
-  // Atualizar sugestões quando o input mudar
-  useEffect(() => {
-    const availableVehicles = filterVehiclesByLicenseType();
+    const selectedIds = [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].filter(id => id);
     
-    if (plateInput.length >= 1) {
-      // Filtrar veículos mesmo com apenas 1 caractere para melhor UX
-      const filtered = availableVehicles.filter(v => 
-        v.plate.toUpperCase().includes(plateInput.toUpperCase())
-      );
-      
-      setSuggestedVehicles(filtered);
-      
-      // Redefinir o índice destacado quando as sugestões mudam
-      setHighlightedIndex(filtered.length > 0 ? 0 : -1);
-      
-      // Apenas alteramos o estado de aberto se houver sugestões e input com 2+ chars
-      if (filtered.length > 0 && plateInput.length >= 2) {
-        setOpenSuggestions(true);
-      } else {
-        setOpenSuggestions(false);
-      }
-    } else {
-      setSuggestedVehicles([]);
-      setHighlightedIndex(-1);
-      setOpenSuggestions(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plateInput, vehicles]);
-  
-  // Função para buscar veículos que correspondem ao input atual
-  const findMatchingVehicles = (input: string): Vehicle[] => {
-    if (!input || !vehicles) return [];
-    
-    const availableVehicles = filterVehiclesByLicenseType();
-    return availableVehicles.filter(v => 
-      v.plate.toUpperCase().includes(input.toUpperCase())
+    // Verificar se algum veículo com a placa dada está entre os selecionados
+    return vehicles.some(vehicle => 
+      vehicle.plate === plate && selectedIds.includes(vehicle.id)
     );
   };
   
@@ -123,14 +61,19 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
       return;
     }
     
+    if (isVehicleSelectedInOtherFields(normalizedPlate)) {
+      setInputError("Esta placa já está selecionada em outro campo");
+      return;
+    }
+    
     // Verificar se a placa já foi adicionada
-    const currentPlates = form.getValues('additionalPlates') || [];
-    if (currentPlates.includes(normalizedPlate)) {
+    if (isVehicleAlreadyInAdditionalPlates(normalizedPlate)) {
       setInputError("Esta placa já foi adicionada");
       return;
     }
     
     // Adicionar placa ao formulário
+    const currentPlates = form.getValues('additionalPlates') || [];
     const newPlates = [...currentPlates, normalizedPlate];
     form.setValue('additionalPlates', newPlates, {
       shouldValidate: true,
@@ -187,205 +130,44 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
               </div>
             )}
             
-            {/* Campo para adicionar nova placa com autopreenchimento */}
-            <div className="flex-1 relative">
-              <Popover open={openSuggestions} onOpenChange={(open) => {
-                // Permitir que o usuário continue digitando mesmo com o popover aberto
-                if (!open) {
-                  setOpenSuggestions(false);
-                }
-              }}>
-                <PopoverTrigger asChild>
-                  <div className="w-full">
-                    <Input
-                      ref={inputRef}
-                      value={plateInput}
-                      onChange={(e) => {
-                        // Garantir que sempre podemos digitar, independente do estado do popover
-                        setPlateInput(e.target.value.toUpperCase());
-                        setInputError(null);
-                      }}
-                      placeholder="Digite a placa ou comece a digitar para ver sugestões"
-                      className="flex-1 w-full"
-                      onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                        const matches = findMatchingVehicles(plateInput);
-                        
-                        // Navegar com as setas 
-                        if (e.key === 'ArrowDown' && matches.length > 0) {
-                          e.preventDefault();
-                          if (openSuggestions) {
-                            // Navegar para o próximo item (com loop)
-                            setHighlightedIndex((prevIndex) => 
-                              prevIndex < matches.length - 1 ? prevIndex + 1 : 0
-                            );
-                          } else {
-                            // Abrir dropdown
-                            setOpenSuggestions(true);
-                          }
-                        } 
-                        else if (e.key === 'ArrowUp' && matches.length > 0) {
-                          e.preventDefault();
-                          if (openSuggestions) {
-                            // Navegar para o item anterior (com loop)
-                            setHighlightedIndex((prevIndex) => 
-                              prevIndex > 0 ? prevIndex - 1 : matches.length - 1
-                            );
-                          } else {
-                            // Abrir dropdown e selecionar último item
-                            setOpenSuggestions(true);
-                            setHighlightedIndex(matches.length - 1);
-                          }
-                        }
-                        // Selecionar com Enter
-                        else if (e.key === 'Enter') {
-                          e.preventDefault();
-                          
-                          if (plateInput.length > 0) {
-                            if (matches.length > 0) {
-                              // Se dropdown aberto e item destacado, usar esse item
-                              // Caso contrário, usar o primeiro match
-                              const selectedIndex = openSuggestions && highlightedIndex >= 0 
-                                ? highlightedIndex 
-                                : 0;
-                              
-                              const selectedVehicle = matches[selectedIndex];
-                              
-                              if (!isVehicleAlreadyInAdditionalPlates(selectedVehicle.plate)) {
-                                // Adicionar a placa ao formulário
-                                const currentPlates = form.getValues('additionalPlates') || [];
-                                const newPlates = [...currentPlates, selectedVehicle.plate];
-                                form.setValue('additionalPlates', newPlates, {
-                                  shouldValidate: true,
-                                  shouldDirty: true
-                                });
-                                
-                                // Adicionar documento vazio para a placa
-                                const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                                newDocs.push('');
-                                form.setValue('additionalPlatesDocuments', newDocs);
-                                
-                                // Limpar input, fechar sugestões e limpar erro
-                                setPlateInput("");
-                                setOpenSuggestions(false);
-                                setInputError(null);
-                                setHighlightedIndex(-1);
-                              } else {
-                                setInputError("Esta placa já foi adicionada");
-                              }
-                            } else {
-                              // Se não houver correspondências, tentar adicionar o texto atual
-                              handleAddPlate();
-                            }
-                          } else {
-                            setInputError("Digite uma placa");
-                          }
-                        }
-                        // Fechar com Escape
-                        else if (e.key === 'Escape' && openSuggestions) {
-                          e.preventDefault();
-                          setOpenSuggestions(false);
-                        }
-                      }}
-                      maxLength={7}
-                    />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-[calc(100vw-40px)] md:w-full z-50" align="start" sideOffset={5}>
-                  <Command className="rounded-lg">
-                    <CommandList className="max-h-[200px]">
-                      {suggestedVehicles.length > 0 ? (
-                        <CommandGroup heading="Veículos cadastrados">
-                          {suggestedVehicles.map((vehicle, index) => (
-                            <CommandItem
-                              key={vehicle.id}
-                              onSelect={() => {
-                                if (!isVehicleAlreadyInAdditionalPlates(vehicle.plate)) {
-                                  // Adicionar a placa ao formulário diretamente
-                                  const currentPlates = form.getValues('additionalPlates') || [];
-                                  const newPlates = [...currentPlates, vehicle.plate];
-                                  form.setValue('additionalPlates', newPlates, {
-                                    shouldValidate: true,
-                                    shouldDirty: true
-                                  });
-                                  
-                                  // Adicionar documento vazio para a placa
-                                  const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                                  newDocs.push('');
-                                  form.setValue('additionalPlatesDocuments', newDocs);
-                                  
-                                  // Limpar input e erro
-                                  setPlateInput("");
-                                  setInputError(null);
-                                  setHighlightedIndex(-1);
-                                } else {
-                                  setInputError("Esta placa já foi adicionada");
-                                }
-                                setOpenSuggestions(false);
-                              }}
-                              className={`flex items-center justify-between py-3 ${
-                                index === highlightedIndex ? "bg-muted" : ""
-                              }`}
-                              onMouseEnter={() => setHighlightedIndex(index)}
-                            >
-                              <div className="flex flex-col">
-                                <span className={`font-medium text-base ${
-                                  index === highlightedIndex ? "text-primary" : ""
-                                }`}>{vehicle.plate}</span>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                  {vehicle.brand} {vehicle.model} - {
-                                    vehicle.type === "semi_trailer" ? "Semirreboque" :
-                                    vehicle.type === "dolly" ? "Dolly" :
-                                    vehicle.type === "flatbed" ? "Prancha" : 
-                                    vehicle.type
-                                  }
-                                </span>
-                              </div>
-                              <Check 
-                                className={`h-5 w-5 text-primary ${
-                                  plateInput === vehicle.plate || index === highlightedIndex 
-                                    ? "opacity-100" 
-                                    : "opacity-0"
-                                }`} 
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      ) : plateInput.length >= 2 ? (
-                        <CommandEmpty className="py-6 text-center">
-                          <p className="text-sm text-muted-foreground">Nenhum veículo encontrado</p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Prossiga digitando o resto da placa e pressione Enter
-                          </p>
-                        </CommandEmpty>
-                      ) : (
-                        <CommandEmpty className="py-6 text-center">
-                          <p className="text-sm text-muted-foreground">Digite mais letras para buscar veículos</p>
-                        </CommandEmpty>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+            {/* Campo para adicionar nova placa */}
+            <div className="flex items-start gap-2">
+              <div className="flex-1">
+                <Input
+                  value={plateInput}
+                  onChange={(e) => {
+                    // Sempre converter para maiúsculas e permitir até 7 caracteres
+                    setPlateInput(e.target.value.toUpperCase());
+                    setInputError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddPlate();
+                    }
+                  }}
+                  placeholder="Digite a placa completa e pressione Enter"
+                  className="w-full"
+                  maxLength={7}
+                />
+                {inputError && (
+                  <p className="text-sm text-red-500 mt-1">{inputError}</p>
+                )}
+              </div>
+              <Button 
+                type="button" 
+                onClick={handleAddPlate}
+                className="mt-0"
+              >
+                Adicionar
+              </Button>
             </div>
             
-            {/* Mensagem de erro */}
-            {inputError && (
-              <p className="text-sm text-red-500 mt-1">{inputError}</p>
-            )}
-            
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-gray-500">
               <p>
-                Digite a placa e pressione Enter para adicionar.
+                Digite a placa completa e pressione Enter ou clique em Adicionar.
                 Formatos válidos: Mercosul (AAA1A11) ou antigo (AAA1111)
               </p>
-              <p>
-                <span className="font-medium text-blue-600">Dicas:</span>
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>Digite apenas 1 ou 2 letras e pressione Enter para adicionar a primeira placa correspondente</li>
-                <li>Use as setas ↑↓ para navegar entre as sugestões e Enter para selecionar</li>
-                <li>Passe o mouse sobre um item para destacá-lo</li>
-              </ul>
             </div>
           </div>
           <FormMessage />
