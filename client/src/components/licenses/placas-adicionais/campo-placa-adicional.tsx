@@ -58,24 +58,30 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
   };
   
-  // Atualizar sugestões quando o input mudar
+  // Atualizar sugestões quando o input mudar, com debounce manual
   useEffect(() => {
-    if (plateInput.length >= 2) {
-      const availableVehicles = filterVehiclesByLicenseType();
-      const filtered = availableVehicles.filter(v => 
-        v.plate.toUpperCase().includes(plateInput.toUpperCase())
-      );
-      setSuggestedVehicles(filtered);
-      
-      if (filtered.length > 0 && !openSuggestions) {
-        setOpenSuggestions(true);
-      } else if (filtered.length === 0 && openSuggestions) {
+    const timer = setTimeout(() => {
+      if (plateInput.length >= 2) {
+        const availableVehicles = filterVehiclesByLicenseType();
+        const filtered = availableVehicles.filter(v => 
+          v.plate.toUpperCase().includes(plateInput.toUpperCase())
+        );
+        
+        setSuggestedVehicles(filtered);
+        
+        // Apenas alteramos o estado de aberto se houver sugestões
+        if (filtered.length > 0) {
+          setOpenSuggestions(true);
+        } else {
+          setOpenSuggestions(false);
+        }
+      } else {
+        setSuggestedVehicles([]);
         setOpenSuggestions(false);
       }
-    } else {
-      setSuggestedVehicles([]);
-      setOpenSuggestions(false);
-    }
+    }, 300); // Pequeno delay para evitar atualizações excessivas
+    
+    return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plateInput, vehicles]);
   
@@ -167,7 +173,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
             <div className="flex-1 relative">
               <Popover open={openSuggestions} onOpenChange={setOpenSuggestions}>
                 <PopoverTrigger asChild>
-                  <div>
+                  <div className="w-full">
                     <Input
                       ref={inputRef}
                       value={plateInput}
@@ -197,10 +203,10 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                     />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="p-0 w-full" align="start">
-                  {suggestedVehicles.length > 0 && (
-                    <Command>
-                      <CommandList>
+                <PopoverContent className="p-0 w-[calc(100vw-40px)] md:w-full z-50" align="start" sideOffset={5}>
+                  <Command className="rounded-lg">
+                    <CommandList className="max-h-[200px]">
+                      {suggestedVehicles.length > 0 ? (
                         <CommandGroup heading="Veículos cadastrados">
                           {suggestedVehicles.map((vehicle) => (
                             <CommandItem
@@ -216,11 +222,11 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                                 }
                                 setOpenSuggestions(false);
                               }}
-                              className="flex items-center justify-between"
+                              className="flex items-center justify-between py-3"
                             >
                               <div className="flex flex-col">
-                                <span className="font-medium">{vehicle.plate}</span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="font-medium text-base">{vehicle.plate}</span>
+                                <span className="text-xs text-muted-foreground mt-1">
                                   {vehicle.brand} {vehicle.model} - {
                                     vehicle.type === "semi_trailer" ? "Semirreboque" :
                                     vehicle.type === "dolly" ? "Dolly" :
@@ -230,14 +236,25 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                                 </span>
                               </div>
                               <Check 
-                                className={`h-4 w-4 ${plateInput === vehicle.plate ? "opacity-100" : "opacity-0"}`} 
+                                className={`h-5 w-5 text-primary ${plateInput === vehicle.plate ? "opacity-100" : "opacity-0"}`} 
                               />
                             </CommandItem>
                           ))}
                         </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  )}
+                      ) : plateInput.length >= 2 ? (
+                        <CommandEmpty className="py-6 text-center">
+                          <p className="text-sm text-muted-foreground">Nenhum veículo encontrado</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Prossiga digitando o resto da placa e pressione Enter
+                          </p>
+                        </CommandEmpty>
+                      ) : (
+                        <CommandEmpty className="py-6 text-center">
+                          <p className="text-sm text-muted-foreground">Digite mais letras para buscar veículos</p>
+                        </CommandEmpty>
+                      )}
+                    </CommandList>
+                  </Command>
                 </PopoverContent>
               </Popover>
             </div>
@@ -247,10 +264,15 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
               <p className="text-sm text-red-500 mt-1">{inputError}</p>
             )}
             
-            <p className="text-xs text-gray-500">
-              Digite a placa e pressione Enter para adicionar.
-              Formatos válidos: Mercosul (AAA1A11) ou antigo (AAA1111)
-            </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>
+                Digite a placa e pressione Enter para adicionar.
+                Formatos válidos: Mercosul (AAA1A11) ou antigo (AAA1111)
+              </p>
+              <p>
+                Placas que começam com as mesmas letras serão mostradas como sugestões para facilitar
+              </p>
+            </div>
           </div>
           <FormMessage />
         </FormItem>
