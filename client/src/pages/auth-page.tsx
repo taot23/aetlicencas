@@ -24,6 +24,7 @@ import { useAuth, loginSchema, registerSchema } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Logo } from "@/components/ui/logo";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -73,7 +74,9 @@ export default function AuthPage() {
         <Card className="w-full max-w-md mx-auto">
           <CardContent className="pt-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-800">Sistema de Controle de Licenças AET</h2>
+              <div className="flex justify-center mb-4">
+                <Logo width={180} />
+              </div>
               <p className="text-gray-500 mt-2">
                 {activeTab === "login" 
                   ? "Faça login para acessar o sistema" 
@@ -216,7 +219,10 @@ export default function AuthPage() {
 
       <div className="hidden md:flex md:flex-1 bg-blue-700 text-white p-10 items-center justify-center">
         <div className="max-w-md">
-          <h1 className="text-4xl font-bold mb-6">Controle de Licenças AET</h1>
+          <div className="flex justify-center mb-6">
+            <Logo width={200} className="invert" />
+          </div>
+          <h1 className="text-3xl font-bold mb-6 text-center">NVS Licenças AET</h1>
           <p className="text-xl mb-6">
             Um sistema completo para gerenciamento de veículos e controle de licenças de Autorização Especial de Trânsito.
           </p>

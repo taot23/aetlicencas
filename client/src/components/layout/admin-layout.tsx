@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Logo } from "@/components/ui/logo";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -113,7 +114,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold">Portal Administrativo AET</h1>
+              <Logo width={130} className="py-1" />
+              <span className="ml-2 text-lg font-semibold hidden sm:inline">Portal Administrativo</span>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -165,8 +167,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Footer */}
       <footer className="bg-white border-t py-4">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} Portal Administrativo AET. Todos os direitos reservados.
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex justify-center mb-2">
+            <Logo width={80} />
+          </div>
+          <div className="text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} NVS Licenças. Todos os direitos reservados.
+          </div>
         </div>
       </footer>
     </div>
