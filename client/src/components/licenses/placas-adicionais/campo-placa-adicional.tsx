@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Vehicle } from "@shared/schema";
 import { PlacaAdicionalItem } from './placa-adicional-item';
 import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check } from 'lucide-react';
 
 interface CampoPlacaAdicionalProps {
   form: UseFormReturn<any>;
   vehicles: Vehicle[] | undefined;
   isLoadingVehicles: boolean;
+  licenseType?: string;
 }
 
 // Validador para formato de placa
@@ -17,9 +28,62 @@ const isValidPlateFormat = (plate: string): boolean => {
   return /^[A-Z]{3}\d[A-Z0-9]\d\d$/.test(plate);
 };
 
-export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles }: CampoPlacaAdicionalProps) {
+export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, licenseType }: CampoPlacaAdicionalProps) {
   const [plateInput, setPlateInput] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
+  const [openSuggestions, setOpenSuggestions] = useState(false);
+  const [suggestedVehicles, setSuggestedVehicles] = useState<Vehicle[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Função para filtrar veículos baseado no tipo de licença
+  const filterVehiclesByLicenseType = () => {
+    if (!vehicles || !Array.isArray(vehicles)) return [];
+    
+    // Não exibir unidades tratoras (cavalo) nas sugestões
+    return vehicles.filter(vehicle => 
+      vehicle.type !== "tractor_unit" && 
+      // Verificar se a placa não foi selecionada nos dropdowns
+      !isVehicleSelectedInOtherFields(vehicle)
+    );
+  };
+  
+  // Função para verificar se o veículo já está selecionado em outros campos
+  const isVehicleSelectedInOtherFields = (vehicle: Vehicle): boolean => {
+    const tractorUnitId = form.getValues('tractorUnitId');
+    const firstTrailerId = form.getValues('firstTrailerId');
+    const dollyId = form.getValues('dollyId');
+    const secondTrailerId = form.getValues('secondTrailerId');
+    const flatbedId = form.getValues('flatbedId');
+    
+    return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
+  };
+  
+  // Atualizar sugestões quando o input mudar
+  useEffect(() => {
+    if (plateInput.length >= 2) {
+      const availableVehicles = filterVehiclesByLicenseType();
+      const filtered = availableVehicles.filter(v => 
+        v.plate.toUpperCase().includes(plateInput.toUpperCase())
+      );
+      setSuggestedVehicles(filtered);
+      
+      if (filtered.length > 0 && !openSuggestions) {
+        setOpenSuggestions(true);
+      } else if (filtered.length === 0 && openSuggestions) {
+        setOpenSuggestions(false);
+      }
+    } else {
+      setSuggestedVehicles([]);
+      setOpenSuggestions(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plateInput, vehicles]);
+  
+  // Verificar se um veículo já está adicionado nas placas adicionais
+  const isVehicleAlreadyInAdditionalPlates = (plate: string): boolean => {
+    const additionalPlates = form.getValues('additionalPlates') || [];
+    return additionalPlates.includes(plate);
+  };
 
   const handleAddPlate = () => {
     // Normalizar e validar a placa
@@ -99,24 +163,83 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles }: Campo
               </div>
             )}
             
-            {/* Campo para adicionar nova placa */}
-            <div className="flex items-center space-x-2">
-              <Input
-                value={plateInput}
-                onChange={(e) => {
-                  setPlateInput(e.target.value.toUpperCase());
-                  setInputError(null);
-                }}
-                placeholder="Digite a placa e pressione Enter"
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddPlate();
-                  }
-                }}
-                maxLength={7}
-              />
+            {/* Campo para adicionar nova placa com autopreenchimento */}
+            <div className="flex-1 relative">
+              <Popover open={openSuggestions} onOpenChange={setOpenSuggestions}>
+                <PopoverTrigger asChild>
+                  <div>
+                    <Input
+                      ref={inputRef}
+                      value={plateInput}
+                      onChange={(e) => {
+                        setPlateInput(e.target.value.toUpperCase());
+                        setInputError(null);
+                      }}
+                      placeholder="Digite a placa ou comece a digitar para ver sugestões"
+                      className="flex-1 w-full"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (suggestedVehicles.length === 1) {
+                            // Se houver exatamente uma sugestão, usa ela
+                            if (!isVehicleAlreadyInAdditionalPlates(suggestedVehicles[0].plate)) {
+                              setPlateInput(suggestedVehicles[0].plate);
+                              setTimeout(() => {
+                                handleAddPlate();
+                              }, 0);
+                            }
+                          } else {
+                            handleAddPlate();
+                          }
+                        }
+                      }}
+                      maxLength={7}
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-full" align="start">
+                  {suggestedVehicles.length > 0 && (
+                    <Command>
+                      <CommandList>
+                        <CommandGroup heading="Veículos cadastrados">
+                          {suggestedVehicles.map((vehicle) => (
+                            <CommandItem
+                              key={vehicle.id}
+                              onSelect={() => {
+                                if (!isVehicleAlreadyInAdditionalPlates(vehicle.plate)) {
+                                  setPlateInput(vehicle.plate);
+                                  setTimeout(() => {
+                                    handleAddPlate();
+                                  }, 0);
+                                } else {
+                                  setInputError("Esta placa já foi adicionada");
+                                }
+                                setOpenSuggestions(false);
+                              }}
+                              className="flex items-center justify-between"
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium">{vehicle.plate}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {vehicle.brand} {vehicle.model} - {
+                                    vehicle.type === "semi_trailer" ? "Semirreboque" :
+                                    vehicle.type === "dolly" ? "Dolly" :
+                                    vehicle.type === "flatbed" ? "Prancha" : 
+                                    vehicle.type
+                                  }
+                                </span>
+                              </div>
+                              <Check 
+                                className={`h-4 w-4 ${plateInput === vehicle.plate ? "opacity-100" : "opacity-0"}`} 
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
             
             {/* Mensagem de erro */}

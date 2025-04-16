@@ -964,11 +964,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             Adicione placas de veículos que fazem parte da composição mas não foram selecionados acima
           </div>
           
-          {/* Novo componente de campo de placas adicionais */}
+          {/* Novo componente de campo de placas adicionais com autopreenchimento */}
           <CampoPlacaAdicional 
             form={form} 
             vehicles={vehicles} 
-            isLoadingVehicles={isLoadingVehicles} 
+            isLoadingVehicles={isLoadingVehicles}
+            licenseType={licenseType}
           />
         </div>
 
