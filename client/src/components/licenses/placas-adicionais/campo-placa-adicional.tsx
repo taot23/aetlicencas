@@ -58,6 +58,9 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
   };
   
+  // Manter uma referência das sugestões disponíveis, mesmo quando não visíveis
+  const [availableSuggestions, setAvailableSuggestions] = useState<Vehicle[]>([]);
+  
   // Atualizar sugestões quando o input mudar, com debounce manual
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -67,7 +70,9 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
           v.plate.toUpperCase().includes(plateInput.toUpperCase())
         );
         
+        // Atualizar tanto as sugestões visíveis quanto a lista completa disponível
         setSuggestedVehicles(filtered);
+        setAvailableSuggestions(filtered);
         
         // Apenas alteramos o estado de aberto se houver sugestões
         if (filtered.length > 0) {
@@ -75,11 +80,22 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
         } else {
           setOpenSuggestions(false);
         }
-      } else {
+      } else if (plateInput.length > 0) {
+        // Mesmo com menos de 2 caracteres, ainda buscamos as sugestões
+        // mas não mostramos o popover
+        const availableVehicles = filterVehiclesByLicenseType();
+        const filtered = availableVehicles.filter(v => 
+          v.plate.toUpperCase().includes(plateInput.toUpperCase())
+        );
+        setAvailableSuggestions(filtered);
         setSuggestedVehicles([]);
         setOpenSuggestions(false);
+      } else {
+        setSuggestedVehicles([]);
+        setAvailableSuggestions([]);
+        setOpenSuggestions(false);
       }
-    }, 300); // Pequeno delay para evitar atualizações excessivas
+    }, 200); // Delay menor para melhor responsividade
     
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,9 +202,12 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          if (suggestedVehicles.length > 0) {
-                            // Se houver sugestões, usa a primeira
-                            const firstSuggestion = suggestedVehicles[0];
+                          
+                          // Usar availableSuggestions em vez de suggestedVehicles para capturar
+                          // sugestões mesmo quando não visíveis (com menos de 2 caracteres)
+                          if (availableSuggestions.length > 0) {
+                            // Se houver sugestões disponíveis, usar a primeira
+                            const firstSuggestion = availableSuggestions[0];
                             if (!isVehicleAlreadyInAdditionalPlates(firstSuggestion.plate)) {
                               // Definir a placa e adicionar imediatamente
                               setPlateInput(firstSuggestion.plate);
