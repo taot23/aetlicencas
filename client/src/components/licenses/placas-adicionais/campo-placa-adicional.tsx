@@ -186,15 +186,37 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          if (suggestedVehicles.length === 1) {
-                            // Se houver exatamente uma sugestão, usa ela
-                            if (!isVehicleAlreadyInAdditionalPlates(suggestedVehicles[0].plate)) {
-                              setPlateInput(suggestedVehicles[0].plate);
+                          if (suggestedVehicles.length > 0) {
+                            // Se houver sugestões, usa a primeira
+                            const firstSuggestion = suggestedVehicles[0];
+                            if (!isVehicleAlreadyInAdditionalPlates(firstSuggestion.plate)) {
+                              // Definir a placa e adicionar imediatamente
+                              setPlateInput(firstSuggestion.plate);
                               setTimeout(() => {
-                                handleAddPlate();
+                                // Usar a placa da sugestão diretamente
+                                const normalizedPlate = firstSuggestion.plate.toUpperCase().trim();
+                                const currentPlates = form.getValues('additionalPlates') || [];
+                                const newPlates = [...currentPlates, normalizedPlate];
+                                form.setValue('additionalPlates', newPlates, {
+                                  shouldValidate: true,
+                                  shouldDirty: true
+                                });
+                                
+                                // Adicionar documento vazio para a placa
+                                const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                                newDocs.push('');
+                                form.setValue('additionalPlatesDocuments', newDocs);
+                                
+                                // Limpar input e erro
+                                setPlateInput("");
+                                setInputError(null);
+                                setOpenSuggestions(false);
                               }, 0);
+                            } else {
+                              setInputError("Esta placa já foi adicionada");
                             }
                           } else {
+                            // Se não houver sugestões, adicionar o texto atual
                             handleAddPlate();
                           }
                         }
@@ -270,7 +292,8 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                 Formatos válidos: Mercosul (AAA1A11) ou antigo (AAA1111)
               </p>
               <p>
-                Placas que começam com as mesmas letras serão mostradas como sugestões para facilitar
+                <span className="font-medium text-blue-600">Dica:</span> Comece a digitar para ver sugestões de placas cadastradas. 
+                Pressione Enter para selecionar a primeira sugestão automaticamente.
               </p>
             </div>
           </div>
