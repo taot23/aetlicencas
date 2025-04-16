@@ -471,60 +471,51 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             Dados do Transportador
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-3">
-              <FormField
-                control={form.control}
-                name="transporterId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Transportador</FormLabel>
-                    <div className="relative">
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))} 
-                        defaultValue={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-10 pr-10">
-                            <SelectValue placeholder="Buscar transportador..." />
-                            <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingTransporters ? (
-                            <SelectItem value="loading">
-                              <div className="flex items-center space-x-2">
-                                <LoaderCircle className="h-4 w-4 animate-spin" />
-                                <span>Carregando transportadores...</span>
-                              </div>
+          <div className="grid grid-cols-1 gap-4">
+            <FormField
+              control={form.control}
+              name="transporterId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Transportador</FormLabel>
+                  <div className="relative">
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-10 pr-10">
+                          <SelectValue placeholder="Buscar transportador..." />
+                          <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingTransporters ? (
+                          <SelectItem value="loading">
+                            <div className="flex items-center space-x-2">
+                              <LoaderCircle className="h-4 w-4 animate-spin" />
+                              <span>Carregando transportadores...</span>
+                            </div>
+                          </SelectItem>
+                        ) : transporters.length > 0 ? (
+                          transporters.map((transporter) => (
+                            <SelectItem key={transporter.id} value={transporter.id.toString()}>
+                              <div className="font-medium">{transporter.name}</div>
+                              {transporter.documentNumber && (
+                                <div className="text-xs text-muted-foreground">{transporter.documentNumber}</div>
+                              )}
                             </SelectItem>
-                          ) : transporters.length > 0 ? (
-                            transporters.map((transporter) => (
-                              <SelectItem key={transporter.id} value={transporter.id.toString()}>
-                                <div className="font-medium">{transporter.name}</div>
-                                {transporter.documentNumber && (
-                                  <div className="text-xs text-muted-foreground">{transporter.documentNumber}</div>
-                                )}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_transporter">Nenhum transportador vinculado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="md:flex md:items-end">
-              <Link to="/my-companies" className="flex items-center justify-center h-10 w-full p-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors border border-blue-200">
-                <LinkIcon className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">Vincular Empresa</span>
-              </Link>
-            </div>
+                          ))
+                        ) : (
+                          <SelectItem value="no_transporter">Nenhum transportador vinculado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 
