@@ -58,48 +58,38 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
   };
   
-  // Manter uma referência das sugestões disponíveis, mesmo quando não visíveis
-  const [availableSuggestions, setAvailableSuggestions] = useState<Vehicle[]>([]);
-  
-  // Atualizar sugestões quando o input mudar, com debounce manual
+  // Atualizar sugestões quando o input mudar
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (plateInput.length >= 2) {
-        const availableVehicles = filterVehiclesByLicenseType();
-        const filtered = availableVehicles.filter(v => 
-          v.plate.toUpperCase().includes(plateInput.toUpperCase())
-        );
-        
-        // Atualizar tanto as sugestões visíveis quanto a lista completa disponível
-        setSuggestedVehicles(filtered);
-        setAvailableSuggestions(filtered);
-        
-        // Apenas alteramos o estado de aberto se houver sugestões
-        if (filtered.length > 0) {
-          setOpenSuggestions(true);
-        } else {
-          setOpenSuggestions(false);
-        }
-      } else if (plateInput.length > 0) {
-        // Mesmo com menos de 2 caracteres, ainda buscamos as sugestões
-        // mas não mostramos o popover
-        const availableVehicles = filterVehiclesByLicenseType();
-        const filtered = availableVehicles.filter(v => 
-          v.plate.toUpperCase().includes(plateInput.toUpperCase())
-        );
-        setAvailableSuggestions(filtered);
-        setSuggestedVehicles([]);
-        setOpenSuggestions(false);
+    if (plateInput.length >= 2) {
+      const availableVehicles = filterVehiclesByLicenseType();
+      const filtered = availableVehicles.filter(v => 
+        v.plate.toUpperCase().includes(plateInput.toUpperCase())
+      );
+      
+      setSuggestedVehicles(filtered);
+      
+      // Apenas alteramos o estado de aberto se houver sugestões
+      if (filtered.length > 0) {
+        setOpenSuggestions(true);
       } else {
-        setSuggestedVehicles([]);
-        setAvailableSuggestions([]);
         setOpenSuggestions(false);
       }
-    }, 200); // Delay menor para melhor responsividade
-    
-    return () => clearTimeout(timer);
+    } else {
+      setSuggestedVehicles([]);
+      setOpenSuggestions(false);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plateInput, vehicles]);
+  
+  // Função para buscar veículos que correspondem ao input atual
+  const findMatchingVehicles = (input: string): Vehicle[] => {
+    if (!input || !vehicles) return [];
+    
+    const availableVehicles = filterVehiclesByLicenseType();
+    return availableVehicles.filter(v => 
+      v.plate.toUpperCase().includes(input.toUpperCase())
+    );
+  };
   
   // Verificar se um veículo já está adicionado nas placas adicionais
   const isVehicleAlreadyInAdditionalPlates = (plate: string): boolean => {
@@ -203,19 +193,19 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           
-                          // Usar availableSuggestions em vez de suggestedVehicles para capturar
-                          // sugestões mesmo quando não visíveis (com menos de 2 caracteres)
-                          if (availableSuggestions.length > 0) {
-                            // Se houver sugestões disponíveis, usar a primeira
-                            const firstSuggestion = availableSuggestions[0];
-                            if (!isVehicleAlreadyInAdditionalPlates(firstSuggestion.plate)) {
-                              // Definir a placa e adicionar imediatamente
-                              setPlateInput(firstSuggestion.plate);
-                              setTimeout(() => {
-                                // Usar a placa da sugestão diretamente
-                                const normalizedPlate = firstSuggestion.plate.toUpperCase().trim();
+                          // Buscar veículos que correspondem ao input atual
+                          // mesmo com menos de 2 caracteres
+                          if (plateInput.length > 0) {
+                            const matches = findMatchingVehicles(plateInput);
+                            
+                            if (matches.length > 0) {
+                              // Se houver veículos correspondentes, usar o primeiro
+                              const firstMatch = matches[0];
+                              
+                              if (!isVehicleAlreadyInAdditionalPlates(firstMatch.plate)) {
+                                // Adicionar a placa ao formulário
                                 const currentPlates = form.getValues('additionalPlates') || [];
-                                const newPlates = [...currentPlates, normalizedPlate];
+                                const newPlates = [...currentPlates, firstMatch.plate];
                                 form.setValue('additionalPlates', newPlates, {
                                   shouldValidate: true,
                                   shouldDirty: true
@@ -226,17 +216,22 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                                 newDocs.push('');
                                 form.setValue('additionalPlatesDocuments', newDocs);
                                 
-                                // Limpar input e erro
+                                // Mostrar informação sobre o veículo adicionado
+                                console.log(`Adicionada placa ${firstMatch.plate} (${firstMatch.brand} ${firstMatch.model})`);
+                                
+                                // Limpar input, fechar sugestões e limpar erro
                                 setPlateInput("");
-                                setInputError(null);
                                 setOpenSuggestions(false);
-                              }, 0);
+                                setInputError(null);
+                              } else {
+                                setInputError("Esta placa já foi adicionada");
+                              }
                             } else {
-                              setInputError("Esta placa já foi adicionada");
+                              // Se não houver correspondências, tentar adicionar o texto atual
+                              handleAddPlate();
                             }
                           } else {
-                            // Se não houver sugestões, adicionar o texto atual
-                            handleAddPlate();
+                            setInputError("Digite uma placa");
                           }
                         }
                       }}
@@ -254,10 +249,22 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                               key={vehicle.id}
                               onSelect={() => {
                                 if (!isVehicleAlreadyInAdditionalPlates(vehicle.plate)) {
-                                  setPlateInput(vehicle.plate);
-                                  setTimeout(() => {
-                                    handleAddPlate();
-                                  }, 0);
+                                  // Adicionar a placa ao formulário diretamente
+                                  const currentPlates = form.getValues('additionalPlates') || [];
+                                  const newPlates = [...currentPlates, vehicle.plate];
+                                  form.setValue('additionalPlates', newPlates, {
+                                    shouldValidate: true,
+                                    shouldDirty: true
+                                  });
+                                  
+                                  // Adicionar documento vazio para a placa
+                                  const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
+                                  newDocs.push('');
+                                  form.setValue('additionalPlatesDocuments', newDocs);
+                                  
+                                  // Limpar input e erro
+                                  setPlateInput("");
+                                  setInputError(null);
                                 } else {
                                   setInputError("Esta placa já foi adicionada");
                                 }
