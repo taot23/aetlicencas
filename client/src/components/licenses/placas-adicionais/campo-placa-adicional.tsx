@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import { Input } from "@/components/ui/input";
 import { Vehicle } from "@shared/schema";
 import { PlacaAdicionalItem } from './placa-adicional-item';
@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check } from 'lucide-react';
+
+// Constante para evitar chamadas repetidas ao setTimeout
+const ADD_PLATE_DELAY = 10;
 
 interface CampoPlacaAdicionalProps {
   form: UseFormReturn<any>;
@@ -58,24 +61,33 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
   };
   
+  // Estado para rastreamento do item atualmente destacado no dropdown
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  
   // Atualizar sugestões quando o input mudar
   useEffect(() => {
-    if (plateInput.length >= 2) {
-      const availableVehicles = filterVehiclesByLicenseType();
+    const availableVehicles = filterVehiclesByLicenseType();
+    
+    if (plateInput.length >= 1) {
+      // Filtrar veículos mesmo com apenas 1 caractere para melhor UX
       const filtered = availableVehicles.filter(v => 
         v.plate.toUpperCase().includes(plateInput.toUpperCase())
       );
       
       setSuggestedVehicles(filtered);
       
-      // Apenas alteramos o estado de aberto se houver sugestões
-      if (filtered.length > 0) {
+      // Redefinir o índice destacado quando as sugestões mudam
+      setHighlightedIndex(filtered.length > 0 ? 0 : -1);
+      
+      // Apenas alteramos o estado de aberto se houver sugestões e input com 2+ chars
+      if (filtered.length > 0 && plateInput.length >= 2) {
         setOpenSuggestions(true);
       } else {
         setOpenSuggestions(false);
       }
     } else {
       setSuggestedVehicles([]);
+      setHighlightedIndex(-1);
       setOpenSuggestions(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -177,35 +189,71 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
             
             {/* Campo para adicionar nova placa com autopreenchimento */}
             <div className="flex-1 relative">
-              <Popover open={openSuggestions} onOpenChange={setOpenSuggestions}>
+              <Popover open={openSuggestions} onOpenChange={(open) => {
+                // Permitir que o usuário continue digitando mesmo com o popover aberto
+                if (!open) {
+                  setOpenSuggestions(false);
+                }
+              }}>
                 <PopoverTrigger asChild>
                   <div className="w-full">
                     <Input
                       ref={inputRef}
                       value={plateInput}
                       onChange={(e) => {
+                        // Garantir que sempre podemos digitar, independente do estado do popover
                         setPlateInput(e.target.value.toUpperCase());
                         setInputError(null);
                       }}
                       placeholder="Digite a placa ou comece a digitar para ver sugestões"
                       className="flex-1 w-full"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                      onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                        const matches = findMatchingVehicles(plateInput);
+                        
+                        // Navegar com as setas 
+                        if (e.key === 'ArrowDown' && matches.length > 0) {
+                          e.preventDefault();
+                          if (openSuggestions) {
+                            // Navegar para o próximo item (com loop)
+                            setHighlightedIndex((prevIndex) => 
+                              prevIndex < matches.length - 1 ? prevIndex + 1 : 0
+                            );
+                          } else {
+                            // Abrir dropdown
+                            setOpenSuggestions(true);
+                          }
+                        } 
+                        else if (e.key === 'ArrowUp' && matches.length > 0) {
+                          e.preventDefault();
+                          if (openSuggestions) {
+                            // Navegar para o item anterior (com loop)
+                            setHighlightedIndex((prevIndex) => 
+                              prevIndex > 0 ? prevIndex - 1 : matches.length - 1
+                            );
+                          } else {
+                            // Abrir dropdown e selecionar último item
+                            setOpenSuggestions(true);
+                            setHighlightedIndex(matches.length - 1);
+                          }
+                        }
+                        // Selecionar com Enter
+                        else if (e.key === 'Enter') {
                           e.preventDefault();
                           
-                          // Buscar veículos que correspondem ao input atual
-                          // mesmo com menos de 2 caracteres
                           if (plateInput.length > 0) {
-                            const matches = findMatchingVehicles(plateInput);
-                            
                             if (matches.length > 0) {
-                              // Se houver veículos correspondentes, usar o primeiro
-                              const firstMatch = matches[0];
+                              // Se dropdown aberto e item destacado, usar esse item
+                              // Caso contrário, usar o primeiro match
+                              const selectedIndex = openSuggestions && highlightedIndex >= 0 
+                                ? highlightedIndex 
+                                : 0;
                               
-                              if (!isVehicleAlreadyInAdditionalPlates(firstMatch.plate)) {
+                              const selectedVehicle = matches[selectedIndex];
+                              
+                              if (!isVehicleAlreadyInAdditionalPlates(selectedVehicle.plate)) {
                                 // Adicionar a placa ao formulário
                                 const currentPlates = form.getValues('additionalPlates') || [];
-                                const newPlates = [...currentPlates, firstMatch.plate];
+                                const newPlates = [...currentPlates, selectedVehicle.plate];
                                 form.setValue('additionalPlates', newPlates, {
                                   shouldValidate: true,
                                   shouldDirty: true
@@ -216,13 +264,11 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                                 newDocs.push('');
                                 form.setValue('additionalPlatesDocuments', newDocs);
                                 
-                                // Mostrar informação sobre o veículo adicionado
-                                console.log(`Adicionada placa ${firstMatch.plate} (${firstMatch.brand} ${firstMatch.model})`);
-                                
                                 // Limpar input, fechar sugestões e limpar erro
                                 setPlateInput("");
                                 setOpenSuggestions(false);
                                 setInputError(null);
+                                setHighlightedIndex(-1);
                               } else {
                                 setInputError("Esta placa já foi adicionada");
                               }
@@ -234,6 +280,11 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                             setInputError("Digite uma placa");
                           }
                         }
+                        // Fechar com Escape
+                        else if (e.key === 'Escape' && openSuggestions) {
+                          e.preventDefault();
+                          setOpenSuggestions(false);
+                        }
                       }}
                       maxLength={7}
                     />
@@ -244,7 +295,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                     <CommandList className="max-h-[200px]">
                       {suggestedVehicles.length > 0 ? (
                         <CommandGroup heading="Veículos cadastrados">
-                          {suggestedVehicles.map((vehicle) => (
+                          {suggestedVehicles.map((vehicle, index) => (
                             <CommandItem
                               key={vehicle.id}
                               onSelect={() => {
@@ -265,15 +316,21 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                                   // Limpar input e erro
                                   setPlateInput("");
                                   setInputError(null);
+                                  setHighlightedIndex(-1);
                                 } else {
                                   setInputError("Esta placa já foi adicionada");
                                 }
                                 setOpenSuggestions(false);
                               }}
-                              className="flex items-center justify-between py-3"
+                              className={`flex items-center justify-between py-3 ${
+                                index === highlightedIndex ? "bg-muted" : ""
+                              }`}
+                              onMouseEnter={() => setHighlightedIndex(index)}
                             >
                               <div className="flex flex-col">
-                                <span className="font-medium text-base">{vehicle.plate}</span>
+                                <span className={`font-medium text-base ${
+                                  index === highlightedIndex ? "text-primary" : ""
+                                }`}>{vehicle.plate}</span>
                                 <span className="text-xs text-muted-foreground mt-1">
                                   {vehicle.brand} {vehicle.model} - {
                                     vehicle.type === "semi_trailer" ? "Semirreboque" :
@@ -284,7 +341,11 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                                 </span>
                               </div>
                               <Check 
-                                className={`h-5 w-5 text-primary ${plateInput === vehicle.plate ? "opacity-100" : "opacity-0"}`} 
+                                className={`h-5 w-5 text-primary ${
+                                  plateInput === vehicle.plate || index === highlightedIndex 
+                                    ? "opacity-100" 
+                                    : "opacity-0"
+                                }`} 
                               />
                             </CommandItem>
                           ))}
@@ -318,9 +379,13 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                 Formatos válidos: Mercosul (AAA1A11) ou antigo (AAA1111)
               </p>
               <p>
-                <span className="font-medium text-blue-600">Dica:</span> Comece a digitar para ver sugestões de placas cadastradas. 
-                Pressione Enter para selecionar a primeira sugestão automaticamente.
+                <span className="font-medium text-blue-600">Dicas:</span>
               </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Digite apenas 1 ou 2 letras e pressione Enter para adicionar a primeira placa correspondente</li>
+                <li>Use as setas ↑↓ para navegar entre as sugestões e Enter para selecionar</li>
+                <li>Passe o mouse sobre um item para destacá-lo</li>
+              </ul>
             </div>
           </div>
           <FormMessage />
