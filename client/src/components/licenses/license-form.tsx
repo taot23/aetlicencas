@@ -990,16 +990,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               </h4>
               <p className="text-sm text-blue-600 mb-3">
                 Os CRLVs dos veículos serão vinculados automaticamente a partir do cadastro de veículos.
-                Caso não encontre algum veículo, cadastre-o aqui:
-                <Button 
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="ml-1 h-6 px-2 inline-flex items-center"
-                  onClick={() => setShowVehicleDialog(true)}
-                >
-                  <Plus className="h-3 w-3 mr-1" /> Veículo
-                </Button>
+                Caso não encontre algum veículo, cadastre-o clicando no +:
               </p>
               <div className="text-xs text-gray-500">
                 Formatos aceitos: PDF, JPG, PNG
