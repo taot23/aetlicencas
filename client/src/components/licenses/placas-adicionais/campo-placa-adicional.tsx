@@ -60,26 +60,27 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
   
   // Atualizar sugestões quando o input mudar
   useEffect(() => {
+    // Sempre tenta mostrar sugestões, mesmo que o input esteja vazio
     const availableVehicles = filterVehiclesByLicenseType();
     
-    if (plateInput.length >= 1) {
-      // Filtra independente da posição do texto na placa
-      // Converte para maiúsculas para comparação case-insensitive
-      const normalized = plateInput.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const filtered = availableVehicles.filter(v => 
-        v.plate.toUpperCase().includes(normalized)
-      );
-      
-      setSuggestedVehicles(filtered);
-      setHighlightedIndex(0); // Sempre selecionar o primeiro item
-      
-      if (filtered.length > 0) {
-        setOpenSuggestions(true);
-      } else {
-        setOpenSuggestions(false);
-      }
+    // Filtra independente da posição do texto na placa
+    // Converte para maiúsculas para comparação case-insensitive
+    const normalized = plateInput.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Se o input estiver vazio, mostra todos os veículos disponíveis
+    // Caso contrário, filtra pelo input
+    const filtered = normalized === "" 
+      ? availableVehicles 
+      : availableVehicles.filter(v => v.plate.toUpperCase().includes(normalized));
+    
+    setSuggestedVehicles(filtered);
+    
+    // Sempre selecionar o primeiro item para permitir seleção rápida com Enter
+    if (filtered.length > 0) {
+      setHighlightedIndex(0);
+      setOpenSuggestions(true);
     } else {
-      setSuggestedVehicles([]);
+      setHighlightedIndex(-1);
       setOpenSuggestions(false);
     }
   }, [plateInput, vehicles]);
@@ -216,6 +217,8 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       }}
                       placeholder="Digite a placa ou comece a digitar para ver sugestões"
                       className="w-full"
+                      // Remover qualquer restrição de comprimento máximo
+                      // maxLength={7}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowDown' && suggestedVehicles.length > 0) {
                           e.preventDefault();
