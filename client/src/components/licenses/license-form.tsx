@@ -123,7 +123,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       dollyId: undefined,
       secondTrailerId: undefined,
       flatbedId: undefined,
-      length: 19.8, // Valor mínimo padrão
+      length: undefined, // Valor não preenchido inicialmente
       width: undefined,
       height: undefined,
       additionalPlates: [],
