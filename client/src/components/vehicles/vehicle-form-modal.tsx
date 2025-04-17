@@ -6,6 +6,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertVehicleSchema, Vehicle } from "@shared/schema";
 import { z } from "zod";
+// Constante para tipos de veículos
+const VEHICLE_TYPES = {
+  tractor: "Unidade Tratora (Cavalo)",
+  semi_trailer: "Semirreboque",
+  trailer: "Reboque",
+  dolly: "Dolly",
+  flatbed: "Prancha"
+};
 import {
   Form,
   FormControl,
@@ -151,13 +159,8 @@ export function VehicleFormModal({
   };
   
   // Mapear tipos de veículo para labels em português
-  const vehicleTypeLabels: Record<string, string> = {
-    tractor: "Unidade Tratora (Cavalo)",
-    semi_trailer: "Semirreboque",
-    trailer: "Reboque",
-    dolly: "Dolly",
-    flatbed: "Prancha"
-  };
+  // Usar a constante global
+  const vehicleTypeLabels = VEHICLE_TYPES;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -264,9 +267,9 @@ export function VehicleFormModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.entries(vehicleTypeEnum.enum).map(([value]) => (
+                        {Object.entries(vehicleTypeLabels).map(([value, label]) => (
                           <SelectItem key={value} value={value}>
-                            {vehicleTypeLabels[value] || value}
+                            {label}
                           </SelectItem>
                         ))}
                       </SelectContent>

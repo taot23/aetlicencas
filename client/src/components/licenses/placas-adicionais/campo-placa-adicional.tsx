@@ -14,6 +14,7 @@ import {
   CommandList
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { VehicleFormModal } from "@/components/vehicles/vehicle-form-modal";
 
 interface CampoPlacaAdicionalProps {
   form: UseFormReturn<any>;
@@ -35,6 +36,10 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
   const [openSuggestions, setOpenSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para controlar o modal de veículo
+  const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
+  const [plateToEdit, setPlateToEdit] = useState<string | undefined>();
   
   // Verificar se um veículo já está adicionado nas placas adicionais
   const isVehicleAlreadyInAdditionalPlates = (plate: string): boolean => {
@@ -186,6 +191,23 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     form.setValue('additionalPlatesDocuments', newDocs);
   };
 
+  // Função para adicionar veículo após criação/edição
+  const handleVehicleSaved = (vehicle: Vehicle) => {
+    // Se a placa já está na lista, não precisamos fazer nada
+    if (isVehicleAlreadyInAdditionalPlates(vehicle.plate)) {
+      return;
+    }
+    
+    // Se a placa foi alterada durante a edição, vamos adicionar a nova placa
+    if (plateToEdit !== vehicle.plate) {
+      addSinglePlate(vehicle.plate);
+    }
+    
+    // Fechar o modal
+    setIsVehicleModalOpen(false);
+    setPlateToEdit(undefined);
+  };
+
   return (
     <FormField
       control={form.control}
@@ -194,6 +216,17 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
         <FormItem>
           <FormLabel>Placas Adicionais</FormLabel>
           <div className="space-y-4">
+            {/* Modal de formulário de veículo */}
+            <VehicleFormModal
+              isOpen={isVehicleModalOpen}
+              onClose={() => {
+                setIsVehicleModalOpen(false);
+                setPlateToEdit(undefined);
+              }}
+              plateToEdit={plateToEdit}
+              onSuccess={handleVehicleSaved}
+            />
+            
             {/* Lista de placas adicionadas */}
             {field.value && field.value.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -204,12 +237,10 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                     index={index}
                     vehicles={vehicles}
                     onRemove={handleRemovePlate}
-                    onEdit={(plateToEdit) => {
+                    onEdit={(plate) => {
                       // Abrir modal para edição/cadastro de veículo
-                      // Implementar lógica de modal inline
-                      console.log("Editar veículo:", plateToEdit);
-                      // Aqui deve chamar uma função passada pelo componente pai
-                      // para abrir o modal de formulário de veículo
+                      setPlateToEdit(plate);
+                      setIsVehicleModalOpen(true);
                     }}
                   />
                 ))}
