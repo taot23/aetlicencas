@@ -131,6 +131,15 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     newDocs.push('');
     form.setValue('additionalPlatesDocuments', newDocs);
     
+    // Se a placa não estiver cadastrada, perguntar se o usuário quer cadastrá-la agora
+    if (!isPlateRegistered(plate) && plate.length === 7) {
+      setTimeout(() => {
+        // Abrir o modal de cadastro de veículo com a placa pré-preenchida
+        setPlateToEdit(plate);
+        setIsVehicleModalOpen(true);
+      }, 500); // Pequeno atraso para melhor UX
+    }
+    
     return true;
   };
   

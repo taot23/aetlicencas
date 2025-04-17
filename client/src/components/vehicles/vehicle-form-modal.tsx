@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -6,14 +6,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertVehicleSchema, Vehicle } from "@shared/schema";
 import { z } from "zod";
-// Constante para tipos de veículos
-const VEHICLE_TYPES = {
-  tractor: "Unidade Tratora (Cavalo)",
-  semi_trailer: "Semirreboque",
-  trailer: "Reboque",
-  dolly: "Dolly",
-  flatbed: "Prancha"
-};
 import {
   Form,
   FormControl,
@@ -39,6 +31,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// Constante para tipos de veículos
+const VEHICLE_TYPES = {
+  tractor: "Unidade Tratora (Cavalo)",
+  semi_trailer: "Semirreboque",
+  trailer: "Reboque",
+  dolly: "Dolly",
+  flatbed: "Prancha"
+};
 
 // Esquema estendido para validação do formulário
 const formSchema = insertVehicleSchema.extend({
