@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Plus, Pencil } from "lucide-react";
 import { Vehicle } from "@shared/schema";
 
 interface PlacaAdicionalItemProps {
@@ -32,7 +32,14 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove }: PlacaAd
       }`}
     >
       <div className="flex flex-col">
-        <span className="font-medium">{plate}</span>
+        <div className="flex items-center gap-1">
+          <span className="font-medium">{plate}</span>
+          {isRegistered ? (
+            <Pencil className="h-3 w-3" />
+          ) : (
+            <Plus className="h-3 w-3" />
+          )}
+        </div>
         <span className={`text-xs ${isRegistered ? 'text-green-600' : 'text-red-600'}`}>
           {isRegistered ? 'Veículo cadastrado' : 'Veículo não cadastrado'}
         </span>
