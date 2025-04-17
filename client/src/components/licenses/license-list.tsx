@@ -204,7 +204,7 @@ export function LicenseList({
         ) : licenses.length > 0 ? (
           <div className="space-y-4 p-4">
             {licenses.map((license) => (
-              <div key={license.id} className="bg-white shadow rounded-lg p-4 border border-gray-100">
+              <div key={(license as any).uniqueId || license.id} className="bg-white shadow rounded-lg p-4 border border-gray-100">
                 <div className="flex justify-between mb-2">
                   <div className="font-medium text-lg">{license.requestNumber}</div>
                   {!isDraftList && <StatusBadge status={(license as any).specificStateStatus || license.status} />}
@@ -399,7 +399,7 @@ export function LicenseList({
               </TableRow>
             ) : licenses.length > 0 ? (
               licenses.map((license) => (
-                <TableRow key={license.id}>
+                <TableRow key={(license as any).uniqueId || license.id}>
                   <TableCell className="font-medium">{license.requestNumber}</TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
                   <TableCell>{license.mainVehiclePlate}</TableCell>

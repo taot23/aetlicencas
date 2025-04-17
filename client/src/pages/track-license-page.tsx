@@ -169,53 +169,47 @@ export default function TrackLicensePage() {
       return filteredLicenses;
     }
 
-    // Ordenar o array
-    return [...filteredLicenses].sort((a, b) => {
-      // Mapeamento especial para campos aninhados
-      let aValue: any, bValue: any;
-      
-      // Tratamento especial para status específico do estado
-      if (sortColumn === 'status') {
-        aValue = (a as any).specificStateStatus || a.status;
-        bValue = (b as any).specificStateStatus || b.status;
-      } else if (sortColumn === 'state') {
-        aValue = (a as any).specificState || (a.states && a.states.length > 0 ? a.states[0] : '');
-        bValue = (b as any).specificState || (b.states && b.states.length > 0 ? b.states[0] : '');
+    // Criar uma cópia para ordenação
+    const toSort = [...filteredLicenses];
+    
+    // Definir uma função de ordenação personalizada com base na coluna e direção
+    const getSortValue = (license: ExtendedLicenseWithId, column: string): any => {
+      if (column === 'status') {
+        return license.specificStateStatus || license.status;
+      } else if (column === 'state') {
+        return license.specificState || (license.states && license.states.length > 0 ? license.states[0] : '');
+      } else if (column === 'requestNumber') {
+        return license.requestNumber;
+      } else if (column === 'type') {
+        return license.type;
+      } else if (column === 'mainVehiclePlate') {
+        return license.mainVehiclePlate;
+      } else if (column === 'createdAt') {
+        return license.createdAt ? new Date(license.createdAt).getTime() : 0;
+      } else if (column === 'updatedAt') {
+        return license.updatedAt ? new Date(license.updatedAt).getTime() : 0;
       } else {
-        // Campos regulares
-        aValue = sortColumn === 'requestNumber' ? a.requestNumber :
-                 sortColumn === 'type' ? a.type :
-                 sortColumn === 'mainVehiclePlate' ? a.mainVehiclePlate :
-                 sortColumn === 'createdAt' ? a.createdAt :
-                 sortColumn === 'updatedAt' ? a.updatedAt :
-                 a[sortColumn as keyof typeof a];
-                 
-        bValue = sortColumn === 'requestNumber' ? b.requestNumber :
-                 sortColumn === 'type' ? b.type :
-                 sortColumn === 'mainVehiclePlate' ? b.mainVehiclePlate :
-                 sortColumn === 'createdAt' ? b.createdAt :
-                 sortColumn === 'updatedAt' ? b.updatedAt :
-                 b[sortColumn as keyof typeof b];
+        return license[column as keyof typeof license];
+      }
+    };
+    
+    // Ordenar o array
+    toSort.sort((a, b) => {
+      const aValue = getSortValue(a, sortColumn);
+      const bValue = getSortValue(b, sortColumn);
+      
+      // Valores iguais
+      if (aValue === bValue) return 0;
+      
+      // Tratamento para nulos
+      if (aValue === null || aValue === undefined) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      if (bValue === null || bValue === undefined) {
+        return sortDirection === 'asc' ? -1 : 1;
       }
       
-      // Tratamento especial para datas
-      if (sortColumn === 'createdAt' || sortColumn === 'updatedAt') {
-        // Se ambos os valores são nulos, são considerados iguais
-        if (!aValue && !bValue) return 0;
-        // Se apenas um valor é nulo, o não nulo vem primeiro
-        if (!aValue) return sortDirection === 'asc' ? 1 : -1;
-        if (!bValue) return sortDirection === 'asc' ? -1 : 1;
-        
-        // Ambos são datas válidas
-        const dateA = new Date(aValue);
-        const dateB = new Date(bValue);
-        
-        return sortDirection === 'asc' 
-          ? dateA.getTime() - dateB.getTime() 
-          : dateB.getTime() - dateA.getTime();
-      }
-      
-      // Para strings, fazer comparação de texto
+      // Para strings
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc' 
           ? aValue.localeCompare(bValue) 
@@ -223,20 +217,12 @@ export default function TrackLicensePage() {
       }
       
       // Para números e outros tipos
-      if (aValue === bValue) return 0;
-      
-      if (aValue === null || aValue === undefined) {
-        return sortDirection === 'asc' ? 1 : -1;
-      }
-      
-      if (bValue === null || bValue === undefined) {
-        return sortDirection === 'asc' ? -1 : 1;
-      }
-      
       return sortDirection === 'asc' 
         ? (aValue < bValue ? -1 : 1) 
         : (bValue < aValue ? -1 : 1);
     });
+    
+    return toSort;
   }, [filteredLicenses, sortColumn, sortDirection]);
 
   const handleViewLicense = (license: LicenseRequest) => {
