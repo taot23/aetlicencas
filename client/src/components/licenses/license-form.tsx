@@ -560,7 +560,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       </SelectItem>
                       <SelectItem value="bitrain_7_axles">
                         <div className="flex items-center">
-                          <Truck className="mr-2 h-4 w-4" />
+                          <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={16} />
                           <span>Bitrem 7 eixos</span>
                         </div>
                       </SelectItem>
@@ -878,6 +878,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={20} />
               ) : licenseType === 'bitrain_9_axles' ? (
                 <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={20} />
+              ) : licenseType === 'bitrain_7_axles' ? (
+                <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={20} />
               ) : (
                 <Truck className="mr-2 h-5 w-5" />
               )}
@@ -1074,6 +1076,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={20} />
             ) : licenseType === 'bitrain_9_axles' ? (
               <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={20} />
+            ) : licenseType === 'bitrain_7_axles' ? (
+              <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={20} />
             ) : (
               <Truck className="mr-2 h-5 w-5" />
             )}
