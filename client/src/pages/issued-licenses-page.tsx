@@ -26,6 +26,7 @@ import { FileDown, ExternalLink, AlertCircle, CheckCircle2, Clock } from "lucide
 import { Status, StatusBadge } from "@/components/licenses/status-badge";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { Badge } from "@/components/ui/badge";
+import { SortableHeader } from "@/components/ui/sortable-header";
 
 export default function IssuedLicensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,6 +36,8 @@ export default function IssuedLicensesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
+  const [sortColumn, setSortColumn] = useState<string | null>("emissionDate");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>('desc');
   const itemsPerPage = 10;
 
   const { data: issuedLicenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
@@ -164,9 +167,78 @@ export default function IssuedLicensesPage() {
     return matchesSearch && matchesDateFrom && matchesDateTo && matchesState && matchesStatus;
   });
 
+  // Função para ordenar as licenças
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Se já está ordenando por esta coluna, alterna a direção
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection('asc');
+      } else {
+        setSortDirection('asc');
+      }
+    } else {
+      // Nova coluna selecionada, começa com ascendente
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Ordenar licenças filtradas
+  const sortedLicenses = useMemo(() => {
+    if (!sortColumn || !sortDirection) {
+      return filteredLicenses;
+    }
+
+    return [...filteredLicenses].sort((a, b) => {
+      const aValue = a[sortColumn as keyof typeof a];
+      const bValue = b[sortColumn as keyof typeof b];
+      
+      // Tratamento especial para datas
+      if (sortColumn === 'emissionDate' || sortColumn === 'validUntil') {
+        // Se ambos os valores são nulos, são considerados iguais
+        if (!aValue && !bValue) return 0;
+        // Se apenas um valor é nulo, o não nulo vem primeiro
+        if (!aValue) return sortDirection === 'asc' ? 1 : -1;
+        if (!bValue) return sortDirection === 'asc' ? -1 : 1;
+        
+        // Ambos são datas válidas
+        const dateA = new Date(aValue as string);
+        const dateB = new Date(bValue as string);
+        
+        return sortDirection === 'asc' 
+          ? dateA.getTime() - dateB.getTime() 
+          : dateB.getTime() - dateA.getTime();
+      }
+      
+      // Para strings, fazer comparação de texto
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
+      }
+      
+      // Para números e outros tipos
+      if (aValue === bValue) return 0;
+      
+      if (aValue === null || aValue === undefined) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      
+      if (bValue === null || bValue === undefined) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      
+      return sortDirection === 'asc' 
+        ? (aValue < bValue ? -1 : 1) 
+        : (bValue < aValue ? -1 : 1);
+    });
+  }, [filteredLicenses, sortColumn, sortDirection]);
+
   // Paginação
-  const totalPages = Math.ceil(filteredLicenses.length / itemsPerPage);
-  const paginatedLicenses = filteredLicenses.slice(
+  const totalPages = Math.ceil(sortedLicenses.length / itemsPerPage);
+  const paginatedLicenses = sortedLicenses.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -311,12 +383,42 @@ export default function IssuedLicensesPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-100">
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Nº Pedido</TableHead>
-                  <TableHead>Placa Principal</TableHead>
+                  <SortableHeader
+                    column="state"
+                    label="Estado"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    column="requestNumber"
+                    label="Nº Pedido"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    column="mainVehiclePlate"
+                    label="Placa Principal"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                   <TableHead>Nº Licença</TableHead>
-                  <TableHead>Emissão</TableHead>
-                  <TableHead>Validade</TableHead>
+                  <SortableHeader
+                    column="emissionDate"
+                    label="Emissão"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    column="validUntil"
+                    label="Validade"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                   <TableHead>Situação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
