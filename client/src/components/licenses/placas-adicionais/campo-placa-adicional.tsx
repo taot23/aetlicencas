@@ -63,9 +63,11 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     const availableVehicles = filterVehiclesByLicenseType();
     
     if (plateInput.length >= 1) {
-      // Filtrar veículos mesmo com apenas 1 caractere
+      // Filtra independente da posição do texto na placa
+      // Converte para maiúsculas para comparação case-insensitive
+      const normalized = plateInput.toUpperCase().replace(/[^A-Z0-9]/g, '');
       const filtered = availableVehicles.filter(v => 
-        v.plate.toUpperCase().includes(plateInput.toUpperCase())
+        v.plate.toUpperCase().includes(normalized)
       );
       
       setSuggestedVehicles(filtered);
@@ -208,7 +210,8 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       ref={inputRef}
                       value={plateInput}
                       onChange={(e) => {
-                        setPlateInput(e.target.value.toUpperCase());
+                        // Converte para maiúsculas e remove hífens automaticamente
+                        setPlateInput(e.target.value.toUpperCase().replace(/-/g, ''));
                         setInputError(null);
                       }}
                       placeholder="Digite a placa ou comece a digitar para ver sugestões"
