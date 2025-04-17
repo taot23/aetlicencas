@@ -478,7 +478,10 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                               }`}
                               onMouseEnter={() => setHighlightedIndex(index)}
                             >
-                              <div className="flex flex-col">
+                              <div 
+                                className="flex flex-col"
+                                ref={index === highlightedIndex ? highlightedItemRef : null}
+                              >
                                 <span className={`font-medium text-base ${
                                   index === highlightedIndex ? "text-primary" : ""
                                 }`}>{vehicle.plate}</span>
