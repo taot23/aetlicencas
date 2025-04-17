@@ -92,13 +92,29 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
   
   // Processar entrada de múltiplas placas
   const processMultiplePlates = (input: string): string[] => {
+    // Verificar se o input é de uma única placa
+    if (isValidPlateFormat(input.toUpperCase().trim())) {
+      return [input.toUpperCase().trim()];
+    }
+    
     // Dividir por vírgulas, espaços ou quebras de linha
     const parts = input.split(/[,\s\n]+/).filter(Boolean);
+    console.log("Partes divididas:", parts);
     
     // Normalizar e filtrar placas válidas
     const validPlates = parts
-      .map(part => part.toUpperCase().trim().replace(/[^A-Z0-9]/g, ''))
-      .filter(plate => isValidPlateFormat(plate));
+      .map(part => {
+        const normalized = part.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+        console.log(`Placa normalizada: "${normalized}"`);
+        return normalized;
+      })
+      .filter(plate => {
+        const isValid = isValidPlateFormat(plate);
+        console.log(`Placa "${plate}" válida? ${isValid}`);
+        return isValid;
+      });
+      
+    console.log("Placas válidas:", validPlates);
     
     // Remover duplicatas (compatível com ES5)
     const uniquePlates: string[] = [];
@@ -107,6 +123,8 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
         uniquePlates.push(plate);
       }
     });
+    
+    console.log("Placas únicas:", uniquePlates);
     return uniquePlates;
   };
   
@@ -262,16 +280,51 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       <Input
                         ref={inputRef}
                         value={plateInput}
-                        maxLength={7}
+                        maxLength={80} // Aumentamos para permitir múltiplas placas
                         onChange={(e) => {
                           // Converter para maiúsculas e continuar digitação
                           setPlateInput(e.target.value.toUpperCase());
                           setInputError(null);
+                          
+                          // Verificar se o texto contém vírgulas ou espaços
+                          const hasCommaOrSpace = /[,\s]/.test(e.target.value);
+                          console.log("Texto contém vírgula ou espaço:", hasCommaOrSpace);
+                          
+                          // Verificar se o último caractere é uma vírgula ou espaço
+                          const lastChar = e.target.value.slice(-1);
+                          const isLastCharDelimiter = /[,\s]/.test(lastChar);
+                          const isTextComplete = e.target.value.length >= 7;
+                          
+                          // Se terminar com vírgula ou espaço, e tiver pelo menos 7 caracteres 
+                          // (tamanho mínimo da placa), processar múltiplas placas
+                          if (isLastCharDelimiter && isTextComplete) {
+                            console.log("Detectado delimitador no final, processando múltiplas placas");
+                            
+                            // Verificar se há placas válidas antes do delimitador
+                            const platesSoFar = processMultiplePlates(e.target.value);
+                            console.log("Placas válidas encontradas:", platesSoFar);
+                            
+                            if (platesSoFar.length > 0) {
+                              // Adicionar placas válidas
+                              platesSoFar.forEach(plate => {
+                                addSinglePlate(plate);
+                              });
+                              
+                              // Limpar o campo após adicionar as placas
+                              setTimeout(() => {
+                                setPlateInput("");
+                              }, 50);
+                            }
+                          }
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
+                            console.log("Enter pressionado, processando placas");
                             handleAddPlate();
+                          }
+                          else if (e.key === ',' || e.key === ' ') {
+                            // Não bloquear digitação normal, vamos processar no onChange
                           }
                           else if (e.key === 'ArrowDown' && suggestedVehicles.length > 0) {
                             e.preventDefault();
