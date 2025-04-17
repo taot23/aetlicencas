@@ -214,10 +214,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Adjust length from meters to centimeters for storage
+    // Adjust dimensions from meters to centimeters for storage
     const dataToSubmit = {
       ...values,
       length: Math.round((values.length || 0) * 100), // Convert to centimeters
+      width: values.width ? Math.round(values.width * 100) : undefined, // Convert to centimeters if exists
+      height: values.height ? Math.round(values.height * 100) : undefined, // Convert to centimeters if exists
     };
     
     if (values.isDraft) {
