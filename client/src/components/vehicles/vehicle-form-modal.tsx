@@ -72,23 +72,11 @@ export function VehicleFormModal({
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   
-  // Buscar veículo caso esteja editando
-  const { 
-    data: existingVehicle,
-    isLoading: isLoadingVehicle 
-  } = useQuery<Vehicle | undefined>({
-    queryKey: ['/api/vehicles/by-plate', plateToEdit],
-    queryFn: async () => {
-      if (!plateToEdit) return undefined;
-      try {
-        const res = await apiRequest('GET', `/api/vehicles/by-plate/${plateToEdit}`);
-        return await res.json();
-      } catch (error) {
-        return undefined; // Placa não encontrada, será um novo cadastro
-      }
-    },
-    enabled: !!plateToEdit
-  });
+  // Removemos a busca automática de veículos existentes
+  // conforme solicitado pelo cliente
+  // O modal sempre abre vazio, sem preencher dados automaticamente
+  const existingVehicle = undefined;
+  const isLoadingVehicle = false;
   
   // Formulário
   const form = useForm<VehicleFormValues>({
@@ -105,31 +93,17 @@ export function VehicleFormModal({
     }
   });
   
-  // Atualizar formulário quando carregar dados do veículo
-  useEffect(() => {
-    if (existingVehicle) {
-      form.reset({
-        plate: existingVehicle.plate,
-        brand: existingVehicle.brand || '',
-        model: existingVehicle.model || '',
-        year: existingVehicle.year || new Date().getFullYear(),
-        type: existingVehicle.type,
-        renavam: existingVehicle.renavam || '',
-        tare: existingVehicle.tare || 0,
-        crlvYear: existingVehicle.crlvYear || new Date().getFullYear(),
-      });
-    }
-  }, [existingVehicle, form]);
+  // Removemos a atualização automática do formulário
+  // Conforme solicitado pelo cliente, o formulário deve sempre começar vazio
+  // Exceto a placa quando informada
   
   // Mutação para salvar o veículo
   const saveMutation = useMutation({
     mutationFn: async (data: VehicleFormValues) => {
       try {
-        const endpoint = existingVehicle 
-          ? `/api/vehicles/${existingVehicle.id}` 
-          : '/api/vehicles';
-          
-        const method = existingVehicle ? 'PATCH' : 'POST';
+        // Como não estamos mais usando existingVehicle, sempre será um POST para novo veículo
+        const endpoint = '/api/vehicles';
+        const method = 'POST';
         
         console.log(`Enviando requisição ${method} para ${endpoint}`, data);
         
@@ -137,7 +111,7 @@ export function VehicleFormModal({
         if (!res.ok) {
           const errorData = await res.json().catch(() => null);
           console.error('Erro na resposta da API:', errorData);
-          throw new Error(errorData?.message || `Erro ao ${existingVehicle ? 'atualizar' : 'cadastrar'} o veículo.`);
+          throw new Error(errorData?.message || `Erro ao cadastrar o veículo.`);
         }
         return await res.json();
       } catch (error) {
@@ -151,8 +125,8 @@ export function VehicleFormModal({
       
       // Mostrar mensagem de sucesso
       toast({
-        title: existingVehicle ? "Veículo atualizado" : "Veículo cadastrado",
-        description: `Placa ${savedVehicle.plate} ${existingVehicle ? 'atualizada' : 'cadastrada'} com sucesso!`,
+        title: "Veículo cadastrado",
+        description: `Placa ${savedVehicle.plate} cadastrada com sucesso!`,
       });
       
       // Chamar callback de sucesso se fornecido
@@ -168,7 +142,7 @@ export function VehicleFormModal({
       console.error('Erro na mutação:', error);
       toast({
         title: "Erro",
-        description: `Não foi possível ${existingVehicle ? 'atualizar' : 'cadastrar'} o veículo: ${error.message}`,
+        description: `Não foi possível cadastrar o veículo: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -195,14 +169,12 @@ export function VehicleFormModal({
       <DialogContent className="max-w-md md:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            {existingVehicle ? 'Editar Veículo' : 'Cadastrar Novo Veículo'}
+            Cadastrar Novo Veículo
           </DialogTitle>
           <DialogDescription>
-            {existingVehicle 
-              ? `Editando veículo com placa ${existingVehicle.plate}`
-              : plateToEdit 
-                ? `Cadastrando novo veículo com placa ${plateToEdit}`
-                : 'Preencha os dados do veículo para cadastrá-lo'
+            {plateToEdit 
+              ? `Cadastrando novo veículo com placa ${plateToEdit}`
+              : 'Preencha os dados do veículo para cadastrá-lo'
             }
           </DialogDescription>
         </DialogHeader>
@@ -220,7 +192,6 @@ export function VehicleFormModal({
                       {...field} 
                       maxLength={7}
                       onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      disabled={!!existingVehicle} 
                     />
                   </FormControl>
                   <FormMessage />
@@ -333,14 +304,9 @@ export function VehicleFormModal({
               </Button>
               <Button 
                 type="submit"
-                disabled={isSaving || isLoadingVehicle}
+                disabled={isSaving}
               >
-                {isSaving 
-                  ? 'Salvando...' 
-                  : existingVehicle 
-                    ? 'Atualizar Veículo' 
-                    : 'Cadastrar Veículo'
-                }
+                {isSaving ? 'Salvando...' : 'Cadastrar Veículo'}
               </Button>
             </DialogFooter>
           </form>
