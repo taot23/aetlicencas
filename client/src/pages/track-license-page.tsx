@@ -158,19 +158,30 @@ export default function TrackLicensePage() {
 
     return [...filteredLicenses].sort((a, b) => {
       // Mapeamento especial para campos aninhados
-      let aValue, bValue;
+      let aValue: any, bValue: any;
       
       // Tratamento especial para status específico do estado
       if (sortColumn === 'status') {
-        aValue = a.specificStateStatus || a.status;
-        bValue = b.specificStateStatus || b.status;
+        aValue = (a as any).specificStateStatus || a.status;
+        bValue = (b as any).specificStateStatus || b.status;
       } else if (sortColumn === 'state') {
-        aValue = a.specificState || (a.states && a.states.length > 0 ? a.states[0] : '');
-        bValue = b.specificState || (b.states && b.states.length > 0 ? b.states[0] : '');
+        aValue = (a as any).specificState || (a.states && a.states.length > 0 ? a.states[0] : '');
+        bValue = (b as any).specificState || (b.states && b.states.length > 0 ? b.states[0] : '');
       } else {
         // Campos regulares
-        aValue = a[sortColumn as keyof typeof a];
-        bValue = b[sortColumn as keyof typeof b];
+        aValue = sortColumn === 'requestNumber' ? a.requestNumber :
+                 sortColumn === 'type' ? a.type :
+                 sortColumn === 'mainVehiclePlate' ? a.mainVehiclePlate :
+                 sortColumn === 'createdAt' ? a.createdAt :
+                 sortColumn === 'updatedAt' ? a.updatedAt :
+                 a[sortColumn as keyof typeof a];
+                 
+        bValue = sortColumn === 'requestNumber' ? b.requestNumber :
+                 sortColumn === 'type' ? b.type :
+                 sortColumn === 'mainVehiclePlate' ? b.mainVehiclePlate :
+                 sortColumn === 'createdAt' ? b.createdAt :
+                 sortColumn === 'updatedAt' ? b.updatedAt :
+                 b[sortColumn as keyof typeof b];
       }
       
       // Tratamento especial para datas
@@ -182,8 +193,8 @@ export default function TrackLicensePage() {
         if (!bValue) return sortDirection === 'asc' ? -1 : 1;
         
         // Ambos são datas válidas
-        const dateA = new Date(aValue as string);
-        const dateB = new Date(bValue as string);
+        const dateA = new Date(aValue);
+        const dateB = new Date(bValue);
         
         return sortDirection === 'asc' 
           ? dateA.getTime() - dateB.getTime() 
