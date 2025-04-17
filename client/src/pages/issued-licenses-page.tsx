@@ -191,28 +191,47 @@ export default function IssuedLicensesPage() {
       return filteredLicenses;
     }
 
-    return [...filteredLicenses].sort((a, b) => {
-      const aValue = a[sortColumn as keyof typeof a];
-      const bValue = b[sortColumn as keyof typeof b];
+    // Criar uma cópia para ordenação
+    const toSort = [...filteredLicenses];
+    
+    // Definir uma função de ordenação personalizada com base na coluna e direção
+    const getSortValue = (license: ExpandedLicense, column: string): any => {
+      if (column === 'state') {
+        return license.state;
+      } else if (column === 'mainVehiclePlate') {
+        return license.mainVehiclePlate;
+      } else if (column === 'type') {
+        return license.type;
+      } else if (column === 'requestNumber') {
+        return license.requestNumber;
+      } else if (column === 'validUntil') {
+        return license.validUntil ? new Date(license.validUntil).getTime() : 0;
+      } else if (column === 'emissionDate') {
+        return license.emissionDate ? new Date(license.emissionDate).getTime() : 0;
+      } else if (column === 'status') {
+        return getLicenseStatus(license.validUntil);
+      } else {
+        return license[column as keyof typeof license];
+      }
+    };
+    
+    // Ordenar o array
+    toSort.sort((a, b) => {
+      const aValue = getSortValue(a, sortColumn);
+      const bValue = getSortValue(b, sortColumn);
       
-      // Tratamento especial para datas
-      if (sortColumn === 'emissionDate' || sortColumn === 'validUntil') {
-        // Se ambos os valores são nulos, são considerados iguais
-        if (!aValue && !bValue) return 0;
-        // Se apenas um valor é nulo, o não nulo vem primeiro
-        if (!aValue) return sortDirection === 'asc' ? 1 : -1;
-        if (!bValue) return sortDirection === 'asc' ? -1 : 1;
-        
-        // Ambos são datas válidas
-        const dateA = new Date(aValue as string);
-        const dateB = new Date(bValue as string);
-        
-        return sortDirection === 'asc' 
-          ? dateA.getTime() - dateB.getTime() 
-          : dateB.getTime() - dateA.getTime();
+      // Valores iguais
+      if (aValue === bValue) return 0;
+      
+      // Tratamento para nulos
+      if (aValue === null || aValue === undefined) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      if (bValue === null || bValue === undefined) {
+        return sortDirection === 'asc' ? -1 : 1;
       }
       
-      // Para strings, fazer comparação de texto
+      // Para strings
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc' 
           ? aValue.localeCompare(bValue) 
@@ -220,20 +239,12 @@ export default function IssuedLicensesPage() {
       }
       
       // Para números e outros tipos
-      if (aValue === bValue) return 0;
-      
-      if (aValue === null || aValue === undefined) {
-        return sortDirection === 'asc' ? 1 : -1;
-      }
-      
-      if (bValue === null || bValue === undefined) {
-        return sortDirection === 'asc' ? -1 : 1;
-      }
-      
       return sortDirection === 'asc' 
         ? (aValue < bValue ? -1 : 1) 
         : (bValue < aValue ? -1 : 1);
     });
+    
+    return toSort;
   }, [filteredLicenses, sortColumn, sortDirection]);
 
   // Paginação
@@ -436,7 +447,7 @@ export default function IssuedLicensesPage() {
                     
                     return (
                       <TableRow 
-                        key={license.id}
+                        key={`${license.licenseId}-${license.state}`}
                         className={
                           validityStatus === 'expired' ? 'bg-red-50' : 
                           validityStatus === 'expiring_soon' ? 'bg-amber-50' : 
@@ -553,7 +564,7 @@ export default function IssuedLicensesPage() {
                 
                 return (
                   <div 
-                    key={license.id} 
+                    key={`mobile-${license.licenseId}-${license.state}`} 
                     className={`p-4 ${
                       validityStatus === 'expired' ? 'bg-red-50' : 
                       validityStatus === 'expiring_soon' ? 'bg-amber-50' : 
