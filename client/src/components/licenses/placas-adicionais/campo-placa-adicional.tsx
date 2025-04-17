@@ -58,31 +58,45 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return [tractorUnitId, firstTrailerId, dollyId, secondTrailerId, flatbedId].includes(vehicle.id);
   };
   
-  // Atualizar sugestões quando o input mudar
+  // Atualizar sugestões quando o input mudar, mas sem interromper a digitação
   useEffect(() => {
-    // Sempre tenta mostrar sugestões, mesmo que o input esteja vazio
+    // Buscar os veículos disponíveis
     const availableVehicles = filterVehiclesByLicenseType();
     
-    // Filtra independente da posição do texto na placa
-    // Converte para maiúsculas para comparação case-insensitive
+    // Normalizar o input para busca (maiúsculas, sem caracteres especiais)
     const normalized = plateInput.toUpperCase().replace(/[^A-Z0-9]/g, '');
     
-    // Se o input estiver vazio, mostra todos os veículos disponíveis
-    // Caso contrário, filtra pelo input
-    const filtered = normalized === "" 
-      ? availableVehicles 
-      : availableVehicles.filter(v => v.plate.toUpperCase().includes(normalized));
+    // Filtragem mais inteligente:
+    // 1. Se input vazio, mostra alguns veículos para escolha rápida (limitado a 5)
+    // 2. Se tem input, busca por qualquer correspondência dentro da placa
+    let filtered = [];
+    if (normalized === "") {
+      // Mostrar apenas alguns veículos (limitar número para não sobrecarregar)
+      filtered = availableVehicles.slice(0, 5);
+    } else {
+      // Buscar por qualquer parte da placa
+      filtered = availableVehicles.filter(v => 
+        v.plate.toUpperCase().includes(normalized)
+      );
+    }
     
+    // Atualizar o estado com os veículos filtrados
     setSuggestedVehicles(filtered);
     
-    // Sempre selecionar o primeiro item para permitir seleção rápida com Enter
+    // Controlar o dropdown e a seleção
     if (filtered.length > 0) {
-      setHighlightedIndex(0);
-      setOpenSuggestions(true);
+      setHighlightedIndex(0); // Sempre selecionar o primeiro
+      setOpenSuggestions(true); // Mostrar dropdown
     } else {
       setHighlightedIndex(-1);
+      setOpenSuggestions(false); // Fechar dropdown se não houver sugestões
+    }
+    
+    // Se o input for vazio, fechar sugestões para ter mais espaço
+    if (normalized === "") {
       setOpenSuggestions(false);
     }
+    
   }, [plateInput, vehicles]);
   
   // Verificar se um veículo já está adicionado nas placas adicionais
@@ -210,6 +224,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                     <Input
                       ref={inputRef}
                       value={plateInput}
+                      autoComplete="off"
                       onChange={(e) => {
                         // Converte para maiúsculas e remove hífens automaticamente
                         setPlateInput(e.target.value.toUpperCase().replace(/-/g, ''));
@@ -217,8 +232,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       }}
                       placeholder="Digite a placa ou comece a digitar para ver sugestões"
                       className="w-full"
-                      // Remover qualquer restrição de comprimento máximo
-                      // maxLength={7}
+                      maxLength={7}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowDown' && suggestedVehicles.length > 0) {
                           e.preventDefault();
