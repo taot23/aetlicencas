@@ -72,11 +72,16 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
         v.plate.toUpperCase().includes(normalized)
       );
       
-      setSuggestedVehicles(filtered);
+      // Ordenar em ordem alfabética pela placa
+      const sortedVehicles = [...filtered].sort((a, b) => 
+        a.plate.localeCompare(b.plate)
+      );
+      
+      setSuggestedVehicles(sortedVehicles);
       
       // Mostrar sugestões apenas se houver correspondências
       // Não abrir automaticamente para não interromper digitação
-      if (filtered.length > 0) {
+      if (sortedVehicles.length > 0) {
         setHighlightedIndex(0);
         // Não forçar abertura do popover aqui para permitir digitação contínua
       } else {
@@ -84,7 +89,12 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
       }
     } else {
       // Se o input estiver vazio, mostrar alguns veículos recentes
-      setSuggestedVehicles(vehicles.slice(0, 5));
+      // Mas também ordenados em ordem alfabética
+      const initialVehicles = [...vehicles]
+        .sort((a, b) => a.plate.localeCompare(b.plate))
+        .slice(0, 5);
+        
+      setSuggestedVehicles(initialVehicles);
       // Não mostrar sugestões com input vazio
       setOpenSuggestions(false);
     }
@@ -138,15 +148,30 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     
     // Adicionar placa ao formulário
     const currentPlates = form.getValues('additionalPlates') || [];
-    const newPlates = [...currentPlates, plate];
+    // Adicionar a nova placa e ordenar em ordem alfabética
+    const newPlates = [...currentPlates, plate].sort((a: string, b: string) => a.localeCompare(b));
+    
     form.setValue('additionalPlates', newPlates, {
       shouldValidate: true,
       shouldDirty: true
     });
     
-    // Adicionar documento vazio para a placa
-    const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-    newDocs.push('');
+    // Como as placas foram reordenadas, precisamos reordenar os documentos também
+    // Criamos um mapa temporário para associar as placas originais aos seus documentos
+    const currentDocs = form.getValues('additionalPlatesDocuments') || [];
+    const docsMap = new Map<string, string>();
+    
+    // Mapear documentos existentes para suas placas
+    currentPlates.forEach((existingPlate: string, index: number) => {
+      docsMap.set(existingPlate, currentDocs[index] || '');
+    });
+    
+    // Adicionar novo documento para a nova placa
+    docsMap.set(plate, '');
+    
+    // Reconstruir a lista de documentos na mesma ordem das placas ordenadas
+    const newDocs = newPlates.map((orderedPlate: string) => docsMap.get(orderedPlate) || '');
+    
     form.setValue('additionalPlatesDocuments', newDocs);
     
     // Nota: Removemos a abertura automática do modal para placas não cadastradas
@@ -198,17 +223,33 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
   const handleRemovePlate = (index: number) => {
     // Remover a placa
     const plates = form.getValues('additionalPlates') || [];
-    const newPlates = [...plates];
-    newPlates.splice(index, 1);
+    
+    // Placa que será removida
+    const plateToRemove = plates[index];
+    
+    // Criar mapa de documentos associados a placas (exceto a que será removida)
+    const docs = form.getValues('additionalPlatesDocuments') || [];
+    const docsMap = new Map<string, string>();
+    
+    plates.forEach((plate: string, idx: number) => {
+      if (idx !== index) { // Ignorar a placa que será removida
+        docsMap.set(plate, docs[idx] || '');
+      }
+    });
+    
+    // Criar uma nova lista sem a placa removida (mas já mantendo a ordem alfabética)
+    const newPlates = plates
+      .filter((_: string, idx: number) => idx !== index)
+      .sort((a: string, b: string) => a.localeCompare(b));
+    
+    // Definir as placas ordenadas
     form.setValue('additionalPlates', newPlates, {
       shouldValidate: true,
       shouldDirty: true
     });
     
-    // Remover documento associado
-    const docs = form.getValues('additionalPlatesDocuments') || [];
-    const newDocs = [...docs];
-    newDocs.splice(index, 1);
+    // Recriar a lista de documentos na mesma ordem das placas ordenadas
+    const newDocs = newPlates.map((plate: string) => docsMap.get(plate) || '');
     form.setValue('additionalPlatesDocuments', newDocs);
   };
 
@@ -306,7 +347,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                             
                             if (platesSoFar.length > 0) {
                               // Adicionar placas válidas
-                              platesSoFar.forEach(plate => {
+                              platesSoFar.forEach((plate: string) => {
                                 addSinglePlate(plate);
                               });
                               
