@@ -52,6 +52,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
+import { VehicleTypeImage } from "@/components/ui/vehicle-type-image";
 import {
   Dialog,
   DialogContent,
@@ -565,7 +566,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       </SelectItem>
                       <SelectItem value="bitrain_6_axles">
                         <div className="flex items-center">
-                          <Truck className="mr-2 h-4 w-4" />
+                          <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={16} />
                           <span>Bitrem 6 eixos</span>
                         </div>
                       </SelectItem>
@@ -871,8 +872,15 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Bitrem */}
         {(licenseType === 'bitrain_9_axles' || licenseType === 'bitrain_7_axles' || licenseType === 'bitrain_6_axles') && (
-          <div className="border border-gray-200 rounded-md p-4 space-y-4">
-            <h3 className="font-medium text-gray-800 mb-2">Veículos do Bitrem</h3>
+          <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+              {licenseType === 'bitrain_6_axles' ? (
+                <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={20} />
+              ) : (
+                <Truck className="mr-2 h-5 w-5" />
+              )}
+              Veículos do Bitrem
+            </h3>
             
             <FormField
               control={form.control}
@@ -980,8 +988,11 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         {/* Dynamic fields for Prancha */}
         {licenseType === 'flatbed' && (
-          <div className="border border-gray-200 rounded-md p-4 space-y-4">
-            <h3 className="font-medium text-gray-800 mb-2">Veículos da Prancha</h3>
+          <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+              <Truck className="mr-2 h-5 w-5" />
+              Veículos da Prancha
+            </h3>
             
             <FormField
               control={form.control}
@@ -1057,7 +1068,11 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
         <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
-            <Truck className="mr-2 h-5 w-5" />
+            {licenseType === 'bitrain_6_axles' ? (
+              <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={20} />
+            ) : (
+              <Truck className="mr-2 h-5 w-5" />
+            )}
             Placas Adicionais
           </h3>
           <div className="text-sm text-muted-foreground mb-4">
