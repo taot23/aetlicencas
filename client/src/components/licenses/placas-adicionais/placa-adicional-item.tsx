@@ -23,6 +23,15 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove }: PlacaAd
     );
   }, [plate, vehicles]);
 
+  // Função para redirecionar para o formulário de veículos
+  const navigateToVehicleForm = () => {
+    // Salva a placa no localStorage para preencher automaticamente no formulário de veículos
+    localStorage.setItem('preFillPlate', plate);
+    
+    // Navega para a página de cadastro de veículos
+    window.location.href = '/vehicles';
+  };
+
   return (
     <div 
       className={`flex justify-between items-center p-3 rounded-md ${
@@ -34,25 +43,40 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove }: PlacaAd
       <div className="flex flex-col">
         <div className="flex items-center gap-1">
           <span className="font-medium">{plate}</span>
-          {isRegistered ? (
-            <Pencil className="h-3 w-3" />
-          ) : (
-            <Plus className="h-3 w-3" />
-          )}
         </div>
         <span className={`text-xs ${isRegistered ? 'text-green-600' : 'text-red-600'}`}>
           {isRegistered ? 'Veículo cadastrado' : 'Veículo não cadastrado'}
         </span>
       </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => onRemove(index)}
-        className="h-8 w-8 p-0"
-      >
-        <X className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1">
+        {/* Botão para editar (se cadastrado) ou adicionar (se não cadastrado) */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={navigateToVehicleForm}
+          className="h-8 w-8 p-0"
+          title={isRegistered ? "Editar veículo" : "Cadastrar veículo"}
+        >
+          {isRegistered ? (
+            <Pencil className="h-4 w-4 text-green-600" />
+          ) : (
+            <Plus className="h-4 w-4 text-red-600" />
+          )}
+        </Button>
+        
+        {/* Botão para remover */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onRemove(index)}
+          className="h-8 w-8 p-0"
+          title="Remover placa"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

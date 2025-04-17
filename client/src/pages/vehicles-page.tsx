@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { VehicleList } from "@/components/vehicles/vehicle-list";
 import { VehicleForm } from "@/components/vehicles/vehicle-form-responsive";
@@ -22,6 +22,18 @@ export default function VehiclesPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+  
+  // Checar se existe uma placa pré-preenchida no localStorage
+  // (Vindo de outro componente como a tela de adicionar placas adicionais)
+  useEffect(() => {
+    const preFillPlate = localStorage.getItem('preFillPlate');
+    if (preFillPlate) {
+      // Abre automaticamente o formulário com a placa pré-preenchida
+      setIsFormOpen(true);
+      // Remove do localStorage depois de usar
+      localStorage.removeItem('preFillPlate');
+    }
+  });
 
   const { data: vehicles, isLoading, refetch } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],

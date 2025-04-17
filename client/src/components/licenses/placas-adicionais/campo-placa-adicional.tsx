@@ -54,7 +54,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return vehicles.find(v => v.plate === plate);
   };
 
-  // Atualizar sugestões com base no input
+  // Atualizar sugestões com base no input - sem interromper digitação
   useEffect(() => {
     if (!vehicles) return;
     
@@ -69,15 +69,18 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
       
       setSuggestedVehicles(filtered);
       
+      // Mostrar sugestões apenas se houver correspondências
+      // Não abrir automaticamente para não interromper digitação
       if (filtered.length > 0) {
         setHighlightedIndex(0);
-        setOpenSuggestions(true);
+        // Não forçar abertura do popover aqui para permitir digitação contínua
       } else {
         setOpenSuggestions(false);
       }
     } else {
       // Se o input estiver vazio, mostrar alguns veículos recentes
       setSuggestedVehicles(vehicles.slice(0, 5));
+      // Não mostrar sugestões com input vazio
       setOpenSuggestions(false);
     }
   }, [plateInput, vehicles]);
@@ -218,6 +221,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                       <Input
                         ref={inputRef}
                         value={plateInput}
+                        maxLength={7}
                         onChange={(e) => {
                           // Converter para maiúsculas e continuar digitação
                           setPlateInput(e.target.value.toUpperCase());
