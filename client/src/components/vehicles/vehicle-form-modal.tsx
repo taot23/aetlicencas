@@ -48,7 +48,10 @@ const formSchema = insertVehicleSchema.extend({
     .refine(
       (value) => /^[A-Za-z]{3}\d[A-Za-z0-9]\d{2}$/.test(value.toUpperCase()), 
       { message: "Formato de placa inválido. Use o formato Mercosul (AAA1A11) ou antigo (AAA1111)." }
-    )
+    ),
+  // Adicionamos valores padrão para os campos obrigatórios que faltavam
+  tare: z.number().default(0), // Peso em kg
+  crlvYear: z.number().default(new Date().getFullYear()) // Ano do CRLV (usando o ano atual como padrão)
 });
 
 type VehicleFormValues = z.infer<typeof formSchema>;
@@ -97,6 +100,8 @@ export function VehicleFormModal({
       year: new Date().getFullYear(),
       type: 'tractor',
       renavam: '',
+      tare: 0, // Peso padrão (será enviado mesmo que não exibido no formulário)
+      crlvYear: new Date().getFullYear() // Ano CRLV padrão
     }
   });
   
@@ -110,6 +115,8 @@ export function VehicleFormModal({
         year: existingVehicle.year || new Date().getFullYear(),
         type: existingVehicle.type,
         renavam: existingVehicle.renavam || '',
+        tare: existingVehicle.tare || 0,
+        crlvYear: existingVehicle.crlvYear || new Date().getFullYear(),
       });
     }
   }, [existingVehicle, form]);
@@ -117,28 +124,48 @@ export function VehicleFormModal({
   // Mutação para salvar o veículo
   const saveMutation = useMutation({
     mutationFn: async (data: VehicleFormValues) => {
-      const endpoint = existingVehicle 
-        ? `/api/vehicles/${existingVehicle.id}` 
-        : '/api/vehicles';
+      try {
+        const endpoint = existingVehicle 
+          ? `/api/vehicles/${existingVehicle.id}` 
+          : '/api/vehicles';
+          
+        const method = existingVehicle ? 'PATCH' : 'POST';
         
-      const method = existingVehicle ? 'PATCH' : 'POST';
-      
-      const res = await apiRequest(method, endpoint, data);
-      return await res.json();
+        console.log(`Enviando requisição ${method} para ${endpoint}`, data);
+        
+        const res = await apiRequest(method, endpoint, data);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => null);
+          console.error('Erro na resposta da API:', errorData);
+          throw new Error(errorData?.message || `Erro ao ${existingVehicle ? 'atualizar' : 'cadastrar'} o veículo.`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error('Erro ao enviar dados do veículo:', error);
+        throw error;
+      }
     },
     onSuccess: (savedVehicle: Vehicle) => {
+      // Invalidar todas as queries relacionadas a veículos para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
+      
+      // Mostrar mensagem de sucesso
       toast({
         title: existingVehicle ? "Veículo atualizado" : "Veículo cadastrado",
         description: `Placa ${savedVehicle.plate} ${existingVehicle ? 'atualizada' : 'cadastrada'} com sucesso!`,
       });
+      
+      // Chamar callback de sucesso se fornecido
       if (onSuccess) {
         onSuccess(savedVehicle);
       }
+      
+      // Limpar o formulário e fechar o modal
       form.reset();
       onClose();
     },
     onError: (error: Error) => {
+      console.error('Erro na mutação:', error);
       toast({
         title: "Erro",
         description: `Não foi possível ${existingVehicle ? 'atualizar' : 'cadastrar'} o veículo: ${error.message}`,
