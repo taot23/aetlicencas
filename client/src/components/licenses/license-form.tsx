@@ -107,6 +107,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: draft.secondTrailerId || undefined,
       flatbedId: draft.flatbedId || undefined,
       length: draft.length / 100, // Convert from cm to meters for display
+      width: draft.width ? draft.width / 100 : undefined, // Convert from cm to meters for display
+      height: draft.height ? draft.height / 100 : undefined, // Convert from cm to meters for display
       additionalPlates: draft.additionalPlates || [],
       additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
@@ -121,7 +123,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       dollyId: undefined,
       secondTrailerId: undefined,
       flatbedId: undefined,
-      length: 0,
+      length: 19.8, // Valor mínimo padrão
+      width: undefined,
+      height: undefined,
       additionalPlates: [],
       states: [],
       additionalPlatesDocuments: [],
@@ -587,10 +591,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       type="text" 
                       inputMode="decimal"
                       pattern="[0-9]*[.,]?[0-9]*"
-                      placeholder="Ex.: 19.80" 
+                      placeholder="Ex.: 19,80" 
                       {...field}
                       className="mobile-input h-10"
-                      value={field.value || ''}
+                      value={
+                        typeof field.value === 'number' 
+                          ? field.value.toString().replace('.', ',') 
+                          : field.value || ''
+                      }
                       onFocus={(e) => {
                         // Adicionar a classe ao body quando o input receber foco
                         document.body.classList.add('keyboard-active');
@@ -607,14 +615,104 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       }}
                       onChange={(e) => {
                         // Permite apenas números e um único separador decimal (ponto ou vírgula)
-                        const value = e.target.value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
+                        const value = e.target.value;
+                        // Substituir vírgula por ponto e garantir que só tenha um separador decimal
+                        const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
                         // Converte para número e atualiza o campo
-                        field.onChange(parseFloat(value) || 0);
+                        field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
                       }}
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-muted-foreground mt-1">
-                    Use o teclado numérico para digitar o comprimento em metros
+                    Digite o comprimento em metros (min: 19,80 - max: 30,00)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="width"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Largura do Conjunto (metros)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="text" 
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,]?[0-9]*"
+                      placeholder="Ex.: 2,60" 
+                      {...field}
+                      className="mobile-input h-10"
+                      value={
+                        typeof field.value === 'number' 
+                          ? field.value.toString().replace('.', ',') 
+                          : field.value || ''
+                      }
+                      onFocus={(e) => {
+                        document.body.classList.add('keyboard-active');
+                        window.scrollTo(0, 0);
+                        setTimeout(() => {
+                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                      }}
+                      onBlur={() => {
+                        document.body.classList.remove('keyboard-active');
+                      }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
+                        field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-muted-foreground mt-1">
+                    Informe a largura total do conjunto em metros
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="height"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Altura do Conjunto (metros)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="text" 
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,]?[0-9]*"
+                      placeholder="Ex.: 4,40" 
+                      {...field}
+                      className="mobile-input h-10"
+                      value={
+                        typeof field.value === 'number' 
+                          ? field.value.toString().replace('.', ',') 
+                          : field.value || ''
+                      }
+                      onFocus={(e) => {
+                        document.body.classList.add('keyboard-active');
+                        window.scrollTo(0, 0);
+                        setTimeout(() => {
+                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                      }}
+                      onBlur={() => {
+                        document.body.classList.remove('keyboard-active');
+                      }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
+                        field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-muted-foreground mt-1">
+                    Informe a altura total do conjunto em metros
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -241,6 +241,8 @@ export const licenseRequests = pgTable("license_requests", {
   secondTrailerId: integer("second_trailer_id").references(() => vehicles.id),
   flatbedId: integer("flatbed_id").references(() => vehicles.id),
   length: integer("length").notNull(), // total length in cm
+  width: integer("width"), // width in cm
+  height: integer("height"), // height in cm
   additionalPlates: text("additional_plates").array(), // Lista de placas adicionais 
   additionalPlatesDocuments: text("additional_plates_documents").array(), // URLs dos documentos das placas adicionais
   states: text("states").array().notNull(),
@@ -277,8 +279,13 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
   })
   .extend({
     transporterId: z.number().positive("Um transportador deve ser selecionado"),
-    states: z.array(z.string()).min(1, "Select at least one state"),
-    length: z.coerce.number().min(1, "Length must be greater than 0"),
+    states: z.array(z.string()).min(1, "Selecione pelo menos um estado"),
+    length: z.coerce.number()
+      .min(19.8, "O comprimento deve ser de no mínimo 19,80 metros")
+      .max(30.0, "O comprimento deve ser de no máximo 30,00 metros")
+      .refine(val => licenseTypeEnum.safeParse("flatbed").success ? true : val >= 19.8, "O comprimento deve ser de no mínimo 19,80 metros para este tipo de conjunto"),
+    width: z.coerce.number().min(1, "A largura deve ser maior que 0").optional(),
+    height: z.coerce.number().min(1, "A altura deve ser maior que 0").optional(),
     additionalPlates: z.array(z.string()).optional().default([]),
     additionalPlatesDocuments: z.array(z.string()).optional().default([]),
   });
