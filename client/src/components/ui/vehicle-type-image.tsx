@@ -6,6 +6,7 @@ import bitrain6AxlesImg from '../../assets/vehicles/bitrain_6_axles.png';
 import bitrain7AxlesImg from '../../assets/vehicles/bitrain_7_axles.png';
 import bitrain9AxlesImg from '../../assets/vehicles/bitrain_9_axles.png';
 import roadtrain9AxlesImg from '../../assets/vehicles/roadtrain_9_axles.png';
+import flatbedImg from '../../assets/vehicles/flatbed.svg';
 
 interface VehicleTypeImageProps {
   type: string;
@@ -52,6 +53,15 @@ export const VehicleTypeImage: FC<VehicleTypeImageProps> = ({
         <img 
           src={roadtrain9AxlesImg} 
           alt="Rodotrem 9 eixos" 
+          className={`w-auto h-${iconSize} ${className}`}
+          style={{ maxHeight: `${iconSize * 4}px` }}
+        />
+      );
+    case 'flatbed':
+      return (
+        <img 
+          src={flatbedImg} 
+          alt="Prancha" 
           className={`w-auto h-${iconSize} ${className}`}
           style={{ maxHeight: `${iconSize * 4}px` }}
         />
