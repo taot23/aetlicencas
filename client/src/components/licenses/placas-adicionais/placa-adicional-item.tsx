@@ -8,9 +8,10 @@ interface PlacaAdicionalItemProps {
   index: number;
   vehicles: Vehicle[] | undefined;
   onRemove: (index: number) => void;
+  onEdit?: (plate: string) => void;
 }
 
-export function PlacaAdicionalItem({ plate, index, vehicles, onRemove }: PlacaAdicionalItemProps) {
+export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }: PlacaAdicionalItemProps) {
   // Verificar se a placa está registrada entre os veículos
   const isRegistered = React.useMemo(() => {
     if (!vehicles || !Array.isArray(vehicles) || vehicles.length === 0) {
@@ -23,13 +24,13 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove }: PlacaAd
     );
   }, [plate, vehicles]);
 
-  // Função para redirecionar para o formulário de veículos
-  const navigateToVehicleForm = () => {
-    // Salva a placa no localStorage para preencher automaticamente no formulário de veículos
-    localStorage.setItem('preFillPlate', plate);
-    
-    // Navega para a página de cadastro de veículos
-    window.location.href = '/vehicles';
+  // Função para abrir o formulário de veículos em modal (sem redirecionar)
+  // Esta função será implementada pelo componente pai
+  const handleEditVehicle = () => {
+    // Chama a função onEdit passada pelo componente pai, enviando a placa
+    if (onEdit) {
+      onEdit(plate);
+    }
   };
 
   return (
@@ -54,7 +55,7 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove }: PlacaAd
           type="button"
           variant="ghost"
           size="sm"
-          onClick={navigateToVehicleForm}
+          onClick={handleEditVehicle}
           className="h-8 w-8 p-0"
           title={isRegistered ? "Editar veículo" : "Cadastrar veículo"}
         >

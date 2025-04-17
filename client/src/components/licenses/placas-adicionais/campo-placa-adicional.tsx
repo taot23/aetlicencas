@@ -204,6 +204,13 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                     index={index}
                     vehicles={vehicles}
                     onRemove={handleRemovePlate}
+                    onEdit={(plateToEdit) => {
+                      // Abrir modal para edição/cadastro de veículo
+                      // Implementar lógica de modal inline
+                      console.log("Editar veículo:", plateToEdit);
+                      // Aqui deve chamar uma função passada pelo componente pai
+                      // para abrir o modal de formulário de veículo
+                    }}
                   />
                 ))}
               </div>
