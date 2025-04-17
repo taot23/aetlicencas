@@ -5,6 +5,7 @@ import { Truck } from 'lucide-react';
 import bitrain6AxlesImg from '../../assets/vehicles/bitrain_6_axles.png';
 import bitrain7AxlesImg from '../../assets/vehicles/bitrain_7_axles.png';
 import bitrain9AxlesImg from '../../assets/vehicles/bitrain_9_axles.png';
+import roadtrain9AxlesImg from '../../assets/vehicles/roadtrain_9_axles.png';
 
 interface VehicleTypeImageProps {
   type: string;
@@ -42,6 +43,15 @@ export const VehicleTypeImage: FC<VehicleTypeImageProps> = ({
         <img 
           src={bitrain7AxlesImg} 
           alt="Bitrem 7 eixos" 
+          className={`w-auto h-${iconSize} ${className}`}
+          style={{ maxHeight: `${iconSize * 4}px` }}
+        />
+      );
+    case 'roadtrain_9_axles':
+      return (
+        <img 
+          src={roadtrain9AxlesImg} 
+          alt="Rodotrem 9 eixos" 
           className={`w-auto h-${iconSize} ${className}`}
           style={{ maxHeight: `${iconSize * 4}px` }}
         />

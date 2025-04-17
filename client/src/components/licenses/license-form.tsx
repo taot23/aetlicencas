@@ -548,7 +548,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                     <SelectContent>
                       <SelectItem value="roadtrain_9_axles">
                         <div className="flex items-center">
-                          <Truck className="mr-2 h-4 w-4" />
+                          <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={16} />
                           <span>Rodotrem 9 eixos</span>
                         </div>
                       </SelectItem>
@@ -728,7 +728,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         {licenseType === 'roadtrain_9_axles' && (
           <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
             <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
-              <Truck className="mr-2 h-5 w-5" />
+              <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={20} />
               Veículos do Rodotrem
             </h3>
             
@@ -1078,6 +1078,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={20} />
             ) : licenseType === 'bitrain_7_axles' ? (
               <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={20} />
+            ) : licenseType === 'roadtrain_9_axles' ? (
+              <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={20} />
             ) : (
               <Truck className="mr-2 h-5 w-5" />
             )}
