@@ -1057,7 +1057,50 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             render={() => (
               <FormItem>
                 <div className="mb-2">
-                  <FormLabel className="text-base font-medium">Selecione os estados para emissão de licença</FormLabel>
+                  <div className="flex justify-between items-center">
+                    <FormLabel className="text-base font-medium">Selecione os estados para emissão de licença</FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="states"
+                      render={({ field }) => {
+                        const allSelected = brazilianStates.length === (field.value || []).length;
+                        return (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs flex gap-1 items-center"
+                            onClick={() => {
+                              if (allSelected) {
+                                // Desselecionar todos
+                                field.onChange([]);
+                              } else {
+                                // Selecionar todos
+                                field.onChange(brazilianStates.map(state => state.code));
+                              }
+                            }}
+                          >
+                            {allSelected ? (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                </svg>
+                                Desmarcar Todos
+                              </>
+                            ) : (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="9 11 12 14 22 4"></polyline>
+                                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                                Selecionar Todos
+                              </>
+                            )}
+                          </Button>
+                        );
+                      }}
+                    />
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1 mb-3">
                     Escolha um ou mais estados onde a licença será utilizada
                   </div>
