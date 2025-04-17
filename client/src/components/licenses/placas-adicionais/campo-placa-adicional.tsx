@@ -59,17 +59,31 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     return vehicles.find(v => v.plate === plate);
   };
 
+  // Referência para os itens do comando para scroll
+  const highlightedItemRef = useRef<HTMLDivElement | null>(null);
+  
+  // Efeito para scrollar para o item destacado
+  useEffect(() => {
+    if (highlightedItemRef.current) {
+      highlightedItemRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [highlightedIndex]);
+  
   // Atualizar sugestões com base no input - sem interromper digitação
   useEffect(() => {
     if (!vehicles) return;
     
-    // Normalizar o input para busca
-    const normalized = plateInput.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    // Normalizar o input para busca - sem remover caracteres para manter compatibilidade com digitação
+    const normalized = plateInput.toUpperCase();
     
     if (normalized.length > 0) {
       // Filtrar veículos que correspondem ao padrão de busca
+      // Utiliza .includes() para buscar parcial mesmo com vírgulas/espaços
       const filtered = vehicles.filter(v => 
-        v.plate.toUpperCase().includes(normalized)
+        v.plate.toUpperCase().includes(normalized.replace(/[,\s]/g, ''))
       );
       
       // Ordenar em ordem alfabética pela placa
@@ -79,11 +93,10 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
       
       setSuggestedVehicles(sortedVehicles);
       
-      // Mostrar sugestões apenas se houver correspondências
-      // Não abrir automaticamente para não interromper digitação
-      if (sortedVehicles.length > 0) {
+      // Mostrar sugestões quando há correspondências e input tem pelo menos 1 caractere
+      if (sortedVehicles.length > 0 && plateInput.trim().length > 0) {
         setHighlightedIndex(0);
-        // Não forçar abertura do popover aqui para permitir digitação contínua
+        setOpenSuggestions(true); // Abrir sugestões automaticamente
       } else {
         setOpenSuggestions(false);
       }
@@ -95,8 +108,13 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
         .slice(0, 5);
         
       setSuggestedVehicles(initialVehicles);
-      // Não mostrar sugestões com input vazio
-      setOpenSuggestions(false);
+      
+      // Mostrar sugestões iniciais mesmo com input vazio ao clicar
+      if (document.activeElement === inputRef.current) {
+        setOpenSuggestions(true);
+      } else {
+        setOpenSuggestions(false);
+      }
     }
   }, [plateInput, vehicles]);
   
@@ -361,26 +379,63 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
-                            console.log("Enter pressionado, processando placas");
-                            handleAddPlate();
+                            
+                            // Se tiver sugestões abertas e uma estiver selecionada, adicionar essa
+                            if (openSuggestions && suggestedVehicles.length > 0) {
+                              addSinglePlate(suggestedVehicles[highlightedIndex].plate);
+                              setPlateInput("");
+                              setOpenSuggestions(false);
+                            } else {
+                              // Senão, processar o texto como está
+                              console.log("Enter pressionado, processando placas");
+                              handleAddPlate();
+                            }
                           }
                           else if (e.key === ',' || e.key === ' ') {
                             // Não bloquear digitação normal, vamos processar no onChange
                           }
-                          else if (e.key === 'ArrowDown' && suggestedVehicles.length > 0) {
+                          else if (e.key === 'ArrowDown') {
+                            // Sempre abrir sugestões ao pressionar seta para baixo
                             e.preventDefault();
-                            setHighlightedIndex((prevIndex) => 
-                              prevIndex < suggestedVehicles.length - 1 ? prevIndex + 1 : 0
-                            );
+                            
+                            if (!openSuggestions) {
+                              setOpenSuggestions(true);
+                            }
+                            
+                            if (suggestedVehicles.length > 0) {
+                              setHighlightedIndex((prevIndex) => 
+                                prevIndex < suggestedVehicles.length - 1 ? prevIndex + 1 : 0
+                              );
+                            }
                           } 
-                          else if (e.key === 'ArrowUp' && suggestedVehicles.length > 0) {
+                          else if (e.key === 'ArrowUp') {
                             e.preventDefault();
-                            setHighlightedIndex((prevIndex) => 
-                              prevIndex > 0 ? prevIndex - 1 : suggestedVehicles.length - 1
-                            );
+                            
+                            if (!openSuggestions) {
+                              setOpenSuggestions(true);
+                            }
+                            
+                            if (suggestedVehicles.length > 0) {
+                              setHighlightedIndex((prevIndex) => 
+                                prevIndex > 0 ? prevIndex - 1 : suggestedVehicles.length - 1
+                              );
+                            }
                           }
                           else if (e.key === 'Escape') {
                             setOpenSuggestions(false);
+                          } 
+                          else if (e.key === 'Tab' && openSuggestions && suggestedVehicles.length > 0) {
+                            // Selecionar a opção ao pressionar Tab
+                            e.preventDefault();
+                            addSinglePlate(suggestedVehicles[highlightedIndex].plate);
+                            setPlateInput("");
+                            setOpenSuggestions(false);
+                          }
+                        }}
+                        // Adicionar evento onfocus para mostrar sugestões
+                        onFocus={() => {
+                          if (suggestedVehicles.length > 0) {
+                            setOpenSuggestions(true);
                           }
                         }}
                         placeholder="Digite placas (separadas por vírgula, espaço ou enter)"
@@ -407,7 +462,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                   sideOffset={5}
                 >
                   <Command className="rounded-lg">
-                    <CommandList className="max-h-[200px]">
+                    <CommandList className="max-h-[200px] overflow-y-auto">
                       {suggestedVehicles.length > 0 ? (
                         <CommandGroup heading="Veículos cadastrados">
                           {suggestedVehicles.map((vehicle, index) => (
