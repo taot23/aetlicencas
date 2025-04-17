@@ -13,8 +13,8 @@ import {
   CommandItem,
   CommandList
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { VehicleFormModal } from "@/components/vehicles/vehicle-form-modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface CampoPlacaAdicionalProps {
   form: UseFormReturn<any>;
@@ -127,22 +127,17 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     
     // Dividir por vírgulas, espaços ou quebras de linha
     const parts = input.split(/[,\s\n]+/).filter(Boolean);
-    console.log("Partes divididas:", parts);
     
     // Normalizar e filtrar placas válidas
     const validPlates = parts
       .map(part => {
         const normalized = part.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
-        console.log(`Placa normalizada: "${normalized}"`);
         return normalized;
       })
       .filter(plate => {
         const isValid = isValidPlateFormat(plate);
-        console.log(`Placa "${plate}" válida? ${isValid}`);
         return isValid;
       });
-      
-    console.log("Placas válidas:", validPlates);
     
     // Remover duplicatas (compatível com ES5)
     const uniquePlates: string[] = [];
@@ -152,7 +147,6 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
       }
     });
     
-    console.log("Placas únicas:", uniquePlates);
     return uniquePlates;
   };
   
@@ -242,9 +236,6 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
     // Remover a placa
     const plates = form.getValues('additionalPlates') || [];
     
-    // Placa que será removida
-    const plateToRemove = plates[index];
-    
     // Criar mapa de documentos associados a placas (exceto a que será removida)
     const docs = form.getValues('additionalPlatesDocuments') || [];
     const docsMap = new Map<string, string>();
@@ -327,200 +318,114 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
               </div>
             )}
             
-            {/* Campo para adicionar placa com autocompletar */}
-            <div className="relative">
-              <Popover 
-                open={openSuggestions} 
-                onOpenChange={(open) => open ? setOpenSuggestions(true) : setOpenSuggestions(false)}
+            {/* Campo para adicionar placa - VERSÃO SIMPLIFICADA SEM POPOVER */}
+            <div className="flex items-start gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  ref={inputRef}
+                  value={plateInput}
+                  maxLength={80} // Aumentamos para permitir múltiplas placas
+                  onChange={(e) => {
+                    // Converter para maiúsculas e continuar digitação
+                    setPlateInput(e.target.value.toUpperCase());
+                    setInputError(null);
+                    
+                    // Verificar se o último caractere é uma vírgula ou espaço
+                    const lastChar = e.target.value.slice(-1);
+                    const isLastCharDelimiter = /[,\s]/.test(lastChar);
+                    const isTextComplete = e.target.value.length >= 7;
+                    
+                    // Se terminar com vírgula ou espaço, e tiver pelo menos 7 caracteres 
+                    // (tamanho mínimo da placa), processar múltiplas placas
+                    if (isLastCharDelimiter && isTextComplete) {
+                      // Verificar se há placas válidas antes do delimitador
+                      const platesSoFar = processMultiplePlates(e.target.value);
+                      
+                      if (platesSoFar.length > 0) {
+                        // Adicionar placas válidas
+                        platesSoFar.forEach((plate: string) => {
+                          addSinglePlate(plate);
+                        });
+                        
+                        // Limpar o campo após adicionar as placas
+                        setTimeout(() => {
+                          setPlateInput("");
+                        }, 50);
+                      }
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddPlate();
+                    }
+                  }}
+                  placeholder="Digite placas (separadas por vírgula, espaço ou enter)"
+                  className="w-full"
+                  autoComplete="off"
+                />
+                {inputError && (
+                  <p className="text-sm text-red-500 mt-1">{inputError}</p>
+                )}
+              </div>
+              <Button 
+                type="button" 
+                onClick={handleAddPlate}
+                className="mt-0"
               >
-                <PopoverTrigger asChild>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 relative">
-                      <Input
-                        ref={inputRef}
-                        value={plateInput}
-                        maxLength={80} // Aumentamos para permitir múltiplas placas
-                        onChange={(e) => {
-                          // Converter para maiúsculas e continuar digitação
-                          setPlateInput(e.target.value.toUpperCase());
-                          setInputError(null);
-                          
-                          // Verificar se o texto contém vírgulas ou espaços
-                          const hasCommaOrSpace = /[,\s]/.test(e.target.value);
-                          console.log("Texto contém vírgula ou espaço:", hasCommaOrSpace);
-                          
-                          // Verificar se o último caractere é uma vírgula ou espaço
-                          const lastChar = e.target.value.slice(-1);
-                          const isLastCharDelimiter = /[,\s]/.test(lastChar);
-                          const isTextComplete = e.target.value.length >= 7;
-                          
-                          // Se terminar com vírgula ou espaço, e tiver pelo menos 7 caracteres 
-                          // (tamanho mínimo da placa), processar múltiplas placas
-                          if (isLastCharDelimiter && isTextComplete) {
-                            console.log("Detectado delimitador no final, processando múltiplas placas");
-                            
-                            // Verificar se há placas válidas antes do delimitador
-                            const platesSoFar = processMultiplePlates(e.target.value);
-                            console.log("Placas válidas encontradas:", platesSoFar);
-                            
-                            if (platesSoFar.length > 0) {
-                              // Adicionar placas válidas
-                              platesSoFar.forEach((plate: string) => {
-                                addSinglePlate(plate);
-                              });
-                              
-                              // Limpar o campo após adicionar as placas
-                              setTimeout(() => {
-                                setPlateInput("");
-                              }, 50);
-                            }
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            
-                            // Se tiver sugestões abertas e uma estiver selecionada, adicionar essa
-                            if (openSuggestions && suggestedVehicles.length > 0) {
-                              addSinglePlate(suggestedVehicles[highlightedIndex].plate);
-                              setPlateInput("");
-                              setOpenSuggestions(false);
-                            } else {
-                              // Senão, processar o texto como está
-                              console.log("Enter pressionado, processando placas");
-                              handleAddPlate();
-                            }
-                          }
-                          else if (e.key === ',' || e.key === ' ') {
-                            // Não bloquear digitação normal, vamos processar no onChange
-                          }
-                          else if (e.key === 'ArrowDown') {
-                            // Sempre abrir sugestões ao pressionar seta para baixo
-                            e.preventDefault();
-                            
-                            if (!openSuggestions) {
-                              setOpenSuggestions(true);
-                            }
-                            
-                            if (suggestedVehicles.length > 0) {
-                              setHighlightedIndex((prevIndex) => 
-                                prevIndex < suggestedVehicles.length - 1 ? prevIndex + 1 : 0
-                              );
-                            }
-                          } 
-                          else if (e.key === 'ArrowUp') {
-                            e.preventDefault();
-                            
-                            if (!openSuggestions) {
-                              setOpenSuggestions(true);
-                            }
-                            
-                            if (suggestedVehicles.length > 0) {
-                              setHighlightedIndex((prevIndex) => 
-                                prevIndex > 0 ? prevIndex - 1 : suggestedVehicles.length - 1
-                              );
-                            }
-                          }
-                          else if (e.key === 'Escape') {
-                            setOpenSuggestions(false);
-                          } 
-                          else if (e.key === 'Tab' && openSuggestions && suggestedVehicles.length > 0) {
-                            // Selecionar a opção ao pressionar Tab
-                            e.preventDefault();
-                            addSinglePlate(suggestedVehicles[highlightedIndex].plate);
-                            setPlateInput("");
-                            setOpenSuggestions(false);
-                          }
-                        }}
-                        // Adicionar evento onfocus para mostrar sugestões
-                        onFocus={() => {
-                          if (suggestedVehicles.length > 0) {
-                            setOpenSuggestions(true);
-                          }
-                        }}
-                        placeholder="Digite placas (separadas por vírgula, espaço ou enter)"
-                        className="w-full"
-                        autoComplete="off"
-                      />
-                      {inputError && (
-                        <p className="text-sm text-red-500 mt-1">{inputError}</p>
-                      )}
-                    </div>
-                    <Button 
-                      type="button" 
-                      onClick={handleAddPlate}
-                      className="mt-0"
-                    >
-                      Adicionar
-                    </Button>
-                  </div>
-                </PopoverTrigger>
-                
-                <PopoverContent 
-                  className="p-0 w-[calc(100vw-40px)] md:w-full" 
-                  align="start" 
-                  sideOffset={5}
-                >
+                Adicionar
+              </Button>
+            </div>
+            
+            {/* Lista de sugestões */}
+            {openSuggestions && suggestedVehicles.length > 0 && (
+              <div className="relative w-full z-10">
+                <div className="absolute top-0 left-0 w-full border border-gray-200 rounded-md shadow-md bg-white">
                   <Command className="rounded-lg">
                     <CommandList className="max-h-[200px] overflow-y-auto">
-                      {suggestedVehicles.length > 0 ? (
-                        <CommandGroup heading="Veículos cadastrados">
-                          {suggestedVehicles.map((vehicle, index) => (
-                            <CommandItem
-                              key={vehicle.id}
-                              onSelect={() => {
-                                addSinglePlate(vehicle.plate);
-                                setPlateInput("");
-                                setOpenSuggestions(false);
-                              }}
-                              className={`flex items-center justify-between py-3 ${
-                                index === highlightedIndex ? "bg-muted" : ""
-                              }`}
-                              onMouseEnter={() => setHighlightedIndex(index)}
+                      <CommandGroup heading="Veículos cadastrados">
+                        {suggestedVehicles.map((vehicle, index) => (
+                          <CommandItem
+                            key={vehicle.id}
+                            onSelect={() => {
+                              addSinglePlate(vehicle.plate);
+                              setPlateInput("");
+                              setOpenSuggestions(false);
+                            }}
+                            className={`flex items-center justify-between py-3 ${
+                              index === highlightedIndex ? "bg-muted" : ""
+                            }`}
+                            onMouseEnter={() => setHighlightedIndex(index)}
+                          >
+                            <div 
+                              className="flex flex-col"
+                              ref={index === highlightedIndex ? highlightedItemRef : null}
                             >
-                              <div 
-                                className="flex flex-col"
-                                ref={index === highlightedIndex ? highlightedItemRef : null}
-                              >
-                                <span className={`font-medium text-base ${
-                                  index === highlightedIndex ? "text-primary" : ""
-                                }`}>{vehicle.plate}</span>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                  {vehicle.brand} {vehicle.model} - {
-                                    vehicle.type === "semi_trailer" ? "Semirreboque" :
-                                    vehicle.type === "dolly" ? "Dolly" :
-                                    vehicle.type === "flatbed" ? "Prancha" : 
-                                    vehicle.type
-                                  }
-                                </span>
-                              </div>
-                              <Check 
-                                className={`h-5 w-5 text-primary ${
-                                  index === highlightedIndex ? "opacity-100" : "opacity-0"
-                                }`}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      ) : (
-                        <CommandEmpty className="py-6 text-center">
-                          <p className="text-sm text-muted-foreground">
-                            {plateInput.length > 0 
-                              ? "Nenhum veículo encontrado" 
-                              : "Digite para buscar veículos"}
-                          </p>
-                          {plateInput.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Você pode adicionar placas múltiplas separadas por vírgula, espaço ou enter
-                            </p>
-                          )}
-                        </CommandEmpty>
-                      )}
+                              <span className={`font-medium text-base ${
+                                index === highlightedIndex ? "text-primary" : ""
+                              }`}>{vehicle.plate}</span>
+                              <span className="text-xs text-muted-foreground mt-1">
+                                {vehicle.brand} {vehicle.model} - {
+                                  vehicle.type === "semi_trailer" ? "Semirreboque" :
+                                  vehicle.type === "dolly" ? "Dolly" :
+                                  vehicle.type === "flatbed" ? "Prancha" : 
+                                  vehicle.type
+                                }
+                              </span>
+                            </div>
+                            <Check 
+                              className={`h-5 w-5 text-primary ${
+                                index === highlightedIndex ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
                     </CommandList>
                   </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
+              </div>
+            )}
             
             {/* Dicas e legenda */}
             <div className="space-y-3 text-xs text-gray-500 border-t pt-3 mt-3">
@@ -528,7 +433,6 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                 <p className="font-medium mb-1">Como adicionar placas:</p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Digite placas separadas por vírgula, espaço ou enter</li>
-                  <li>Selecione sugestões com as setas ↑↓ e Enter</li>
                   <li>Clique em uma sugestão para adicionar</li>
                 </ul>
               </div>
