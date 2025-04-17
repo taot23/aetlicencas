@@ -93,16 +93,20 @@ export default function TrackLicensePage() {
     }
   };
 
-  const filteredLicenses = useMemo(() => {
+  interface ExtendedLicenseWithId extends ExtendedLicense {
+    uniqueId?: string;
+  }
+  
+  // Criar uma lista expandida de licenças separadas por estado (sem duplicação quando ordenadas)
+  const expandedLicenses = useMemo(() => {
     if (!licenses) return [];
     
-    // Criar uma lista expandida de licenças separadas por estado
-    const expandedLicenses: ExtendedLicense[] = [];
+    const result: ExtendedLicenseWithId[] = [];
     
     licenses.forEach(license => {
       // Para cada estado na licença, crie uma entrada específica
       if (license.states && license.states.length > 0) {
-        license.states.forEach(state => {
+        license.states.forEach((state, index) => {
           // Verificar o status para este estado específico
           const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
           
@@ -110,8 +114,8 @@ export default function TrackLicensePage() {
           const stateFileEntry = license.stateFiles?.find(sf => sf.startsWith(`${state}:`));
           const stateFileUrl = stateFileEntry ? stateFileEntry.split(':').slice(1).join(':') : undefined;
           
-          // Criar uma cópia da licença com o estado específico
-          const stateLicense: ExtendedLicense = {
+          // Criar uma cópia da licença com o estado específico e um ID único
+          const stateLicense: ExtendedLicenseWithId = {
             ...license,
             specificState: state,
             // Substituir o array de estados com apenas este estado
@@ -119,18 +123,27 @@ export default function TrackLicensePage() {
             // Para filtros de status no frontend, usamos o status do estado específico
             specificStateStatus: stateStatus,
             // URL do arquivo deste estado específico
-            specificStateFileUrl: stateFileUrl
+            specificStateFileUrl: stateFileUrl,
+            // ID único para esta licença expandida
+            uniqueId: `${license.id}-${state}`
           };
           
-          expandedLicenses.push(stateLicense);
+          result.push(stateLicense);
         });
       } else {
-        // Se não houver estados, apenas adicione a licença como está
-        expandedLicenses.push({...license});
+        // Se não houver estados, apenas adicione a licença como está com ID único
+        result.push({
+          ...license,
+          uniqueId: `${license.id}-default`
+        });
       }
     });
     
-    // Aplicar filtros à lista expandida
+    return result;
+  }, [licenses]);
+  
+  // Aplicar filtros à lista expandida
+  const filteredLicenses = useMemo(() => {
     return expandedLicenses.filter(license => {
       const matchesSearch = !searchTerm || 
         license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,14 +161,15 @@ export default function TrackLicensePage() {
       
       return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [licenses, searchTerm, statusFilter, dateFilter]);
+  }, [expandedLicenses, searchTerm, statusFilter, dateFilter]);
 
-  // Ordenar licenças filtradas
+  // Ordenar licenças filtradas (sem duplicações)
   const sortedLicenses = useMemo(() => {
     if (!sortColumn || !sortDirection) {
       return filteredLicenses;
     }
 
+    // Ordenar o array
     return [...filteredLicenses].sort((a, b) => {
       // Mapeamento especial para campos aninhados
       let aValue: any, bValue: any;
