@@ -19,6 +19,7 @@ import { Pencil, Trash, Send, ExternalLink, Download, FileText } from "lucide-re
 import { StatusBadge } from "./status-badge";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SortableHeader } from "@/components/ui/sortable-header";
 
 interface LicenseListProps {
   licenses: LicenseRequest[];
@@ -27,6 +28,9 @@ interface LicenseListProps {
   onEdit?: (license: LicenseRequest) => void;
   onView?: (license: LicenseRequest) => void;
   onRefresh: () => void;
+  sortColumn?: string | null;
+  sortDirection?: 'asc' | 'desc' | null;
+  onSort?: (column: string) => void;
 }
 
 export function LicenseList({ 
@@ -35,7 +39,10 @@ export function LicenseList({
   isDraftList = false,
   onEdit, 
   onView,
-  onRefresh 
+  onRefresh,
+  sortColumn = null,
+  sortDirection = null,
+  onSort
 }: LicenseListProps) {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -306,12 +313,80 @@ export function LicenseList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{isDraftList ? "Nº Rascunho" : "Nº do Pedido"}</TableHead>
-              <TableHead>Tipo de Conjunto</TableHead>
-              <TableHead>Placa Principal</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>{isDraftList ? "Última Modificação" : "Data Solicitação"}</TableHead>
-              {!isDraftList && <TableHead>Status</TableHead>}
+              {onSort ? (
+                <SortableHeader
+                  column="requestNumber"
+                  label={isDraftList ? "Nº Rascunho" : "Nº do Pedido"}
+                  currentSort={sortColumn}
+                  currentDirection={sortDirection}
+                  onSort={onSort}
+                />
+              ) : (
+                <TableHead>{isDraftList ? "Nº Rascunho" : "Nº do Pedido"}</TableHead>
+              )}
+              
+              {onSort ? (
+                <SortableHeader
+                  column="type"
+                  label="Tipo de Conjunto"
+                  currentSort={sortColumn}
+                  currentDirection={sortDirection}
+                  onSort={onSort}
+                />
+              ) : (
+                <TableHead>Tipo de Conjunto</TableHead>
+              )}
+              
+              {onSort ? (
+                <SortableHeader
+                  column="mainVehiclePlate"
+                  label="Placa Principal"
+                  currentSort={sortColumn}
+                  currentDirection={sortDirection}
+                  onSort={onSort}
+                />
+              ) : (
+                <TableHead>Placa Principal</TableHead>
+              )}
+              
+              {onSort ? (
+                <SortableHeader
+                  column="state"
+                  label="Estado"
+                  currentSort={sortColumn}
+                  currentDirection={sortDirection}
+                  onSort={onSort}
+                />
+              ) : (
+                <TableHead>Estado</TableHead>
+              )}
+              
+              {onSort ? (
+                <SortableHeader
+                  column={isDraftList ? "updatedAt" : "createdAt"}
+                  label={isDraftList ? "Última Modificação" : "Data Solicitação"}
+                  currentSort={sortColumn}
+                  currentDirection={sortDirection}
+                  onSort={onSort}
+                />
+              ) : (
+                <TableHead>{isDraftList ? "Última Modificação" : "Data Solicitação"}</TableHead>
+              )}
+              
+              {!isDraftList && (
+                onSort ? (
+                  <SortableHeader
+                    column="status"
+                    label="Status"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={onSort}
+                  />
+                ) : (
+                  <TableHead>Status</TableHead>
+                )
+              )}
+              
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

@@ -20,14 +20,15 @@ import { format } from "date-fns";
 import { getLicenseTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
+import { SortableHeader } from "@/components/ui/sortable-header";
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
-  
-
+  const [sortColumn, setSortColumn] = useState<string | null>("createdAt");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>('desc');
 
   const { toast } = useToast();
   
@@ -67,15 +68,33 @@ export default function TrackLicensePage() {
   }, [licenses, toast]);
 
   // Otimizado usando useMemo para evitar recálculos desnecessários
+  // Criar interface estendida para a licença com estado específico
+  interface ExtendedLicense extends LicenseRequest {
+    specificState?: string;
+    specificStateStatus?: string;
+    specificStateFileUrl?: string;
+  }
+
+  // Função para ordenar licenças
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Se já está ordenando por esta coluna, alterna a direção
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection('asc');
+      } else {
+        setSortDirection('asc');
+      }
+    } else {
+      // Nova coluna selecionada, começa com ascendente
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   const filteredLicenses = useMemo(() => {
     if (!licenses) return [];
-    
-    // Criar uma interface estendida para a licença com estado específico
-    interface ExtendedLicense extends LicenseRequest {
-      specificState?: string;
-      specificStateStatus?: string;
-      specificStateFileUrl?: string;
-    }
     
     // Criar uma lista expandida de licenças separadas por estado
     const expandedLicenses: ExtendedLicense[] = [];
@@ -130,6 +149,70 @@ export default function TrackLicensePage() {
       return matchesSearch && matchesStatus && matchesDate;
     });
   }, [licenses, searchTerm, statusFilter, dateFilter]);
+
+  // Ordenar licenças filtradas
+  const sortedLicenses = useMemo(() => {
+    if (!sortColumn || !sortDirection) {
+      return filteredLicenses;
+    }
+
+    return [...filteredLicenses].sort((a, b) => {
+      // Mapeamento especial para campos aninhados
+      let aValue, bValue;
+      
+      // Tratamento especial para status específico do estado
+      if (sortColumn === 'status') {
+        aValue = a.specificStateStatus || a.status;
+        bValue = b.specificStateStatus || b.status;
+      } else if (sortColumn === 'state') {
+        aValue = a.specificState || (a.states && a.states.length > 0 ? a.states[0] : '');
+        bValue = b.specificState || (b.states && b.states.length > 0 ? b.states[0] : '');
+      } else {
+        // Campos regulares
+        aValue = a[sortColumn as keyof typeof a];
+        bValue = b[sortColumn as keyof typeof b];
+      }
+      
+      // Tratamento especial para datas
+      if (sortColumn === 'createdAt' || sortColumn === 'updatedAt') {
+        // Se ambos os valores são nulos, são considerados iguais
+        if (!aValue && !bValue) return 0;
+        // Se apenas um valor é nulo, o não nulo vem primeiro
+        if (!aValue) return sortDirection === 'asc' ? 1 : -1;
+        if (!bValue) return sortDirection === 'asc' ? -1 : 1;
+        
+        // Ambos são datas válidas
+        const dateA = new Date(aValue as string);
+        const dateB = new Date(bValue as string);
+        
+        return sortDirection === 'asc' 
+          ? dateA.getTime() - dateB.getTime() 
+          : dateB.getTime() - dateA.getTime();
+      }
+      
+      // Para strings, fazer comparação de texto
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
+      }
+      
+      // Para números e outros tipos
+      if (aValue === bValue) return 0;
+      
+      if (aValue === null || aValue === undefined) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      
+      if (bValue === null || bValue === undefined) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      
+      return sortDirection === 'asc' 
+        ? (aValue < bValue ? -1 : 1) 
+        : (bValue < aValue ? -1 : 1);
+    });
+  }, [filteredLicenses, sortColumn, sortDirection]);
 
   const handleViewLicense = (license: LicenseRequest) => {
     setSelectedLicense(license);
@@ -200,10 +283,13 @@ export default function TrackLicensePage() {
       </div>
 
       <LicenseList 
-        licenses={filteredLicenses || []} 
+        licenses={sortedLicenses || []} 
         isLoading={isLoading}
         onView={handleViewLicense}
         onRefresh={refetch}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        onSort={handleSort}
       />
 
       {selectedLicense && (
