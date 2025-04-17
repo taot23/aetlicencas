@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -51,6 +51,16 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   
   // Estado para o CMT (Capacidade Máxima de Tração)
   const [cmt, setCmt] = useState<number | undefined>(undefined);
+  
+  // Verificar se há uma placa pré-preenchida (vinda de outro componente)
+  useEffect(() => {
+    const preFillPlate = localStorage.getItem('preFillPlate');
+    if (preFillPlate && form) {
+      form.setValue('plate', preFillPlate);
+      // Remover do localStorage depois de usar
+      localStorage.removeItem('preFillPlate');
+    }
+  }, []);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
