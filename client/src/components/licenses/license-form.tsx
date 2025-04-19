@@ -820,16 +820,16 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         document.body.classList.remove('keyboard-active');
                       }}
                       onChange={(e) => {
-                        // Permite a entrada com vírgula para melhor experiência do usuário
+                        // Nova implementação que preserva a vírgula durante a digitação
                         const value = e.target.value;
                         
-                        // Preservar a entrada tal como digitada para exibição
-                        e.target.value = value;
+                        // A novidade está aqui: NÃO alterar o conteúdo do campo na tela
+                        // durante a digitação, para permitir inserir a vírgula
                         
-                        // Sanitizar o valor para conversão
+                        // Sanitizar o valor apenas para o modelo de dados interno
                         const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
                         
-                        // Converter para número e atualizar o campo interno
+                        // Atualizar o campo interno com o valor numérico
                         field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
                       }}
                     />
