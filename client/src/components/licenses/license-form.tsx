@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   insertLicenseRequestSchema, 
@@ -12,7 +12,6 @@ import {
   Vehicle,
   LicenseRequest,
   Transporter,
-  insertVehicleSchema
 } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -36,263 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CampoPlacaAdicional } from "./placas-adicionais";
-import { 
-  LoaderCircle,
-  X, 
-  Plus, 
-  Truck, 
-  Search, 
-  Upload, 
-  Building2, 
-  Link as LinkIcon,
-  FileUp,
-  Check
-} from "lucide-react";
+import { LoaderCircle, X, Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Link } from "wouter";
-import { useOnClickOutside } from "@/hooks/use-on-click-outside";
-import { VehicleTypeImage } from "@/components/ui/vehicle-type-image";
-
-// Tipos de carga por categoria
-const NON_FLATBED_CARGO_TYPES = [
-  { value: "dry_cargo", label: "Carga Seca" },
-  { value: "liquid_cargo", label: "Líquida" },
-  { value: "live_cargo", label: "Viva" },
-  { value: "sugar_cane", label: "Cana de Açúcar" }
-];
-
-const FLATBED_CARGO_TYPES = [
-  { value: "indivisible_cargo", label: "Carga Indivisível" },
-  { value: "agricultural_machinery", label: "Máquinas Agrícolas" },
-  { value: "oversized", label: "SUPERDIMENSIONADA" }
-];
-
-// Limites dimensionais
-const DIMENSION_LIMITS = {
-  default: {
-    maxLength: 30.00,
-    minLength: 19.80,
-    maxWidth: 2.60,
-    maxHeight: 4.40
-  },
-  flatbed: {
-    maxLength: 25.00,
-    minLength: 0,
-    maxWidth: 3.20,
-    maxHeight: 4.95
-  },
-  oversized: {
-    // Sem limites pré-definidos
-    maxLength: 999.99,
-    minLength: 0,
-    maxWidth: 999.99,
-    maxHeight: 999.99
-  }
-};
-
-// Funções auxiliares para formatar campos de dimensão com vírgula e limites específicos
-function formatNumericInput(value: string, maxDigits: number = 6): string {
-  // Esta é uma função básica que apenas formata a entrada, preservando a digitação
-  // e garantindo que o formato esteja correto, sem aplicar regras de negócio
-  
-  // Remover caracteres inválidos (manter apenas números, vírgula e ponto)
-  let formattedValue = value.replace(/[^\d.,]/g, '');
-  
-  // Substituir ponto por vírgula para padronização
-  formattedValue = formattedValue.replace('.', ',');
-  
-  // Garantir que não haja mais de uma vírgula
-  const parts = formattedValue.split(',');
-  if (parts.length > 2) {
-    formattedValue = parts[0] + ',' + parts.slice(1).join('');
-  }
-  
-  // Limitar o tamanho total do número
-  if (formattedValue.length > maxDigits) {
-    // Se tiver parte decimal, limitar o total considerando a vírgula
-    if (formattedValue.includes(',')) {
-      const [integer, decimal] = formattedValue.split(',');
-      if (integer.length >= maxDigits) {
-        formattedValue = integer.substring(0, maxDigits);
-      } else {
-        const remainingDigits = maxDigits - integer.length - 1; // -1 para a vírgula
-        formattedValue = integer + ',' + decimal.substring(0, remainingDigits);
-      }
-    } else {
-      formattedValue = formattedValue.substring(0, maxDigits);
-    }
-  }
-  
-  return formattedValue;
-}
-
-// Esta função completa os zeros para o formato visual final (00,00) sem arredondamento
-function formatFinalValue(value: string): string {
-  if (!value) return '';
-  
-  // Remover qualquer caractere que não seja número, vírgula ou ponto
-  let cleanValue = value.replace(/[^\d.,]/g, '');
-  
-  // Substituir ponto por vírgula para padronização
-  cleanValue = cleanValue.replace('.', ',');
-  
-  // Separar parte inteira e decimal
-  const parts = cleanValue.split(',');
-  const integerPart = parts[0] || '0';
-  
-  // Se não tem parte decimal, adicionar ,00
-  if (parts.length === 1) {
-    return integerPart + ',00';
-  }
-  
-  // Garantir exatamente 2 casas decimais sem arredondamento
-  let decimalPart = parts[1] || '';
-  
-  // Truncar para exatamente 2 dígitos se tiver mais
-  if (decimalPart.length > 2) {
-    decimalPart = decimalPart.substring(0, 2);
-  }
-  
-  // Completar com zeros se tiver menos de 2 dígitos
-  while (decimalPart.length < 2) {
-    decimalPart += '0';
-  }
-  
-  return integerPart + ',' + decimalPart;
-}
-
-// Função para limitar comprimento (19,80 a 30,00 metros para maioria dos conjuntos)
-function formatLengthInput(value: string, licenseType: string, cargoType?: string): { 
-  displayValue: string; 
-  numericValue: number | undefined; 
-} {
-  // Formatar entrada numérica padrão
-  const formattedValue = formatNumericInput(value);
-  
-  // Converter para número para verificar limites
-  const numericValue = parseFloat(formattedValue.replace(',', '.'));
-  
-  // Se não for um número, retornar valor formatado apenas
-  if (isNaN(numericValue)) {
-    return {
-      displayValue: formattedValue,
-      numericValue: undefined
-    };
-  }
-  
-  // Determinar limites com base no tipo de licença e carga
-  const isFlatbed = licenseType === 'flatbed';
-  const isOversized = cargoType === 'oversized';
-  
-  // Obter limites baseados no tipo
-  let limits = DIMENSION_LIMITS.default;
-  if (isFlatbed) {
-    limits = isOversized ? DIMENSION_LIMITS.oversized : DIMENSION_LIMITS.flatbed;
-  }
-  
-  let finalValue = formattedValue;
-  let finalNumeric = numericValue;
-  
-  // Durante a digitação, apenas verificamos limites máximos
-  // para permitir que o usuário digite livremente valores abaixo do mínimo
-  if (numericValue > limits.maxLength) {
-    finalNumeric = limits.maxLength;
-  }
-  
-  return {
-    displayValue: finalValue,
-    numericValue: finalNumeric
-  };
-}
-
-// Função para limitar largura (2,60 metros para conjuntos normais, 3,20 para prancha)
-function formatWidthInput(value: string, licenseType: string, cargoType?: string): { 
-  displayValue: string; 
-  numericValue: number | undefined; 
-} {
-  // Formatar entrada numérica padrão
-  const formattedValue = formatNumericInput(value);
-  
-  // Converter para número para verificar limites
-  const numericValue = parseFloat(formattedValue.replace(',', '.'));
-  
-  // Se não for um número, retornar valor formatado apenas
-  if (isNaN(numericValue)) {
-    return {
-      displayValue: formattedValue,
-      numericValue: undefined
-    };
-  }
-  
-  // Determinar limites com base no tipo de licença e carga
-  const isFlatbed = licenseType === 'flatbed';
-  const isOversized = cargoType === 'oversized';
-  
-  // Obter limites baseados no tipo
-  let limits = DIMENSION_LIMITS.default;
-  if (isFlatbed) {
-    limits = isOversized ? DIMENSION_LIMITS.oversized : DIMENSION_LIMITS.flatbed;
-  }
-  
-  let finalValue = formattedValue;
-  let finalNumeric = numericValue;
-  
-  // Durante a digitação, apenas verificamos limites máximos
-  // para permitir que o usuário digite livremente valores abaixo do mínimo
-  if (numericValue > limits.maxWidth) {
-    finalNumeric = limits.maxWidth;
-  }
-  
-  return {
-    displayValue: finalValue,
-    numericValue: finalNumeric
-  };
-}
-
-// Função para limitar altura (4,40 metros para conjuntos normais, 4,95 para prancha)
-function formatHeightInput(value: string, licenseType: string, cargoType?: string): { 
-  displayValue: string; 
-  numericValue: number | undefined; 
-} {
-  // Formatar entrada numérica padrão
-  const formattedValue = formatNumericInput(value);
-  
-  // Converter para número para verificar limites
-  const numericValue = parseFloat(formattedValue.replace(',', '.'));
-  
-  // Se não for um número, retornar valor formatado apenas
-  if (isNaN(numericValue)) {
-    return {
-      displayValue: formattedValue,
-      numericValue: undefined
-    };
-  }
-  
-  // Determinar limites com base no tipo de licença e carga
-  const isFlatbed = licenseType === 'flatbed';
-  const isOversized = cargoType === 'oversized';
-  
-  // Obter limites baseados no tipo
-  let limits = DIMENSION_LIMITS.default;
-  if (isFlatbed) {
-    limits = isOversized ? DIMENSION_LIMITS.oversized : DIMENSION_LIMITS.flatbed;
-  }
-  
-  let finalValue = formattedValue;
-  let finalNumeric = numericValue;
-  
-  // Durante a digitação, apenas verificamos limites máximos
-  // para permitir que o usuário digite livremente valores abaixo do mínimo
-  if (numericValue > limits.maxHeight) {
-    finalNumeric = limits.maxHeight;
-  }
-  
-  return {
-    displayValue: finalValue,
-    numericValue: finalNumeric
-  };
-}
 
 interface LicenseFormProps {
   draft?: LicenseRequest | null;
@@ -304,18 +48,6 @@ interface LicenseFormProps {
 export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporterId }: LicenseFormProps) {
   const { toast } = useToast();
   const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
-  const [cargoType, setCargoType] = useState<string>(draft?.cargoType || "");
-  
-  // Estado local para valores formatados de dimensões com casas decimais
-  const [lengthDisplay, setLengthDisplay] = useState<string>(
-    draft?.length ? formatFinalValue((draft.length / 100).toString().replace('.', ',')) : ""
-  );
-  const [widthDisplay, setWidthDisplay] = useState<string>(
-    draft?.width ? formatFinalValue((draft.width / 100).toString().replace('.', ',')) : ""
-  );
-  const [heightDisplay, setHeightDisplay] = useState<string>(
-    draft?.height ? formatFinalValue((draft.height / 100).toString().replace('.', ',')) : ""
-  );
 
   // Fetch vehicles for the dropdown selectors
   const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
@@ -351,8 +83,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: draft.secondTrailerId || undefined,
       flatbedId: draft.flatbedId || undefined,
       length: draft.length / 100, // Convert from cm to meters for display
-      width: draft.width ? draft.width / 100 : undefined, // Convert from cm to meters for display
-      height: draft.height ? draft.height / 100 : undefined, // Convert from cm to meters for display
       additionalPlates: draft.additionalPlates || [],
       additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
@@ -368,8 +98,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: undefined,
       flatbedId: undefined,
       length: 0,
-      width: undefined,
-      height: undefined,
       additionalPlates: [],
       states: [],
       additionalPlatesDocuments: [],
@@ -461,10 +189,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     // Adjust length from meters to centimeters for storage
     const dataToSubmit = {
       ...values,
-      cargoType, // Adiciona o tipo de carga selecionado
       length: Math.round((values.length || 0) * 100), // Convert to centimeters
-      width: values.width ? Math.round((values.width || 0) * 100) : undefined, // Convert to centimeters, se existir
-      height: values.height ? Math.round((values.height || 0) * 100) : undefined, // Convert to centimeters, se existir
     };
     
     if (values.isDraft) {
@@ -559,23 +284,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         {licenseType === 'roadtrain_9_axles' && (
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos do Rodotrem</h3>
-            
-            <div className="mb-4">
-              <Label className="mb-2 block">Tipo de Carga</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {NON_FLATBED_CARGO_TYPES.map((cargo) => (
-                  <Button
-                    key={cargo.value}
-                    type="button"
-                    variant={cargoType === cargo.value ? "default" : "outline"}
-                    className="justify-start text-left"
-                    onClick={() => setCargoType(cargo.value)}
-                  >
-                    {cargo.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
             
             <FormField
               control={form.control}
@@ -720,23 +428,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos do Bitrem</h3>
             
-            <div className="mb-4">
-              <Label className="mb-2 block">Tipo de Carga</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {NON_FLATBED_CARGO_TYPES.map((cargo) => (
-                  <Button
-                    key={cargo.value}
-                    type="button"
-                    variant={cargoType === cargo.value ? "default" : "outline"}
-                    className="justify-start text-left"
-                    onClick={() => setCargoType(cargo.value)}
-                  >
-                    {cargo.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
             <FormField
               control={form.control}
               name="tractorUnitId"
@@ -846,28 +537,6 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos da Prancha</h3>
             
-            <div className="mb-4">
-              <Label className="mb-2 block">Tipo de Carga</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {FLATBED_CARGO_TYPES.map((cargo) => (
-                  <Button
-                    key={cargo.value}
-                    type="button"
-                    variant={cargoType === cargo.value ? "default" : "outline"}
-                    className="justify-start text-left"
-                    onClick={() => setCargoType(cargo.value)}
-                  >
-                    {cargo.label}
-                  </Button>
-                ))}
-              </div>
-              {cargoType === 'oversized' && (
-                <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-sm border border-amber-200">
-                  Atenção: Para cargas SUPERDIMENSIONADAS, dimensões especiais serão permitidas.
-                </div>
-              )}
-            </div>
-            
             <FormField
               control={form.control}
               name="tractorUnitId"
@@ -938,161 +607,26 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           </div>
         )}
 
-        <div className="border border-gray-200 rounded-md p-4 space-y-4">
-          <h3 className="font-medium text-gray-800 mb-2">Dimensões do Conjunto</h3>
-          
-          <FormField
-            control={form.control}
-            name="length"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Comprimento (metros)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="text" 
-                    placeholder="19,80" 
-                    value={lengthDisplay || (field.value ? field.value.toString().replace('.', ',') : '')}
-                    onChange={(e) => {
-                      // Usar a função específica para comprimento
-                      const { displayValue, numericValue } = formatLengthInput(
-                        e.target.value, 
-                        licenseType, 
-                        cargoType
-                      );
-                      
-                      // Atualizar o display com valor formatado
-                      setLengthDisplay(displayValue);
-                      
-                      // Atualizar o valor do campo com número
-                      if (numericValue !== undefined) {
-                        field.onChange(numericValue);
-                      }
-                    }}
-                    onBlur={() => {
-                      // Ao sair do campo, formatar com zeros (ex: 19,80)
-                      if (field.value) {
-                        const finalValue = formatFinalValue(field.value.toString().replace('.', ','));
-                        setLengthDisplay(finalValue);
-                      }
-                    }}
-                  />
-                </FormControl>
-                <FormDescription>
-                  {licenseType === 'flatbed' ? (
-                    cargoType === 'oversized' ? 
-                    "Dimensões para cargas SUPERDIMENSIONADAS não possuem limites pré-definidos" :
-                    "Para pranchas, o comprimento deve estar entre 0m e 25,00m"
-                  ) : (
-                    "O comprimento deve estar entre 19,80m e 30,00m para este tipo de conjunto"
-                  )}
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="width"
-              render={({ field = { value: 0, onChange: () => {} } }) => (
-                <FormItem>
-                  <FormLabel>Largura (metros)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="text" 
-                      placeholder={licenseType === 'flatbed' ? "3,20" : "2,60"}
-                      value={widthDisplay || ''}
-                      onChange={(e) => {
-                        // Usar a função específica para largura
-                        const { displayValue, numericValue } = formatWidthInput(
-                          e.target.value, 
-                          licenseType, 
-                          cargoType
-                        );
-                        
-                        // Atualizar o display com valor formatado
-                        setWidthDisplay(displayValue);
-                        
-                        // Atualizar o valor do campo com número
-                        if (numericValue !== undefined) {
-                          field.onChange(numericValue);
-                        }
-                      }}
-                      onBlur={() => {
-                        // Ao sair do campo, formatar com zeros (ex: 2,60)
-                        if (field.value) {
-                          const finalValue = formatFinalValue(field.value.toString().replace('.', ','));
-                          setWidthDisplay(finalValue);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {licenseType === 'flatbed' ? (
-                      cargoType === 'oversized' ? 
-                      "Sem limite definido para cargas SUPERDIMENSIONADAS" :
-                      "Para pranchas, a largura deve ser de até 3,20m"
-                    ) : (
-                      "A largura deve ser de até 2,60m para este tipo de conjunto"
-                    )}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="height"
-              render={({ field = { value: 0, onChange: () => {} } }) => (
-                <FormItem>
-                  <FormLabel>Altura (metros)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="text" 
-                      placeholder={licenseType === 'flatbed' ? "4,95" : "4,40"}
-                      value={heightDisplay || ''}
-                      onChange={(e) => {
-                        // Usar a função específica para altura
-                        const { displayValue, numericValue } = formatHeightInput(
-                          e.target.value, 
-                          licenseType, 
-                          cargoType
-                        );
-                        
-                        // Atualizar o display com valor formatado
-                        setHeightDisplay(displayValue);
-                        
-                        // Atualizar o valor do campo com número
-                        if (numericValue !== undefined) {
-                          field.onChange(numericValue);
-                        }
-                      }}
-                      onBlur={() => {
-                        // Ao sair do campo, formatar com zeros (ex: 4,40)
-                        if (field.value) {
-                          const finalValue = formatFinalValue(field.value.toString().replace('.', ','));
-                          setHeightDisplay(finalValue);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {licenseType === 'flatbed' ? (
-                      cargoType === 'oversized' ? 
-                      "Sem limite definido para cargas SUPERDIMENSIONADAS" :
-                      "Para pranchas, a altura deve ser de até 4,95m"
-                    ) : (
-                      "A altura deve ser de até 4,40m para este tipo de conjunto"
-                    )}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+        <FormField
+          control={form.control}
+          name="length"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Comprimento do Conjunto (metros)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="30.5" 
+                  {...field} 
+                  value={field.value || ''} 
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="border border-gray-200 rounded-md p-4 space-y-4">
           <h3 className="font-medium text-gray-800 mb-2">Relação de Placas Adicionais</h3>
