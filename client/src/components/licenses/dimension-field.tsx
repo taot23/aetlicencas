@@ -11,6 +11,11 @@ export function handleDimensionInput(e: ChangeEvent<HTMLInputElement>, field: an
   // Limitar a digitação apenas a números, vírgula e ponto
   value = value.replace(/[^\d.,]/g, '');
   
+  // Limitar a 5 caracteres no total (incluindo vírgula)
+  if (value.length > 5) {
+    value = value.substring(0, 5);
+  }
+  
   // Assegurar que só exista um separador decimal
   const hasComma = value.indexOf(',') !== -1;
   const hasDot = value.indexOf('.') !== -1;
@@ -20,12 +25,22 @@ export function handleDimensionInput(e: ChangeEvent<HTMLInputElement>, field: an
     value = value.replace(/\./g, '');
   }
   
+  // Se digitar só números e chegar em 2 dígitos, adiciona vírgula automaticamente
+  if (value.length === 2 && !hasComma && !hasDot && /^\d+$/.test(value)) {
+    value = value + ',';
+  }
+  
+  // Converter ponto para vírgula sempre (preferência formato brasileiro)
+  if (hasDot) {
+    value = value.replace('.', ',');
+  }
+  
   // Limitar a 2 casas decimais durante a digitação
-  if (hasComma || hasDot) {
-    const parts = value.split(/[,.]/);
+  if (value.indexOf(',') !== -1) {
+    const parts = value.split(',');
     if (parts[1] && parts[1].length > 2) {
       parts[1] = parts[1].substring(0, 2);
-      value = parts.join(hasComma ? ',' : '.');
+      value = parts.join(',');
     }
   }
   
