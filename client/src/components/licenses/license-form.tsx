@@ -93,6 +93,9 @@ const DIMENSION_LIMITS = {
 
 // Funções auxiliares para formatar campos de dimensão com vírgula e limites específicos
 function formatNumericInput(value: string, maxDigits: number = 6): string {
+  // Esta é uma função básica que apenas formata a entrada, preservando a digitação
+  // e garantindo que o formato esteja correto, sem aplicar regras de negócio
+  
   // Remover caracteres inválidos (manter apenas números, vírgula e ponto)
   let formattedValue = value.replace(/[^\d.,]/g, '');
   
@@ -105,17 +108,41 @@ function formatNumericInput(value: string, maxDigits: number = 6): string {
     formattedValue = parts[0] + ',' + parts[1];
   }
   
-  // Limitar a 2 casas decimais
+  // Limitar a 2 casas decimais sem completar zeros à direita
   if (parts.length > 1 && parts[1].length > 2) {
     formattedValue = parts[0] + ',' + parts[1].substring(0, 2);
   }
   
-  // Limitar tamanho total
+  // Limitar tamanho total para evitar overflow
   if (formattedValue.length > maxDigits) {
     formattedValue = formattedValue.substring(0, maxDigits);
   }
   
   return formattedValue;
+}
+
+// Esta função completa os zeros para o formato visual final (00,00)
+function formatFinalValue(value: string): string {
+  if (!value) return '';
+  
+  const parts = value.split(',');
+  
+  // Se não tem parte decimal, adicionar ,00
+  if (parts.length === 1) {
+    return parts[0] + ',00';
+  }
+  
+  // Se tem parte decimal mas só um dígito, adicionar um zero
+  if (parts.length > 1 && parts[1].length === 1) {
+    return parts[0] + ',' + parts[1] + '0';
+  }
+  
+  // Se tem parte decimal mas está vazia, adicionar 00
+  if (parts.length > 1 && parts[1].length === 0) {
+    return parts[0] + ',00';
+  }
+  
+  return value;
 }
 
 // Função para limitar comprimento (19,80 a 30,00 metros para maioria dos conjuntos)
@@ -141,28 +168,30 @@ function formatLengthInput(value: string, licenseType: string, cargoType?: strin
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
+  // Durante a digitação, apenas verificamos limites, mas não formatamos
+  // para exibição final (com zeros fixos) para permitir edição
   if (licenseType === 'flatbed') {
     // Para pranchas com carga superdimensionada, não aplicamos limite
     if (cargoType === 'oversized') {
       if (numericValue > 100) {
-        finalValue = '100,00';
         finalNumeric = 100;
+        // Só formatamos com zeros adicionais no final da edição (onBlur)
       }
     } 
     // Para outras pranchas, limite de 25 metros
     else if (numericValue > 25) {
-      finalValue = '25,00';
       finalNumeric = 25;
+      // Só formatamos com zeros adicionais no final da edição (onBlur)
     }
   } 
   // Para os demais conjuntos
   else {
     if (numericValue < 19.80) {
-      finalValue = '19,80';
       finalNumeric = 19.8;
+      // Só formatamos com zeros adicionais no final da edição (onBlur)
     } else if (numericValue > 30) {
-      finalValue = '30,00';
       finalNumeric = 30;
+      // Só formatamos com zeros adicionais no final da edição (onBlur)
     }
   }
   
@@ -195,24 +224,26 @@ function formatWidthInput(value: string, licenseType: string, cargoType?: string
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
+  // Durante a digitação, apenas verificamos limites, mas não formatamos
+  // para exibição final (com zeros fixos) para permitir edição
   if (licenseType === 'flatbed') {
     // Para pranchas com carga superdimensionada, não aplicamos limite rígido
     if (cargoType === 'oversized') {
       if (numericValue > 100) {
-        finalValue = '100,00';
         finalNumeric = 100;
+        // Só formatamos com zeros adicionais no final da edição (onBlur)
       }
     } 
     // Para outras pranchas, limite de 3,20 metros
     else if (numericValue > 3.20) {
-      finalValue = '3,20';
       finalNumeric = 3.2;
+      // Só formatamos com zeros adicionais no final da edição (onBlur)
     }
   } 
   // Para os demais conjuntos, limite de 2,60 metros
   else if (numericValue > 2.60) {
-    finalValue = '2,60';
     finalNumeric = 2.6;
+    // Só formatamos com zeros adicionais no final da edição (onBlur)
   }
   
   return {
@@ -244,24 +275,26 @@ function formatHeightInput(value: string, licenseType: string, cargoType?: strin
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
+  // Durante a digitação, apenas verificamos limites, mas não formatamos
+  // para exibição final (com zeros fixos) para permitir edição
   if (licenseType === 'flatbed') {
     // Para pranchas com carga superdimensionada, não aplicamos limite rígido
     if (cargoType === 'oversized') {
       if (numericValue > 100) {
-        finalValue = '100,00';
         finalNumeric = 100;
+        // Só formatamos com zeros adicionais no final da edição (onBlur)
       }
     } 
     // Para outras pranchas, limite de 4,95 metros
     else if (numericValue > 4.95) {
-      finalValue = '4,95';
       finalNumeric = 4.95;
+      // Só formatamos com zeros adicionais no final da edição (onBlur)
     }
   } 
   // Para os demais conjuntos, limite de 4,40 metros
   else if (numericValue > 4.40) {
-    finalValue = '4,40';
     finalNumeric = 4.4;
+    // Só formatamos com zeros adicionais no final da edição (onBlur)
   }
   
   return {
@@ -995,9 +1028,22 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 300);
                       }}
-                      onBlur={() => {
+                      onBlur={(e) => {
                         // Remover a classe do body quando o input perder o foco
                         document.body.classList.remove('keyboard-active');
+                        
+                        // Formatar o valor final com 2 casas decimais obrigatórias
+                        if (e.target.value) {
+                          // Garantir formatação com 2 casas decimais ao sair do campo
+                          const formattedValue = formatFinalValue(e.target.value);
+                          e.target.value = formattedValue;
+                          
+                          // Atualizar valor no formulário (numérico)
+                          const numericValue = parseFloat(formattedValue.replace(',', '.'));
+                          if (!isNaN(numericValue)) {
+                            field.onChange(numericValue);
+                          }
+                        }
                       }}
                       onChange={(e) => {
                         // Usar a função específica para comprimento
