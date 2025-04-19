@@ -125,24 +125,19 @@ function formatNumericInput(value: string, maxDigits: number = 6): string {
 function formatFinalValue(value: string): string {
   if (!value) return '';
   
-  const parts = value.split(',');
+  // Converter vírgula para ponto para processamento numérico
+  const numValue = value.replace(',', '.');
   
-  // Se não tem parte decimal, adicionar ,00
-  if (parts.length === 1) {
-    return parts[0] + ',00';
-  }
+  // Converter para número e depois formatar com 2 casas decimais
+  let numericValue = parseFloat(numValue);
   
-  // Se tem parte decimal mas só um dígito, adicionar um zero
-  if (parts.length > 1 && parts[1].length === 1) {
-    return parts[0] + ',' + parts[1] + '0';
-  }
+  // Se não for um número válido, retornar vazio
+  if (isNaN(numericValue)) return '';
   
-  // Se tem parte decimal mas está vazia, adicionar 00
-  if (parts.length > 1 && parts[1].length === 0) {
-    return parts[0] + ',00';
-  }
-  
-  return value;
+  // Formatar com exatamente 2 casas decimais
+  // 1. Converter para string com 2 casas decimais (usando ponto)
+  // 2. Substituir ponto por vírgula para o formato brasileiro
+  return numericValue.toFixed(2).replace('.', ',');
 }
 
 // Função para limitar comprimento (19,80 a 30,00 metros para maioria dos conjuntos)
