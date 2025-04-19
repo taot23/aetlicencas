@@ -582,7 +582,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       </SelectItem>
                       <SelectItem value="romeo_and_juliet">
                         <div className="flex items-center">
-                          <Truck className="mr-2 h-4 w-4" />
+                          <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={16} />
                           <span>Romeu e Julieta</span>
                         </div>
                       </SelectItem>
@@ -1186,7 +1186,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             ) : licenseType === 'flatbed' ? (
               <VehicleTypeImage type="flatbed" className="mr-2" iconSize={20} />
             ) : licenseType === 'romeo_and_juliet' ? (
-              <Truck className="mr-2 h-5 w-5" />
+              <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={20} />
             ) : (
               <Truck className="mr-2 h-5 w-5" />
             )}
