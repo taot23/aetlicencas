@@ -1,9 +1,45 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+// Função utilitária para campos de dimensões (comprimento, largura, altura)
+function handleDimensionInput(e: ChangeEvent<HTMLInputElement>, field: any) {
+  // Campo inteligente para dimensões que aceita tanto ponto quanto vírgula
+  let value = e.target.value;
+  
+  // Limitar a digitação apenas a números, vírgula e ponto
+  value = value.replace(/[^\d.,]/g, '');
+  
+  // Assegurar que só exista um separador decimal
+  const hasComma = value.indexOf(',') !== -1;
+  const hasDot = value.indexOf('.') !== -1;
+  
+  if (hasComma && hasDot) {
+    // Se tiver ambos, remover o ponto
+    value = value.replace(/\./g, '');
+  }
+  
+  // Limitar a 2 casas decimais durante a digitação
+  if (hasComma || hasDot) {
+    const parts = value.split(/[,.]/);
+    if (parts[1] && parts[1].length > 2) {
+      parts[1] = parts[1].substring(0, 2);
+      value = parts.join(hasComma ? ',' : '.');
+    }
+  }
+  
+  // Preservar o exato valor digitado na tela
+  e.target.value = value;
+  
+  // Sanitizar para o modelo interno (sempre com ponto)
+  const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
+  
+  // Atualizar o campo interno com o valor numérico
+  field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
+}
 import { 
   insertLicenseRequestSchema, 
   insertDraftLicenseSchema, 
@@ -819,19 +855,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         // Remover a classe do body quando o input perder o foco
                         document.body.classList.remove('keyboard-active');
                       }}
-                      onChange={(e) => {
-                        // Nova implementação que preserva a vírgula durante a digitação
-                        const value = e.target.value;
-                        
-                        // A novidade está aqui: NÃO alterar o conteúdo do campo na tela
-                        // durante a digitação, para permitir inserir a vírgula
-                        
-                        // Sanitizar o valor apenas para o modelo de dados interno
-                        const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-                        
-                        // Atualizar o campo interno com o valor numérico
-                        field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
-                      }}
+                      onChange={(e) => handleDimensionInput(e, field)}
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-muted-foreground mt-1">
