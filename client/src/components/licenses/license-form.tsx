@@ -37,6 +37,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoaderCircle, X, Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { VehicleTypeImage } from "@/components/ui/vehicle-type-image";
 
 interface LicenseFormProps {
   draft?: LicenseRequest | null;
@@ -83,6 +84,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: draft.secondTrailerId || undefined,
       flatbedId: draft.flatbedId || undefined,
       length: draft.length / 100, // Convert from cm to meters for display
+      width: draft.width ? draft.width / 100 : undefined, // Convert from cm to meters for display
+      height: draft.height ? draft.height / 100 : undefined, // Convert from cm to meters for display
       additionalPlates: draft.additionalPlates || [],
       additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
@@ -98,6 +101,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: undefined,
       flatbedId: undefined,
       length: 0,
+      width: undefined,
+      height: undefined,
       additionalPlates: [],
       states: [],
       additionalPlatesDocuments: [],
@@ -190,6 +195,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     const dataToSubmit = {
       ...values,
       length: Math.round((values.length || 0) * 100), // Convert to centimeters
+      width: values.width ? Math.round(values.width * 100) : undefined, // Convert to centimeters if exists
+      height: values.height ? Math.round(values.height * 100) : undefined, // Convert to centimeters if exists
     };
     
     if (values.isDraft) {
@@ -261,20 +268,32 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipo de Conjunto</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tipo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="roadtrain_9_axles">Rodotrem 9 eixos</SelectItem>
-                  <SelectItem value="bitrain_9_axles">Bitrem 9 eixos</SelectItem>
-                  <SelectItem value="bitrain_7_axles">Bitrem 7 eixos</SelectItem>
-                  <SelectItem value="bitrain_6_axles">Bitrem 6 eixos</SelectItem>
-                  <SelectItem value="flatbed">Prancha</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col space-y-3">
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um tipo" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="roadtrain_9_axles">Rodotrem 9 eixos</SelectItem>
+                    <SelectItem value="bitrain_9_axles">Bitrem 9 eixos</SelectItem>
+                    <SelectItem value="bitrain_7_axles">Bitrem 7 eixos</SelectItem>
+                    <SelectItem value="bitrain_6_axles">Bitrem 6 eixos</SelectItem>
+                    <SelectItem value="flatbed">Prancha</SelectItem>
+                    <SelectItem value="romeo_and_juliet">Romeu e Julieta</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {licenseType && (
+                  <div className="p-3 border rounded-md flex flex-col items-center">
+                    <VehicleTypeImage type={licenseType} iconSize={100} />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {licenseTypeEnum[licenseType as keyof typeof licenseTypeEnum] || licenseType}
+                    </p>
+                  </div>
+                )}
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -344,7 +363,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhuma carreta cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -412,7 +431,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhuma carreta cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -423,7 +442,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           </div>
         )}
 
-        {/* Dynamic fields for Bitrem */}
+        {/* Dynamic fields for Bitrems */}
         {(licenseType === 'bitrain_9_axles' || licenseType === 'bitrain_7_axles' || licenseType === 'bitrain_6_axles') && (
           <div className="border border-gray-200 rounded-md p-4 space-y-4">
             <h3 className="font-medium text-gray-800 mb-2">Veículos do Bitrem</h3>
@@ -487,7 +506,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhuma carreta cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -521,7 +540,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        <SelectItem value="no_trailer">Nenhuma carreta cadastrada</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -607,117 +626,240 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           </div>
         )}
 
+        {/* Romeu e Julieta fields */}
+        {licenseType === 'romeo_and_juliet' && (
+          <div className="border border-gray-200 rounded-md p-4 space-y-4">
+            <h3 className="font-medium text-gray-800 mb-2">Veículos do Romeu e Julieta</h3>
+            
+            <FormField
+              control={form.control}
+              name="tractorUnitId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Caminhão</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    defaultValue={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o caminhão" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingVehicles ? (
+                        <SelectItem value="loading">Carregando...</SelectItem>
+                      ) : tractorUnits
+                          .filter(v => v.model?.toLowerCase().includes('caminhão'))
+                          .length > 0 ? (
+                        tractorUnits
+                          .filter(v => v.model?.toLowerCase().includes('caminhão'))
+                          .map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                      ) : (
+                        <SelectItem value="no_truck">Nenhum caminhão cadastrado</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Para o Romeu e Julieta, a unidade tratora deve ser um caminhão
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="firstTrailerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reboque</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    defaultValue={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o reboque" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingVehicles ? (
+                        <SelectItem value="loading">Carregando...</SelectItem>
+                      ) : vehicles?.filter(v => v.type === "trailer").length > 0 ? (
+                        vehicles
+                          ?.filter(v => v.type === "trailer")
+                          .map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                      ) : (
+                        <SelectItem value="no_trailer">Nenhum reboque cadastrado</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Para o Romeu e Julieta, o reboque deve ser do tipo "Reboque"
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
         <FormField
           control={form.control}
           name="length"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Comprimento do Conjunto (metros)</FormLabel>
+              <FormLabel>Comprimento (metros)</FormLabel>
               <FormControl>
                 <Input 
-                  type="number" 
-                  step="0.01" 
-                  placeholder="30.5" 
-                  {...field} 
-                  value={field.value || ''} 
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  type="text" 
+                  inputMode="decimal"
+                  pattern="[0-9]*[.,]?[0-9]*"
+                  placeholder="Ex.: 19,80" 
+                  {...field}
+                  value={
+                    typeof field.value === 'number' 
+                      ? field.value.toString().replace('.', ',') 
+                      : field.value || ''
+                  }
+                  onChange={(e) => {
+                    // Validação básica para permitir apenas números e vírgula
+                    let value = e.target.value.replace(/[^\d,]/g, '');
+                    
+                    // Substituir vírgulas extras
+                    const parts = value.split(',');
+                    if (parts.length > 2) {
+                      value = parts[0] + ',' + parts.slice(1).join('');
+                    }
+                    
+                    // Atualizar o campo visual
+                    e.target.value = value;
+                    
+                    // Converter para número para o form
+                    const numericValue = parseFloat(value.replace(',', '.'));
+                    field.onChange(isNaN(numericValue) ? 0 : numericValue);
+                  }}
                 />
               </FormControl>
+              <FormDescription>
+                Informe o comprimento total do conjunto em metros.
+                {licenseType && (
+                  <>
+                    {licenseType === 'flatbed'
+                      ? " Máximo para prancha: 25,00 metros."
+                      : " Máximo para veículos de carga: 30,00 metros."}
+                  </>
+                )}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="border border-gray-200 rounded-md p-4 space-y-4">
-          <h3 className="font-medium text-gray-800 mb-2">Relação de Placas Adicionais</h3>
-          <div className="text-sm text-muted-foreground mb-2">Adicione as placas que fazem parte da composição mas não constam da listagem acima</div>
+        {(licenseType === 'flatbed') && (
+          <>
+            <FormField
+              control={form.control}
+              name="width"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Largura (metros)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="text" 
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,]?[0-9]*"
+                      placeholder="Ex.: 2,60" 
+                      {...field}
+                      value={
+                        typeof field.value === 'number' 
+                          ? field.value.toString().replace('.', ',') 
+                          : field.value || ''
+                      }
+                      onChange={(e) => {
+                        // Validação básica para permitir apenas números e vírgula
+                        let value = e.target.value.replace(/[^\d,]/g, '');
+                        
+                        // Substituir vírgulas extras
+                        const parts = value.split(',');
+                        if (parts.length > 2) {
+                          value = parts[0] + ',' + parts.slice(1).join('');
+                        }
+                        
+                        // Atualizar o campo visual
+                        e.target.value = value;
+                        
+                        // Converter para número para o form
+                        const numericValue = parseFloat(value.replace(',', '.'));
+                        field.onChange(isNaN(numericValue) ? undefined : numericValue);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Informe a largura total da carga em metros.
+                    Máximo para prancha: 3,20 metros.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           
-          <FormField
-            control={form.control}
-            name="additionalPlates"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex flex-col space-y-4">
-                  {field.value?.map((plate, index) => (
-                    <div key={index} className="flex flex-col space-y-2 p-3 border border-gray-200 rounded-md">
-                      <div className="flex items-center space-x-2">
-                        <Input 
-                          value={plate} 
-                          onChange={(e) => {
-                            const newPlates = [...field.value || []];
-                            newPlates[index] = e.target.value;
-                            field.onChange(newPlates);
-                          }}
-                          placeholder="ABC1234"
-                          className="uppercase"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => {
-                            // Remove both plate and document
-                            const newPlates = [...field.value || []];
-                            newPlates.splice(index, 1);
-                            field.onChange(newPlates);
-                            
-                            const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                            newDocs.splice(index, 1);
-                            form.setValue('additionalPlatesDocuments', newDocs);
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      {/* Document upload for each plate */}
-                      <div className="mt-2">
-                        <Label htmlFor={`plate-doc-${index}`}>Documento do veículo (CRLV)</Label>
-                        <Input
-                          id={`plate-doc-${index}`}
-                          type="file"
-                          accept="application/pdf,image/*"
-                          className="mt-1"
-                          onChange={(e) => {
-                            const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                            if (e.target.files?.[0]) {
-                              // We store file path reference here
-                              // In a real implementation, you'd upload this to a server and store the URL
-                              newDocs[index] = URL.createObjectURL(e.target.files[0]);
-                              form.setValue('additionalPlatesDocuments', newDocs);
-                            }
-                          }}
-                        />
-                        {form.getValues('additionalPlatesDocuments')?.[index] && (
-                          <div className="text-sm text-green-600 mt-1">
-                            Documento anexado ✓
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 flex items-center"
-                    onClick={() => {
-                      field.onChange([...field.value || [], '']);
-                      // Add empty document slot
-                      const newDocs = [...form.getValues('additionalPlatesDocuments') || []];
-                      newDocs.push('');
-                      form.setValue('additionalPlatesDocuments', newDocs);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Placa
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            <FormField
+              control={form.control}
+              name="height"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Altura (metros)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="text" 
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,]?[0-9]*"
+                      placeholder="Ex.: 4,40" 
+                      {...field}
+                      value={
+                        typeof field.value === 'number' 
+                          ? field.value.toString().replace('.', ',') 
+                          : field.value || ''
+                      }
+                      onChange={(e) => {
+                        // Validação básica para permitir apenas números e vírgula
+                        let value = e.target.value.replace(/[^\d,]/g, '');
+                        
+                        // Substituir vírgulas extras
+                        const parts = value.split(',');
+                        if (parts.length > 2) {
+                          value = parts[0] + ',' + parts.slice(1).join('');
+                        }
+                        
+                        // Atualizar o campo visual
+                        e.target.value = value;
+                        
+                        // Converter para número para o form
+                        const numericValue = parseFloat(value.replace(',', '.'));
+                        field.onChange(isNaN(numericValue) ? undefined : numericValue);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Informe a altura total da carga em metros.
+                    Máximo para prancha: 4,95 metros.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         <FormField
           control={form.control}
@@ -725,32 +867,39 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           render={() => (
             <FormItem>
               <div className="mb-4">
-                <FormLabel>Estados (múltipla escolha)</FormLabel>
+                <FormLabel>Estados</FormLabel>
+                <FormDescription>
+                  Selecione os estados para os quais a licença será solicitada
+                </FormDescription>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {brazilianStates.map((state) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                {Object.entries(brazilianStates).map(([state, label]) => (
                   <FormField
-                    key={state.code}
+                    key={state}
                     control={form.control}
                     name="states"
                     render={({ field }) => {
                       return (
                         <FormItem
-                          key={state.code}
-                          className="flex flex-row items-start space-x-3 space-y-0"
+                          key={state}
+                          className="flex flex-row items-start space-x-3 space-y-0 p-2 border rounded-md"
                         >
                           <FormControl>
                             <Checkbox
-                              checked={(field.value || []).includes(state.code)}
+                              checked={field.value?.includes(state)}
                               onCheckedChange={(checked) => {
                                 return checked
-                                  ? field.onChange([...(field.value || []), state.code])
-                                  : field.onChange((field.value || []).filter((value) => value !== state.code));
+                                  ? field.onChange([...field.value, state])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== state
+                                      )
+                                    );
                               }}
                             />
                           </FormControl>
-                          <FormLabel className="text-sm font-normal">
-                            {state.code}
+                          <FormLabel className="font-normal">
+                            {label}
                           </FormLabel>
                         </FormItem>
                       );
@@ -771,28 +920,26 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <FormLabel>Observações</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Adicione observações relevantes para este pedido de licença"
-                  className="min-h-[120px]"
-                  value={field.value as string || ""}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  name={field.name}
-                  ref={field.ref}
+                  placeholder="Insira aqui quaisquer observações relevantes para esta solicitação"
+                  className="resize-y"
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormDescription>
-                Inclua quaisquer informações adicionais ou detalhes específicos para esta solicitação.
+                Informações adicionais para o órgão que irá analisar sua solicitação
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex flex-col sm:flex-row justify-end gap-4 sm:space-x-4 pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+        <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
+            disabled={isProcessing}
             className="w-full sm:w-auto order-3 sm:order-1"
           >
             Cancelar
@@ -802,7 +949,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             variant="outline"
             onClick={handleSaveDraft}
             disabled={isProcessing}
-            className="w-full sm:w-auto order-2"
+            className="border-yellow-500 text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 w-full sm:w-auto order-2"
           >
             {saveAsDraftMutation.isPending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Rascunho
