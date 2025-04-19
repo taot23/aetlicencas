@@ -820,11 +820,41 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         document.body.classList.remove('keyboard-active');
                       }}
                       onChange={(e) => {
-                        // Permite apenas números e um único separador decimal (ponto ou vírgula)
-                        const value = e.target.value;
-                        // Substituir vírgula por ponto e garantir que só tenha um separador decimal
+                        let value = e.target.value;
+                        
+                        // Apenas permitir números, vírgula e ponto
+                        value = value.replace(/[^\d.,]/g, '');
+                        
+                        // Limitar tamanho para 6 caracteres (xxx,xx)
+                        if (value.length > 6) {
+                          value = value.substring(0, 6);
+                        }
+                        
+                        // Substituir ponto por vírgula para exibição
+                        value = value.replace(/\./g, ',');
+                        
+                        // Garantir que só tem uma vírgula
+                        const parts = value.split(',');
+                        if (parts.length > 2) {
+                          value = parts[0] + ',' + parts[1];
+                        }
+                        
+                        // Limitar a 2 casas decimais
+                        if (parts.length > 1 && parts[1].length > 2) {
+                          value = parts[0] + ',' + parts[1].substring(0, 2);
+                        }
+                        
+                        // Verificar se o valor é maior que 100,00
+                        const numericValue = parseFloat(value.replace(',', '.'));
+                        if (numericValue > 100) {
+                          value = '100,00';
+                        }
+                        
+                        // Atualizar campo visual
+                        e.target.value = value;
+                        
+                        // Converter para formato numérico para o modelo
                         const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-                        // Converte para número e atualiza o campo
                         field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
                       }}
                     />
