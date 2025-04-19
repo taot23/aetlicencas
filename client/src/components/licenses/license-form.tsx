@@ -92,17 +92,21 @@ const DIMENSION_LIMITS = {
 };
 
 // Função auxiliar para formatar campos de dimensão com vírgula
-function formatDimensionInput(value: string, maxLength: number = 6): { 
+function formatDimensionInput(
+  value: string, 
+  dimensionType?: 'length' | 'width' | 'height',
+  licenseType?: string,
+  cargoType?: string,
+  maxLength: number = 7
+): { 
   displayValue: string; 
   numericValue: number | undefined;
 } {
-  // Apenas permitir números, vírgula e ponto
-  let formattedValue = value.replace(/[^\d.,]/g, '');
+  // Permitir explicitamente números, vírgula e ponto (para compatibilidade com diferentes dispositivos)
+  let formattedValue = value;
   
-  // Limitar tamanho total (incluindo vírgula e casas decimais)
-  if (formattedValue.length > maxLength) {
-    formattedValue = formattedValue.substring(0, maxLength);
-  }
+  // Remover caracteres inválidos (manter apenas números, vírgula e ponto)
+  formattedValue = formattedValue.replace(/[^\d.,]/g, '');
   
   // Substituir ponto por vírgula para exibição
   formattedValue = formattedValue.replace(/\./g, ',');
@@ -118,14 +122,60 @@ function formatDimensionInput(value: string, maxLength: number = 6): {
     formattedValue = parts[0] + ',' + parts[1].substring(0, 2);
   }
   
-  // Verificar se o valor é maior que 100,00
-  const numericValue = parseFloat(formattedValue.replace(',', '.'));
-  if (!isNaN(numericValue) && numericValue > 100) {
-    formattedValue = '100,00';
-    return { 
-      displayValue: formattedValue, 
-      numericValue: 100
-    };
+  // Limitar o tamanho total do número para evitar valores muito grandes
+  // Usamos 7 caracteres para permitir valores como "100,00"
+  if (formattedValue.length > maxLength) {
+    if (formattedValue.includes(',')) {
+      const integerPart = parts[0];
+      const decimalPart = parts.length > 1 ? parts[1] : '';
+      
+      // Se a parte inteira já exceder o limite, truncá-la
+      if (integerPart.length >= maxLength - 3) { // -3 para vírgula e 2 decimais
+        formattedValue = integerPart.substring(0, maxLength - 3) + ',00';
+      } else {
+        // Caso contrário, manter a parte inteira e ajustar as decimais
+        formattedValue = integerPart + ',' + decimalPart.substring(0, 2);
+      }
+    } else {
+      // Se não tiver vírgula, truncar o número
+      formattedValue = formattedValue.substring(0, maxLength - 3) + ',00';
+    }
+  }
+  
+  // Aplicar limites específicos com base no tipo de dimensão e tipo de licença
+  if (dimensionType && licenseType) {
+    let limits = DIMENSION_LIMITS.default;
+    
+    if (licenseType === 'flatbed') {
+      limits = cargoType === 'oversized' 
+        ? DIMENSION_LIMITS.oversized 
+        : DIMENSION_LIMITS.flatbed;
+    }
+    
+    const numericValue = parseFloat(formattedValue.replace(',', '.'));
+    if (!isNaN(numericValue)) {
+      if (dimensionType === 'length') {
+        if (numericValue > limits.maxLength) {
+          formattedValue = limits.maxLength.toFixed(2).replace('.', ',');
+        } else if (licenseType !== 'flatbed' && numericValue < limits.minLength) {
+          formattedValue = limits.minLength.toFixed(2).replace('.', ',');
+        }
+      } else if (dimensionType === 'width') {
+        if (numericValue > limits.maxWidth) {
+          formattedValue = limits.maxWidth.toFixed(2).replace('.', ',');
+        }
+      } else if (dimensionType === 'height') {
+        if (numericValue > limits.maxHeight) {
+          formattedValue = limits.maxHeight.toFixed(2).replace('.', ',');
+        }
+      }
+    }
+  } else {
+    // Verificar se o valor é maior que 100,00 (limite geral quando não especificado)
+    const numericValue = parseFloat(formattedValue.replace(',', '.'));
+    if (!isNaN(numericValue) && numericValue > 100) {
+      formattedValue = '100,00';
+    }
   }
   
   // Converter para formato numérico para o modelo
