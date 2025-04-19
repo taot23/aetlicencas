@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import {
   Vehicle,
   LicenseRequest,
   Transporter,
+  insertVehicleSchema
 } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -35,8 +36,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoaderCircle, X, Plus, Truck } from "lucide-react";
+import { CampoPlacaAdicional } from "./placas-adicionais";
+import { 
+  LoaderCircle,
+  X, 
+  Plus, 
+  Truck, 
+  Search, 
+  Upload, 
+  Building2, 
+  Link as LinkIcon,
+  FileUp,
+  Check
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "wouter";
+import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 import { VehicleTypeImage } from "@/components/ui/vehicle-type-image";
 
 // Tipos de carga por categoria
