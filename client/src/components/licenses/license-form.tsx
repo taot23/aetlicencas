@@ -1057,8 +1057,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         document.body.classList.remove('keyboard-active');
                       }}
                       onChange={(e) => {
-                        // Usar a função auxiliar para formatar o input
-                        const { displayValue, numericValue } = formatWidthInput(e.target.value);
+                        // Usar a função específica para largura
+                        const { displayValue, numericValue } = formatWidthInput(
+                          e.target.value,
+                          licenseType,
+                          form.watch('cargoType')
+                        );
                         
                         // Atualizar campo visual
                         e.target.value = displayValue;
@@ -1110,8 +1114,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         document.body.classList.remove('keyboard-active');
                       }}
                       onChange={(e) => {
-                        // Usar a função auxiliar para formatar o input
-                        const { displayValue, numericValue } = formatDimensionInput(e.target.value);
+                        // Usar a função específica para altura
+                        const { displayValue, numericValue } = formatHeightInput(
+                          e.target.value,
+                          licenseType,
+                          form.watch('cargoType')
+                        );
                         
                         // Atualizar campo visual
                         e.target.value = displayValue;
