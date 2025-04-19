@@ -1078,7 +1078,100 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           </div>
         )}
 
+        {/* Dynamic fields for Romeo and Juliet */}
+        {licenseType === 'romeo_and_juliet' && (
+          <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
+              <Truck className="mr-2 h-5 w-5" />
+              Veículos do Romeu e Julieta
+            </h3>
+            
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800 flex items-center">
+                <Check className="h-4 w-4 mr-2 flex-shrink-0" />
+                Para o conjunto "Romeu e Julieta", a unidade tratora deve ser do tipo "Caminhão" e a 1ª carreta deve ser do tipo "Reboque".
+              </p>
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="tractorUnitId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unidade Tratora (Caminhão)</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    defaultValue={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o caminhão" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingVehicles ? (
+                        <SelectItem value="loading">Carregando...</SelectItem>
+                      ) : trucks.length > 0 ? (
+                        trucks.map((vehicle) => (
+                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                            {vehicle.plate}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no_truck">
+                          <div className="flex flex-col">
+                            <span>Nenhum caminhão cadastrado</span>
+                            <span className="text-xs text-muted-foreground">Você precisa cadastrar um veículo do tipo "Caminhão"</span>
+                          </div>
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            <FormField
+              control={form.control}
+              name="firstTrailerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>1ª Carreta (Reboque)</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    defaultValue={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o reboque" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingVehicles ? (
+                        <SelectItem value="loading">Carregando...</SelectItem>
+                      ) : trailers.length > 0 ? (
+                        trailers.map((vehicle) => (
+                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                            {vehicle.plate}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no_trailer">
+                          <div className="flex flex-col">
+                            <span>Nenhum reboque cadastrado</span>
+                            <span className="text-xs text-muted-foreground">Você precisa cadastrar um veículo do tipo "Reboque"</span>
+                          </div>
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
@@ -1092,6 +1185,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={20} />
             ) : licenseType === 'flatbed' ? (
               <VehicleTypeImage type="flatbed" className="mr-2" iconSize={20} />
+            ) : licenseType === 'romeo_and_juliet' ? (
+              <Truck className="mr-2 h-5 w-5" />
             ) : (
               <Truck className="mr-2 h-5 w-5" />
             )}
