@@ -53,6 +53,43 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 import { VehicleTypeImage } from "@/components/ui/vehicle-type-image";
+
+// Tipos de carga por categoria
+const NON_FLATBED_CARGO_TYPES = [
+  { value: "dry_cargo", label: "Carga Seca" },
+  { value: "liquid_cargo", label: "Líquida" },
+  { value: "live_cargo", label: "Viva" },
+  { value: "sugar_cane", label: "Cana de Açúcar" }
+];
+
+const FLATBED_CARGO_TYPES = [
+  { value: "indivisible_cargo", label: "Carga Indivisível" },
+  { value: "agricultural_machinery", label: "Máquinas Agrícolas" },
+  { value: "oversized", label: "SUPERDIMENSIONADA" }
+];
+
+// Limites dimensionais
+const DIMENSION_LIMITS = {
+  default: {
+    maxLength: 30.00,
+    minLength: 19.80,
+    maxWidth: 2.60,
+    maxHeight: 4.40
+  },
+  flatbed: {
+    maxLength: 25.00,
+    minLength: 0,
+    maxWidth: 3.20,
+    maxHeight: 4.95
+  },
+  oversized: {
+    // Sem limites pré-definidos
+    maxLength: 999.99,
+    minLength: 0,
+    maxWidth: 999.99,
+    maxHeight: 999.99
+  }
+};
 import {
   Dialog,
   DialogContent,
@@ -593,6 +630,50 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               )}
             />
 
+            {/* Campo de Tipo de Carga - varia conforme tipo de conjunto */}
+            {licenseType && (
+              <FormField
+                control={form.control}
+                name="cargoType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Tipo de Carga</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="Selecione o tipo de carga" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {licenseType === 'flatbed' 
+                          ? FLATBED_CARGO_TYPES.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))
+                          : NON_FLATBED_CARGO_TYPES.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))
+                        }
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-xs text-muted-foreground mt-1">
+                      {licenseType === 'flatbed' 
+                        ? 'Selecione o tipo de carga para este conjunto de prancha'
+                        : 'Selecione o tipo de carga para este conjunto'
+                      }
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="length"
@@ -637,7 +718,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-muted-foreground mt-1">
-                    Digite o comprimento em metros (min: 19,80 - max: 30,00)
+                    {licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
+                      ? 'Digite o comprimento em metros (sem limite para carga superdimensionada)'
+                      : licenseType === 'flatbed'
+                        ? 'Digite o comprimento em metros (max: 25,00)'
+                        : 'Digite o comprimento em metros (min: 19,80 - max: 30,00)'
+                    }
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -681,7 +767,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-muted-foreground mt-1">
-                    Informe a largura total do conjunto em metros
+                    {licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
+                      ? 'Informe a largura total do conjunto em metros (sem limite para carga superdimensionada)'
+                      : licenseType === 'flatbed'
+                        ? 'Informe a largura total do conjunto em metros (max: 3,20)'
+                        : 'Informe a largura total do conjunto em metros (max: 2,60)'
+                    }
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
