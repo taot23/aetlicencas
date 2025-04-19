@@ -300,12 +300,18 @@ interface LicenseFormProps {
 export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporterId }: LicenseFormProps) {
   const { toast } = useToast();
   const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
-  const [cargoType, setCargoType] = useState<string>("");
+  const [cargoType, setCargoType] = useState<string>(draft?.cargoType || "");
   
   // Estado local para valores formatados de dimensões com casas decimais
-  const [lengthDisplay, setLengthDisplay] = useState<string>("");
-  const [widthDisplay, setWidthDisplay] = useState<string>("");
-  const [heightDisplay, setHeightDisplay] = useState<string>("");
+  const [lengthDisplay, setLengthDisplay] = useState<string>(
+    draft?.length ? formatFinalValue((draft.length / 100).toString().replace('.', ',')) : ""
+  );
+  const [widthDisplay, setWidthDisplay] = useState<string>(
+    draft?.width ? formatFinalValue((draft.width / 100).toString().replace('.', ',')) : ""
+  );
+  const [heightDisplay, setHeightDisplay] = useState<string>(
+    draft?.height ? formatFinalValue((draft.height / 100).toString().replace('.', ',')) : ""
+  );
 
   // Fetch vehicles for the dropdown selectors
   const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
@@ -341,6 +347,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: draft.secondTrailerId || undefined,
       flatbedId: draft.flatbedId || undefined,
       length: draft.length / 100, // Convert from cm to meters for display
+      width: draft.width ? draft.width / 100 : undefined, // Convert from cm to meters for display
+      height: draft.height ? draft.height / 100 : undefined, // Convert from cm to meters for display
       additionalPlates: draft.additionalPlates || [],
       additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
@@ -356,6 +364,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       secondTrailerId: undefined,
       flatbedId: undefined,
       length: 0,
+      width: undefined,
+      height: undefined,
       additionalPlates: [],
       states: [],
       additionalPlatesDocuments: [],
@@ -447,7 +457,10 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     // Adjust length from meters to centimeters for storage
     const dataToSubmit = {
       ...values,
+      cargoType, // Adiciona o tipo de carga selecionado
       length: Math.round((values.length || 0) * 100), // Convert to centimeters
+      width: values.width ? Math.round((values.width || 0) * 100) : undefined, // Convert to centimeters, se existir
+      height: values.height ? Math.round((values.height || 0) * 100) : undefined, // Convert to centimeters, se existir
     };
     
     if (values.isDraft) {

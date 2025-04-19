@@ -264,6 +264,7 @@ export const licenseRequests = pgTable("license_requests", {
   length: integer("length").notNull(), // total length in cm
   width: integer("width"), // width in cm
   height: integer("height"), // height in cm
+  cargoType: text("cargo_type"), // tipo de carga (union de nonFlatbedCargoType e flatbedCargoType)
   additionalPlates: text("additional_plates").array(), // Lista de placas adicionais 
   additionalPlatesDocuments: text("additional_plates_documents").array(), // URLs dos documentos das placas adicionais
   states: text("states").array().notNull(),
