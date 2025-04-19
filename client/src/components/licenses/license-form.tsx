@@ -109,6 +109,7 @@ interface LicenseFormProps {
 export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporterId }: LicenseFormProps) {
   const { toast } = useToast();
   const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
+  const [cargoType, setCargoType] = useState<string>("");
   const [showVehicleDialog, setShowVehicleDialog] = useState(false);
 
   // Fetch vehicles for the dropdown selectors
@@ -154,6 +155,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       states: draft.states,
       isDraft: draft.isDraft,
       comments: draft.comments || undefined,
+      cargoType: undefined, // Adicionado para support ao tipo de carga
     } : {
       type: "",
       transporterId: preSelectedTransporterId || undefined, // Usar o transportador pré-selecionado
@@ -171,6 +173,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       additionalPlatesDocuments: [],
       isDraft: true,
       comments: "",
+      cargoType: undefined, // Adicionado para support ao tipo de carga
     },
   });
 
@@ -192,6 +195,14 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     const subscription = form.watch((value, { name }) => {
       if (name === "type") {
         setLicenseType(value.type as string);
+        
+        // Reset cargo type when changing license type
+        form.setValue("cargoType", undefined);
+        setCargoType("");
+      }
+      
+      if (name === "cargoType") {
+        setCargoType(value.cargoType as string);
       }
       
       // Set main vehicle plate based on tractor unit selection
@@ -200,6 +211,107 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         if (selectedVehicle) {
           form.setValue("mainVehiclePlate", selectedVehicle.plate);
         }
+      }
+      
+      // Apply dynamic validation based on license type and cargo type
+      const currentType = value.type as string;
+      const currentCargoType = value.cargoType as string;
+      
+      // Ajustar validações de dimensões com base no tipo de conjunto e carga
+      if (currentType && (name === "type" || name === "cargoType" || name === "length" || name === "width" || name === "height")) {
+        let limits = DIMENSION_LIMITS.default;
+        
+        if (currentType === 'flatbed') {
+          limits = currentCargoType === 'oversized' 
+            ? DIMENSION_LIMITS.oversized 
+            : DIMENSION_LIMITS.flatbed;
+        }
+        
+        // Aplicar validações de comprimento específicas
+        if (currentType === 'flatbed' && currentCargoType === 'oversized') {
+          // Sem limites para carga superdimensionada
+          form.clearErrors('length');
+          form.clearErrors('width');
+          form.clearErrors('height');
+        } else {
+          // Verificar e validar dimensões atuais
+          const currentLength = form.getValues('length');
+          const currentWidth = form.getValues('width');
+          const currentHeight = form.getValues('height');
+          
+          // Validar comprimento se estiver definido
+          if (currentLength !== undefined) {
+            if (currentType === 'flatbed') {
+              // Para pranchas, a restrição de comprimento mínimo não se aplica
+              if (currentLength > limits.maxLength) {
+                form.setError('length', { 
+                  type: 'manual', 
+                  message: `O comprimento máximo para este tipo de conjunto é ${limits.maxLength.toFixed(2).replace('.', ',')} metros` 
+                });
+              } else {
+                form.clearErrors('length');
+              }
+            } else {
+              // Para outros tipos, validar tanto mínimo quanto máximo
+              if (currentLength < limits.minLength) {
+                form.setError('length', { 
+                  type: 'manual', 
+                  message: `O comprimento mínimo para este tipo de conjunto é ${limits.minLength.toFixed(2).replace('.', ',')} metros` 
+                });
+              } else if (currentLength > limits.maxLength) {
+                form.setError('length', { 
+                  type: 'manual', 
+                  message: `O comprimento máximo para este tipo de conjunto é ${limits.maxLength.toFixed(2).replace('.', ',')} metros` 
+                });
+              } else {
+                form.clearErrors('length');
+              }
+            }
+          }
+          
+          // Validar largura se estiver definida
+          if (currentWidth !== undefined) {
+            if (currentWidth > limits.maxWidth) {
+              form.setError('width', { 
+                type: 'manual', 
+                message: `A largura máxima para este tipo de conjunto é ${limits.maxWidth.toFixed(2).replace('.', ',')} metros` 
+              });
+            } else {
+              form.clearErrors('width');
+            }
+          }
+          
+          // Validar altura se estiver definida
+          if (currentHeight !== undefined) {
+            if (currentHeight > limits.maxHeight) {
+              form.setError('height', { 
+                type: 'manual', 
+                message: `A altura máxima para este tipo de conjunto é ${limits.maxHeight.toFixed(2).replace('.', ',')} metros` 
+              });
+            } else {
+              form.clearErrors('height');
+            }
+          }
+        }
+        
+        // Atualizar textos descritivos para as dimensões
+        const lengthDesc = currentType === 'flatbed' && currentCargoType === 'oversized'
+          ? 'Digite o comprimento em metros (sem limite para carga superdimensionada)'
+          : currentType === 'flatbed'
+            ? `Digite o comprimento em metros (max: ${limits.maxLength.toFixed(2).replace('.', ',')})`
+            : `Digite o comprimento em metros (min: ${limits.minLength.toFixed(2).replace('.', ',')} - max: ${limits.maxLength.toFixed(2).replace('.', ',')})`;
+            
+        const widthDesc = currentType === 'flatbed' && currentCargoType === 'oversized'
+          ? 'Informe a largura total do conjunto em metros (sem limite para carga superdimensionada)'
+          : currentType === 'flatbed'
+            ? `Informe a largura total do conjunto em metros (max: ${limits.maxWidth.toFixed(2).replace('.', ',')})`
+            : `Informe a largura total do conjunto em metros (max: ${limits.maxWidth.toFixed(2).replace('.', ',')})`;
+            
+        const heightDesc = currentType === 'flatbed' && currentCargoType === 'oversized'
+          ? 'Informe a altura total do conjunto em metros (sem limite para carga superdimensionada)'
+          : currentType === 'flatbed'
+            ? `Informe a altura total do conjunto em metros (max: ${limits.maxHeight.toFixed(2).replace('.', ',')})`
+            : `Informe a altura total do conjunto em metros (max: ${limits.maxHeight.toFixed(2).replace('.', ',')})`;
       }
     });
     
@@ -816,7 +928,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-muted-foreground mt-1">
-                    Informe a altura total do conjunto em metros
+                    {licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
+                      ? 'Informe a altura total do conjunto em metros (sem limite para carga superdimensionada)'
+                      : licenseType === 'flatbed'
+                        ? 'Informe a altura total do conjunto em metros (max: 4,95)'
+                        : 'Informe a altura total do conjunto em metros (max: 4,40)'
+                    }
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
