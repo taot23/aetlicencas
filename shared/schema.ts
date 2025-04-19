@@ -255,7 +255,6 @@ export const licenseRequests = pgTable("license_requests", {
   transporterId: integer("transporter_id").references(() => transporters.id),
   requestNumber: text("request_number").notNull().unique(),
   type: text("type").notNull(), // From licenseTypeEnum
-  cargoType: text("cargo_type"), // From cargoTypeEnum
   mainVehiclePlate: text("main_vehicle_plate").notNull(),
   tractorUnitId: integer("tractor_unit_id").references(() => vehicles.id),
   firstTrailerId: integer("first_trailer_id").references(() => vehicles.id),
@@ -285,8 +284,7 @@ export const licenseRequests = pgTable("license_requests", {
     statusIdx: index("idx_license_status").on(table.status),
     isDraftIdx: index("idx_license_is_draft").on(table.isDraft),
     createdAtIdx: index("idx_license_created_at").on(table.createdAt),
-    mainVehiclePlateIdx: index("idx_license_main_vehicle").on(table.mainVehiclePlate),
-    cargoTypeIdx: index("idx_license_cargo_type").on(table.cargoType)
+    mainVehiclePlateIdx: index("idx_license_main_vehicle").on(table.mainVehiclePlate)
   };
 });
 
