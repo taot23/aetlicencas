@@ -552,37 +552,37 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                     <SelectContent>
                       <SelectItem value="roadtrain_9_axles">
                         <div className="flex items-center">
-                          <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={16} />
+                          <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={24} />
                           <span>Rodotrem 9 eixos</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="bitrain_9_axles">
                         <div className="flex items-center">
-                          <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={16} />
+                          <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={24} />
                           <span>Bitrem 9 eixos</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="bitrain_7_axles">
                         <div className="flex items-center">
-                          <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={16} />
+                          <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={24} />
                           <span>Bitrem 7 eixos</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="bitrain_6_axles">
                         <div className="flex items-center">
-                          <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={16} />
+                          <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={24} />
                           <span>Bitrem 6 eixos</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="flatbed">
                         <div className="flex items-center">
-                          <VehicleTypeImage type="flatbed" className="mr-2" iconSize={16} />
+                          <VehicleTypeImage type="flatbed" className="mr-2" iconSize={24} />
                           <span>Prancha</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="romeo_and_juliet">
                         <div className="flex items-center">
-                          <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={16} />
+                          <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={24} />
                           <span>Romeu e Julieta</span>
                         </div>
                       </SelectItem>
@@ -738,7 +738,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         {licenseType === 'roadtrain_9_axles' && (
           <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
             <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
-              <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={32} />
               Veículos do Rodotrem
             </h3>
             
@@ -885,13 +885,13 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
           <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
             <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
               {licenseType === 'bitrain_6_axles' ? (
-                <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={20} />
+                <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={32} />
               ) : licenseType === 'bitrain_9_axles' ? (
-                <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={20} />
+                <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={32} />
               ) : licenseType === 'bitrain_7_axles' ? (
-                <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={20} />
+                <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={32} />
               ) : (
-                <Truck className="mr-2 h-5 w-5" />
+                <Truck className="mr-2 h-8 w-8" />
               )}
               Veículos do Bitrem
             </h3>
@@ -1004,7 +1004,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         {licenseType === 'flatbed' && (
           <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
             <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
-              <VehicleTypeImage type="flatbed" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="flatbed" className="mr-2" iconSize={32} />
               Veículos da Prancha
             </h3>
             
@@ -1082,7 +1082,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         {licenseType === 'romeo_and_juliet' && (
           <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
             <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
-              <Truck className="mr-2 h-5 w-5" />
+              <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={32} />
               Veículos do Romeu e Julieta
             </h3>
             
@@ -1176,19 +1176,19 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
         <div className="border border-gray-200 rounded-lg p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center">
             {licenseType === 'bitrain_6_axles' ? (
-              <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="bitrain_6_axles" className="mr-2" iconSize={32} />
             ) : licenseType === 'bitrain_9_axles' ? (
-              <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="bitrain_9_axles" className="mr-2" iconSize={32} />
             ) : licenseType === 'bitrain_7_axles' ? (
-              <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="bitrain_7_axles" className="mr-2" iconSize={32} />
             ) : licenseType === 'roadtrain_9_axles' ? (
-              <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="roadtrain_9_axles" className="mr-2" iconSize={32} />
             ) : licenseType === 'flatbed' ? (
-              <VehicleTypeImage type="flatbed" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="flatbed" className="mr-2" iconSize={32} />
             ) : licenseType === 'romeo_and_juliet' ? (
-              <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={20} />
+              <VehicleTypeImage type="romeo_and_juliet" className="mr-2" iconSize={32} />
             ) : (
-              <Truck className="mr-2 h-5 w-5" />
+              <Truck className="mr-2 h-8 w-8" />
             )}
             Placas Adicionais
           </h3>

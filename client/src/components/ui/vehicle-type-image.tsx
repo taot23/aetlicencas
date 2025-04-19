@@ -92,8 +92,12 @@ export const VehicleTypeImage: FC<VehicleTypeImageProps> = ({
         <img 
           src={romeoAndJulietImg} 
           alt="Romeu e Julieta" 
-          className={`w-auto h-${iconSize} ${className}`}
-          style={{ maxHeight: `${iconSize * 4}px` }}
+          className={`w-auto ${className}`}
+          style={{ 
+            height: `${iconSize}px`,
+            objectFit: 'contain',
+            objectPosition: 'center'
+          }}
         />
       );
     // Adicionar mais cases para outros tipos conforme necessário
