@@ -91,22 +91,10 @@ const DIMENSION_LIMITS = {
   }
 };
 
-// Função auxiliar para formatar campos de dimensão com vírgula
-function formatDimensionInput(
-  value: string, 
-  dimensionType?: 'length' | 'width' | 'height',
-  licenseType?: string,
-  cargoType?: string,
-  maxLength: number = 7
-): { 
-  displayValue: string; 
-  numericValue: number | undefined;
-} {
-  // Permitir explicitamente números, vírgula e ponto (para compatibilidade com diferentes dispositivos)
-  let formattedValue = value;
-  
+// Funções auxiliares para formatar campos de dimensão com vírgula e limites específicos
+function formatNumericInput(value: string, maxDigits: number = 6): string {
   // Remover caracteres inválidos (manter apenas números, vírgula e ponto)
-  formattedValue = formattedValue.replace(/[^\d.,]/g, '');
+  let formattedValue = value.replace(/[^\d.,]/g, '');
   
   // Substituir ponto por vírgula para exibição
   formattedValue = formattedValue.replace(/\./g, ',');
@@ -122,67 +110,163 @@ function formatDimensionInput(
     formattedValue = parts[0] + ',' + parts[1].substring(0, 2);
   }
   
-  // Limitar o tamanho total do número para evitar valores muito grandes
-  // Usamos 7 caracteres para permitir valores como "100,00"
-  if (formattedValue.length > maxLength) {
-    if (formattedValue.includes(',')) {
-      const integerPart = parts[0];
-      const decimalPart = parts.length > 1 ? parts[1] : '';
-      
-      // Se a parte inteira já exceder o limite, truncá-la
-      if (integerPart.length >= maxLength - 3) { // -3 para vírgula e 2 decimais
-        formattedValue = integerPart.substring(0, maxLength - 3) + ',00';
-      } else {
-        // Caso contrário, manter a parte inteira e ajustar as decimais
-        formattedValue = integerPart + ',' + decimalPart.substring(0, 2);
+  // Limitar tamanho total
+  if (formattedValue.length > maxDigits) {
+    formattedValue = formattedValue.substring(0, maxDigits);
+  }
+  
+  return formattedValue;
+}
+
+// Função para limitar comprimento (19,80 a 30,00 metros para maioria dos conjuntos)
+function formatLengthInput(value: string, licenseType: string, cargoType?: string): { 
+  displayValue: string; 
+  numericValue: number | undefined; 
+} {
+  // Formatar entrada numérica padrão
+  const formattedValue = formatNumericInput(value);
+  
+  // Converter para número para verificar limites
+  const numericValue = parseFloat(formattedValue.replace(',', '.'));
+  
+  // Se não for um número, retornar valor formatado apenas
+  if (isNaN(numericValue)) {
+    return {
+      displayValue: formattedValue,
+      numericValue: undefined
+    };
+  }
+  
+  // Determinar limites com base no tipo de licença
+  let finalValue = formattedValue;
+  let finalNumeric = numericValue;
+  
+  if (licenseType === 'flatbed') {
+    // Para pranchas com carga superdimensionada, não aplicamos limite
+    if (cargoType === 'oversized') {
+      if (numericValue > 100) {
+        finalValue = '100,00';
+        finalNumeric = 100;
       }
-    } else {
-      // Se não tiver vírgula, truncar o número
-      formattedValue = formattedValue.substring(0, maxLength - 3) + ',00';
+    } 
+    // Para outras pranchas, limite de 25 metros
+    else if (numericValue > 25) {
+      finalValue = '25,00';
+      finalNumeric = 25;
+    }
+  } 
+  // Para os demais conjuntos
+  else {
+    if (numericValue < 19.80) {
+      finalValue = '19,80';
+      finalNumeric = 19.8;
+    } else if (numericValue > 30) {
+      finalValue = '30,00';
+      finalNumeric = 30;
     }
   }
   
-  // Aplicar limites específicos com base no tipo de dimensão e tipo de licença
-  if (dimensionType && licenseType) {
-    let limits = DIMENSION_LIMITS.default;
-    
-    if (licenseType === 'flatbed') {
-      limits = cargoType === 'oversized' 
-        ? DIMENSION_LIMITS.oversized 
-        : DIMENSION_LIMITS.flatbed;
-    }
-    
-    const numericValue = parseFloat(formattedValue.replace(',', '.'));
-    if (!isNaN(numericValue)) {
-      if (dimensionType === 'length') {
-        if (numericValue > limits.maxLength) {
-          formattedValue = limits.maxLength.toFixed(2).replace('.', ',');
-        } else if (licenseType !== 'flatbed' && numericValue < limits.minLength) {
-          formattedValue = limits.minLength.toFixed(2).replace('.', ',');
-        }
-      } else if (dimensionType === 'width') {
-        if (numericValue > limits.maxWidth) {
-          formattedValue = limits.maxWidth.toFixed(2).replace('.', ',');
-        }
-      } else if (dimensionType === 'height') {
-        if (numericValue > limits.maxHeight) {
-          formattedValue = limits.maxHeight.toFixed(2).replace('.', ',');
-        }
-      }
-    }
-  } else {
-    // Verificar se o valor é maior que 100,00 (limite geral quando não especificado)
-    const numericValue = parseFloat(formattedValue.replace(',', '.'));
-    if (!isNaN(numericValue) && numericValue > 100) {
-      formattedValue = '100,00';
-    }
-  }
-  
-  // Converter para formato numérico para o modelo
-  const sanitized = formattedValue.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
   return {
-    displayValue: formattedValue,
-    numericValue: sanitized === '' ? undefined : parseFloat(sanitized)
+    displayValue: finalValue,
+    numericValue: finalNumeric
+  };
+}
+
+// Função para limitar largura (2,60 metros para conjuntos normais, 3,20 para prancha)
+function formatWidthInput(value: string, licenseType: string, cargoType?: string): { 
+  displayValue: string; 
+  numericValue: number | undefined; 
+} {
+  // Formatar entrada numérica padrão
+  const formattedValue = formatNumericInput(value);
+  
+  // Converter para número para verificar limites
+  const numericValue = parseFloat(formattedValue.replace(',', '.'));
+  
+  // Se não for um número, retornar valor formatado apenas
+  if (isNaN(numericValue)) {
+    return {
+      displayValue: formattedValue,
+      numericValue: undefined
+    };
+  }
+  
+  // Determinar limites com base no tipo de licença
+  let finalValue = formattedValue;
+  let finalNumeric = numericValue;
+  
+  if (licenseType === 'flatbed') {
+    // Para pranchas com carga superdimensionada, não aplicamos limite rígido
+    if (cargoType === 'oversized') {
+      if (numericValue > 100) {
+        finalValue = '100,00';
+        finalNumeric = 100;
+      }
+    } 
+    // Para outras pranchas, limite de 3,20 metros
+    else if (numericValue > 3.20) {
+      finalValue = '3,20';
+      finalNumeric = 3.2;
+    }
+  } 
+  // Para os demais conjuntos, limite de 2,60 metros
+  else if (numericValue > 2.60) {
+    finalValue = '2,60';
+    finalNumeric = 2.6;
+  }
+  
+  return {
+    displayValue: finalValue,
+    numericValue: finalNumeric
+  };
+}
+
+// Função para limitar altura (4,40 metros para conjuntos normais, 4,95 para prancha)
+function formatHeightInput(value: string, licenseType: string, cargoType?: string): { 
+  displayValue: string; 
+  numericValue: number | undefined; 
+} {
+  // Formatar entrada numérica padrão
+  const formattedValue = formatNumericInput(value);
+  
+  // Converter para número para verificar limites
+  const numericValue = parseFloat(formattedValue.replace(',', '.'));
+  
+  // Se não for um número, retornar valor formatado apenas
+  if (isNaN(numericValue)) {
+    return {
+      displayValue: formattedValue,
+      numericValue: undefined
+    };
+  }
+  
+  // Determinar limites com base no tipo de licença
+  let finalValue = formattedValue;
+  let finalNumeric = numericValue;
+  
+  if (licenseType === 'flatbed') {
+    // Para pranchas com carga superdimensionada, não aplicamos limite rígido
+    if (cargoType === 'oversized') {
+      if (numericValue > 100) {
+        finalValue = '100,00';
+        finalNumeric = 100;
+      }
+    } 
+    // Para outras pranchas, limite de 4,95 metros
+    else if (numericValue > 4.95) {
+      finalValue = '4,95';
+      finalNumeric = 4.95;
+    }
+  } 
+  // Para os demais conjuntos, limite de 4,40 metros
+  else if (numericValue > 4.40) {
+    finalValue = '4,40';
+    finalNumeric = 4.4;
+  }
+  
+  return {
+    displayValue: finalValue,
+    numericValue: finalNumeric
   };
 }
 
@@ -916,8 +1000,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         document.body.classList.remove('keyboard-active');
                       }}
                       onChange={(e) => {
-                        // Usar a função auxiliar para formatar o input
-                        const { displayValue, numericValue } = formatDimensionInput(e.target.value);
+                        // Usar a função específica para comprimento
+                        const { displayValue, numericValue } = formatLengthInput(
+                          e.target.value,
+                          licenseType,
+                          form.watch('cargoType')
+                        );
                         
                         // Atualizar campo visual
                         e.target.value = displayValue;
@@ -970,7 +1058,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       }}
                       onChange={(e) => {
                         // Usar a função auxiliar para formatar o input
-                        const { displayValue, numericValue } = formatDimensionInput(e.target.value);
+                        const { displayValue, numericValue } = formatWidthInput(e.target.value);
                         
                         // Atualizar campo visual
                         e.target.value = displayValue;
