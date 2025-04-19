@@ -1099,8 +1099,21 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 300);
                       }}
-                      onBlur={() => {
+                      onBlur={(e) => {
                         document.body.classList.remove('keyboard-active');
+                        
+                        // Formatar o valor final com 2 casas decimais obrigatórias
+                        if (e.target.value) {
+                          // Garantir formatação com 2 casas decimais ao sair do campo
+                          const formattedValue = formatFinalValue(e.target.value);
+                          e.target.value = formattedValue;
+                          
+                          // Atualizar valor no formulário (numérico)
+                          const numericValue = parseFloat(formattedValue.replace(',', '.'));
+                          if (!isNaN(numericValue)) {
+                            field.onChange(numericValue);
+                          }
+                        }
                       }}
                       onChange={(e) => {
                         // Usar a função específica para largura
@@ -1156,8 +1169,21 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 300);
                       }}
-                      onBlur={() => {
+                      onBlur={(e) => {
                         document.body.classList.remove('keyboard-active');
+                        
+                        // Formatar o valor final com 2 casas decimais obrigatórias
+                        if (e.target.value) {
+                          // Garantir formatação com 2 casas decimais ao sair do campo
+                          const formattedValue = formatFinalValue(e.target.value);
+                          e.target.value = formattedValue;
+                          
+                          // Atualizar valor no formulário (numérico)
+                          const numericValue = parseFloat(formattedValue.replace(',', '.'));
+                          if (!isNaN(numericValue)) {
+                            field.onChange(numericValue);
+                          }
+                        }
                       }}
                       onChange={(e) => {
                         // Usar a função específica para altura
