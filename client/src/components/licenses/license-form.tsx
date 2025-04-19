@@ -166,29 +166,24 @@ function formatLengthInput(value: string, licenseType: string, cargoType?: strin
     };
   }
   
-  // Determinar limites com base no tipo de licença
+  // Determinar limites com base no tipo de licença e carga
+  const isFlatbed = licenseType === 'flatbed';
+  const isOversized = cargoType === 'oversized';
+  
+  // Obter limites baseados no tipo
+  let limits = DIMENSION_LIMITS.default;
+  if (isFlatbed) {
+    limits = isOversized ? DIMENSION_LIMITS.oversized : DIMENSION_LIMITS.flatbed;
+  }
+  
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
-  // Durante a digitação, apenas verificamos limites máximos, nunca mínimos
+  // Durante a digitação, apenas verificamos limites máximos
   // para permitir que o usuário digite livremente valores abaixo do mínimo
-  if (licenseType === 'flatbed') {
-    // Para pranchas com carga superdimensionada, não aplicamos limite rígido
-    if (cargoType === 'oversized') {
-      if (numericValue > 100) {
-        finalNumeric = 100;
-      }
-    } 
-    // Para outras pranchas, limite de 25 metros
-    else if (numericValue > 25) {
-      finalNumeric = 25;
-    }
-  } 
-  // Para os demais conjuntos, apenas verificar o limite máximo
-  else if (numericValue > 30) {
-    finalNumeric = 30;
+  if (numericValue > limits.maxLength) {
+    finalNumeric = limits.maxLength;
   }
-  // Não validamos o valor mínimo durante a digitação para permitir flexibilidade
   
   return {
     displayValue: finalValue,
@@ -215,26 +210,23 @@ function formatWidthInput(value: string, licenseType: string, cargoType?: string
     };
   }
   
-  // Determinar limites com base no tipo de licença
+  // Determinar limites com base no tipo de licença e carga
+  const isFlatbed = licenseType === 'flatbed';
+  const isOversized = cargoType === 'oversized';
+  
+  // Obter limites baseados no tipo
+  let limits = DIMENSION_LIMITS.default;
+  if (isFlatbed) {
+    limits = isOversized ? DIMENSION_LIMITS.oversized : DIMENSION_LIMITS.flatbed;
+  }
+  
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
-  // Durante a digitação, apenas verificamos limites máximos, nunca mínimos
-  if (licenseType === 'flatbed') {
-    // Para pranchas com carga superdimensionada, não aplicamos limite rígido
-    if (cargoType === 'oversized') {
-      if (numericValue > 100) {
-        finalNumeric = 100;
-      }
-    } 
-    // Para outras pranchas, limite de 3,20 metros
-    else if (numericValue > 3.20) {
-      finalNumeric = 3.2;
-    }
-  } 
-  // Para os demais conjuntos, limite de 2,60 metros
-  else if (numericValue > 2.60) {
-    finalNumeric = 2.6;
+  // Durante a digitação, apenas verificamos limites máximos
+  // para permitir que o usuário digite livremente valores abaixo do mínimo
+  if (numericValue > limits.maxWidth) {
+    finalNumeric = limits.maxWidth;
   }
   
   return {
@@ -262,26 +254,23 @@ function formatHeightInput(value: string, licenseType: string, cargoType?: strin
     };
   }
   
-  // Determinar limites com base no tipo de licença
+  // Determinar limites com base no tipo de licença e carga
+  const isFlatbed = licenseType === 'flatbed';
+  const isOversized = cargoType === 'oversized';
+  
+  // Obter limites baseados no tipo
+  let limits = DIMENSION_LIMITS.default;
+  if (isFlatbed) {
+    limits = isOversized ? DIMENSION_LIMITS.oversized : DIMENSION_LIMITS.flatbed;
+  }
+  
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
-  // Durante a digitação, apenas verificamos limites máximos, nunca mínimos
-  if (licenseType === 'flatbed') {
-    // Para pranchas com carga superdimensionada, não aplicamos limite rígido
-    if (cargoType === 'oversized') {
-      if (numericValue > 100) {
-        finalNumeric = 100;
-      }
-    } 
-    // Para outras pranchas, limite de 4,95 metros
-    else if (numericValue > 4.95) {
-      finalNumeric = 4.95;
-    }
-  } 
-  // Para os demais conjuntos, limite de 4,40 metros
-  else if (numericValue > 4.40) {
-    finalNumeric = 4.4;
+  // Durante a digitação, apenas verificamos limites máximos
+  // para permitir que o usuário digite livremente valores abaixo do mínimo
+  if (numericValue > limits.maxHeight) {
+    finalNumeric = limits.maxHeight;
   }
   
   return {
