@@ -86,7 +86,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
 
   // Define filtered vehicle lists based on type
   const tractorUnits = vehicles?.filter(v => v.type === "tractor_unit") || [];
+  const trucks = vehicles?.filter(v => v.type === "truck") || [];
   const semiTrailers = vehicles?.filter(v => v.type === "semi_trailer") || [];
+  const trailers = vehicles?.filter(v => v.type === "trailer") || [];
   const dollys = vehicles?.filter(v => v.type === "dolly") || [];
   const flatbeds = vehicles?.filter(v => v.type === "flatbed") || [];
 
@@ -335,7 +337,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="tractor_unit">Unidade Tratora (Cavalo)</SelectItem>
+                        <SelectItem value="truck">Caminhão</SelectItem>
                         <SelectItem value="semi_trailer">Semirreboque</SelectItem>
+                        <SelectItem value="trailer">Reboque</SelectItem>
                         <SelectItem value="dolly">Dolly</SelectItem>
                         <SelectItem value="flatbed">Prancha</SelectItem>
                       </SelectContent>
@@ -574,6 +578,12 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         <div className="flex items-center">
                           <VehicleTypeImage type="flatbed" className="mr-2" iconSize={16} />
                           <span>Prancha</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="romeo_and_juliet">
+                        <div className="flex items-center">
+                          <Truck className="mr-2 h-4 w-4" />
+                          <span>Romeu e Julieta</span>
                         </div>
                       </SelectItem>
                     </SelectContent>

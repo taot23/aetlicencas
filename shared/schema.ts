@@ -223,6 +223,7 @@ export const licenseTypeEnum = z.enum([
   "bitrain_7_axles", // Bitrem 7 eixos 
   "bitrain_6_axles", // Bitrem 6 eixos
   "flatbed", // Prancha
+  "romeo_and_juliet", // Romeu e Julieta
 ]);
 
 export type LicenseType = z.infer<typeof licenseTypeEnum>;
@@ -360,6 +361,7 @@ export const brazilianStates = [
 
 export const vehicleTypeOptions = [
   { value: "tractor_unit", label: "Unidade Tratora (Cavalo)" },
+  { value: "truck", label: "Caminhão" },
   { value: "semi_trailer", label: "Semirreboque" },
   { value: "trailer", label: "Reboque" },
   { value: "dolly", label: "Dolly" },
