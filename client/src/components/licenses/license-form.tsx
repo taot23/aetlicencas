@@ -1,45 +1,10 @@
-import { useEffect, useState, useRef, ChangeEvent } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-// Função utilitária para campos de dimensões (comprimento, largura, altura)
-function handleDimensionInput(e: ChangeEvent<HTMLInputElement>, field: any) {
-  // Campo inteligente para dimensões que aceita tanto ponto quanto vírgula
-  let value = e.target.value;
-  
-  // Limitar a digitação apenas a números, vírgula e ponto
-  value = value.replace(/[^\d.,]/g, '');
-  
-  // Assegurar que só exista um separador decimal
-  const hasComma = value.indexOf(',') !== -1;
-  const hasDot = value.indexOf('.') !== -1;
-  
-  if (hasComma && hasDot) {
-    // Se tiver ambos, remover o ponto
-    value = value.replace(/\./g, '');
-  }
-  
-  // Limitar a 2 casas decimais durante a digitação
-  if (hasComma || hasDot) {
-    const parts = value.split(/[,.]/);
-    if (parts[1] && parts[1].length > 2) {
-      parts[1] = parts[1].substring(0, 2);
-      value = parts.join(hasComma ? ',' : '.');
-    }
-  }
-  
-  // Preservar o exato valor digitado na tela
-  e.target.value = value;
-  
-  // Sanitizar para o modelo interno (sempre com ponto)
-  const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-  
-  // Atualizar o campo interno com o valor numérico
-  field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
-}
+import { handleDimensionInput, DimensionField } from "./dimension-field";
 import { 
   insertLicenseRequestSchema, 
   insertDraftLicenseSchema, 
@@ -826,48 +791,18 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               control={form.control}
               name="length"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Comprimento (metros)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="text" 
-                      inputMode="decimal"
-                      pattern="[0-9]*[.,]?[0-9]*"
-                      placeholder="Ex.: 19,80" 
-                      {...field}
-                      className="mobile-input h-10"
-                      value={
-                        typeof field.value === 'number' 
-                          ? field.value.toString().replace('.', ',') 
-                          : field.value || ''
-                      }
-                      onFocus={(e) => {
-                        // Adicionar a classe ao body quando o input receber foco
-                        document.body.classList.add('keyboard-active');
-                        // Rolar a página para cima quando o input receber foco
-                        window.scrollTo(0, 0);
-                        // Adicionar pequeno atraso para garantir que o teclado apareça antes de reposicionar
-                        setTimeout(() => {
-                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300);
-                      }}
-                      onBlur={() => {
-                        // Remover a classe do body quando o input perder o foco
-                        document.body.classList.remove('keyboard-active');
-                      }}
-                      onChange={(e) => handleDimensionInput(e, field)}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs text-muted-foreground mt-1">
-                    {licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
+                <DimensionField
+                  field={field}
+                  label="Comprimento (metros)"
+                  placeholder="Ex.: 19,80"
+                  description={
+                    licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
                       ? 'Digite o comprimento em metros (sem limite para carga superdimensionada)'
                       : licenseType === 'flatbed'
                         ? 'Digite o comprimento em metros (max: 25,00)'
                         : 'Digite o comprimento em metros (min: 19,80 - max: 30,00)'
-                    }
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+                  }
+                />
               )}
             />
             
@@ -875,48 +810,18 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               control={form.control}
               name="width"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Largura do Conjunto (metros)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="text" 
-                      inputMode="decimal"
-                      pattern="[0-9]*[.,]?[0-9]*"
-                      placeholder="Ex.: 2,60" 
-                      {...field}
-                      className="mobile-input h-10"
-                      value={
-                        typeof field.value === 'number' 
-                          ? field.value.toString().replace('.', ',') 
-                          : field.value || ''
-                      }
-                      onFocus={(e) => {
-                        document.body.classList.add('keyboard-active');
-                        window.scrollTo(0, 0);
-                        setTimeout(() => {
-                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300);
-                      }}
-                      onBlur={() => {
-                        document.body.classList.remove('keyboard-active');
-                      }}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-                        field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
-                      }}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs text-muted-foreground mt-1">
-                    {licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
+                <DimensionField
+                  field={field}
+                  label="Largura do Conjunto (metros)"
+                  placeholder="Ex.: 2,60"
+                  description={
+                    licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
                       ? 'Informe a largura total do conjunto em metros (sem limite para carga superdimensionada)'
                       : licenseType === 'flatbed'
                         ? 'Informe a largura total do conjunto em metros (max: 3,20)'
                         : 'Informe a largura total do conjunto em metros (max: 2,60)'
-                    }
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+                  }
+                />
               )}
             />
             
@@ -924,48 +829,18 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               control={form.control}
               name="height"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Altura do Conjunto (metros)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="text" 
-                      inputMode="decimal"
-                      pattern="[0-9]*[.,]?[0-9]*"
-                      placeholder="Ex.: 4,40" 
-                      {...field}
-                      className="mobile-input h-10"
-                      value={
-                        typeof field.value === 'number' 
-                          ? field.value.toString().replace('.', ',') 
-                          : field.value || ''
-                      }
-                      onFocus={(e) => {
-                        document.body.classList.add('keyboard-active');
-                        window.scrollTo(0, 0);
-                        setTimeout(() => {
-                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300);
-                      }}
-                      onBlur={() => {
-                        document.body.classList.remove('keyboard-active');
-                      }}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-                        field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
-                      }}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs text-muted-foreground mt-1">
-                    {licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
+                <DimensionField
+                  field={field}
+                  label="Altura do Conjunto (metros)"
+                  placeholder="Ex.: 4,40"
+                  description={
+                    licenseType === 'flatbed' && form.watch('cargoType') === 'oversized'
                       ? 'Informe a altura total do conjunto em metros (sem limite para carga superdimensionada)'
                       : licenseType === 'flatbed'
                         ? 'Informe a altura total do conjunto em metros (max: 4,95)'
                         : 'Informe a altura total do conjunto em metros (max: 4,40)'
-                    }
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+                  }
+                />
               )}
             />
           </div>
