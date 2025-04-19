@@ -228,6 +228,26 @@ export const licenseTypeEnum = z.enum([
 
 export type LicenseType = z.infer<typeof licenseTypeEnum>;
 
+// Cargo type enums
+export const nonFlatbedCargoTypeEnum = z.enum([
+  "dry_cargo", // Carga Seca
+  "liquid_cargo", // Líquida
+  "live_cargo", // Viva
+  "sugar_cane", // Cana de Açúcar
+]);
+
+export const flatbedCargoTypeEnum = z.enum([
+  "indivisible_cargo", // Carga Indivisível
+  "agricultural_machinery", // Máquinas Agrícolas
+  "oversized", // SUPERDIMENSIONADA
+]);
+
+export const cargoTypeEnum = z.union([nonFlatbedCargoTypeEnum, flatbedCargoTypeEnum]);
+
+export type NonFlatbedCargoType = z.infer<typeof nonFlatbedCargoTypeEnum>;
+export type FlatbedCargoType = z.infer<typeof flatbedCargoTypeEnum>;
+export type CargoType = z.infer<typeof cargoTypeEnum>;
+
 // License requests model
 export const licenseRequests = pgTable("license_requests", {
   id: serial("id").primaryKey(),
@@ -235,6 +255,7 @@ export const licenseRequests = pgTable("license_requests", {
   transporterId: integer("transporter_id").references(() => transporters.id),
   requestNumber: text("request_number").notNull().unique(),
   type: text("type").notNull(), // From licenseTypeEnum
+  cargoType: text("cargo_type"), // From cargoTypeEnum
   mainVehiclePlate: text("main_vehicle_plate").notNull(),
   tractorUnitId: integer("tractor_unit_id").references(() => vehicles.id),
   firstTrailerId: integer("first_trailer_id").references(() => vehicles.id),
@@ -264,7 +285,8 @@ export const licenseRequests = pgTable("license_requests", {
     statusIdx: index("idx_license_status").on(table.status),
     isDraftIdx: index("idx_license_is_draft").on(table.isDraft),
     createdAtIdx: index("idx_license_created_at").on(table.createdAt),
-    mainVehiclePlateIdx: index("idx_license_main_vehicle").on(table.mainVehiclePlate)
+    mainVehiclePlateIdx: index("idx_license_main_vehicle").on(table.mainVehiclePlate),
+    cargoTypeIdx: index("idx_license_cargo_type").on(table.cargoType)
   };
 });
 
@@ -281,12 +303,19 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
   .extend({
     transporterId: z.number().positive("Um transportador deve ser selecionado"),
     states: z.array(z.string()).min(1, "Selecione pelo menos um estado"),
+    cargoType: cargoTypeEnum.optional(),
     length: z.coerce.number()
       .min(19.8, "O comprimento deve ser de no mínimo 19,80 metros")
       .max(30.0, "O comprimento deve ser de no máximo 30,00 metros")
       .refine(val => licenseTypeEnum.safeParse("flatbed").success ? true : val >= 19.8, "O comprimento deve ser de no mínimo 19,80 metros para este tipo de conjunto"),
-    width: z.coerce.number().min(1, "A largura deve ser maior que 0").optional(),
-    height: z.coerce.number().min(1, "A altura deve ser maior que 0").optional(),
+    width: z.coerce.number()
+      .min(1, "A largura deve ser maior que 0")
+      .max(3.2, "A largura máxima permitida é 3,20 metros")
+      .optional(),
+    height: z.coerce.number()
+      .min(1, "A altura deve ser maior que 0")
+      .max(4.95, "A altura máxima permitida é 4,95 metros")
+      .optional(),
     additionalPlates: z.array(z.string()).optional().default([]),
     additionalPlatesDocuments: z.array(z.string()).optional().default([]),
   });
