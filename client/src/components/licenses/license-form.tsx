@@ -168,10 +168,11 @@ function formatLengthInput(value: string, licenseType: string, cargoType?: strin
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
-  // Durante a digitação, apenas verificamos limites, mas não formatamos
-  // para exibição final (com zeros fixos) para permitir edição
+  // Durante a digitação, apenas verificamos limites máximos, nunca mínimos
+  // para permitir que o usuário digite livremente valores abaixo do mínimo
+  // (o mínimo será validado apenas no envio do formulário)
   if (licenseType === 'flatbed') {
-    // Para pranchas com carga superdimensionada, não aplicamos limite
+    // Para pranchas com carga superdimensionada, não aplicamos limite rígido
     if (cargoType === 'oversized') {
       if (numericValue > 100) {
         finalNumeric = 100;
@@ -184,16 +185,12 @@ function formatLengthInput(value: string, licenseType: string, cargoType?: strin
       // Só formatamos com zeros adicionais no final da edição (onBlur)
     }
   } 
-  // Para os demais conjuntos
-  else {
-    if (numericValue < 19.80) {
-      finalNumeric = 19.8;
-      // Só formatamos com zeros adicionais no final da edição (onBlur)
-    } else if (numericValue > 30) {
-      finalNumeric = 30;
-      // Só formatamos com zeros adicionais no final da edição (onBlur)
-    }
+  // Para os demais conjuntos, apenas verificar o limite máximo
+  else if (numericValue > 30) {
+    finalNumeric = 30;
+    // Só formatamos com zeros adicionais no final da edição (onBlur)
   }
+  // Não validamos o valor mínimo durante a digitação para permitir flexibilidade
   
   return {
     displayValue: finalValue,
@@ -224,8 +221,8 @@ function formatWidthInput(value: string, licenseType: string, cargoType?: string
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
-  // Durante a digitação, apenas verificamos limites, mas não formatamos
-  // para exibição final (com zeros fixos) para permitir edição
+  // Durante a digitação, apenas verificamos limites máximos, nunca mínimos
+  // para permitir que o usuário digite livremente os valores
   if (licenseType === 'flatbed') {
     // Para pranchas com carga superdimensionada, não aplicamos limite rígido
     if (cargoType === 'oversized') {
@@ -245,6 +242,7 @@ function formatWidthInput(value: string, licenseType: string, cargoType?: string
     finalNumeric = 2.6;
     // Só formatamos com zeros adicionais no final da edição (onBlur)
   }
+  // Não aplicamos limites mínimos durante a digitação
   
   return {
     displayValue: finalValue,
@@ -275,8 +273,8 @@ function formatHeightInput(value: string, licenseType: string, cargoType?: strin
   let finalValue = formattedValue;
   let finalNumeric = numericValue;
   
-  // Durante a digitação, apenas verificamos limites, mas não formatamos
-  // para exibição final (com zeros fixos) para permitir edição
+  // Durante a digitação, apenas verificamos limites máximos, nunca mínimos
+  // para permitir que o usuário digite livremente os valores
   if (licenseType === 'flatbed') {
     // Para pranchas com carga superdimensionada, não aplicamos limite rígido
     if (cargoType === 'oversized') {
@@ -296,6 +294,7 @@ function formatHeightInput(value: string, licenseType: string, cargoType?: strin
     finalNumeric = 4.4;
     // Só formatamos com zeros adicionais no final da edição (onBlur)
   }
+  // Não aplicamos limites mínimos durante a digitação
   
   return {
     displayValue: finalValue,
