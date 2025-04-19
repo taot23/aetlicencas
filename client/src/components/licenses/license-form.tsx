@@ -820,11 +820,16 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         document.body.classList.remove('keyboard-active');
                       }}
                       onChange={(e) => {
-                        // Permite apenas números e um único separador decimal (ponto ou vírgula)
+                        // Permite a entrada com vírgula para melhor experiência do usuário
                         const value = e.target.value;
-                        // Substituir vírgula por ponto e garantir que só tenha um separador decimal
+                        
+                        // Preservar a entrada tal como digitada para exibição
+                        e.target.value = value;
+                        
+                        // Sanitizar o valor para conversão
                         const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-                        // Converte para número e atualiza o campo
+                        
+                        // Converter para número e atualizar o campo interno
                         field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
                       }}
                     />
