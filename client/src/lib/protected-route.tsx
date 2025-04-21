@@ -21,11 +21,19 @@ const RedirectToAuth = ({ path }: { path: string }) => (
 );
 
 // Componente para redirecionar à home quando não autorizado
-const RedirectToHome = ({ path }: { path: string }) => (
-  <Route path={path}>
-    <Redirect to="/" />
-  </Route>
-);
+const RedirectToHome = ({ path }: { path: string }) => {
+  const { checkRole } = useAuth();
+  
+  // Para usuários administrativos, redireciona para admin/licenses
+  // Para usuários normais, vai para "/"
+  const redirectPath = checkRole('operational') ? "/admin/licenses" : "/";
+  
+  return (
+    <Route path={path}>
+      <Redirect to={redirectPath} />
+    </Route>
+  );
+};
 
 // Rota para qualquer usuário autenticado
 export function ProtectedRoute({

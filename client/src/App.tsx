@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
-import DashboardPage from "@/pages/dashboard-page";
+import RegularDashboardPage from "@/pages/regular-dashboard-page";
 import VehiclesPage from "@/pages/vehicles-page";
 import RequestLicensePage from "@/pages/request-license-page";
 import TrackLicensePage from "@/pages/track-license-page";
@@ -15,6 +15,7 @@ import AdminLicensesPage from "@/pages/admin/admin-licenses";
 import AdminTransportersPage from "@/pages/admin/admin-transporters";
 import AdminUsersPage from "@/pages/admin/admin-users";
 import AdminVehiclesPage from "@/pages/admin/admin-vehicles";
+import RedirectPage from "@/pages/redirect-page";
 import { ProtectedRoute, AdminRoute, StaffRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { useEffect } from "react";
@@ -24,6 +25,9 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       
+      {/* Página inicial com redirecionamento inteligente baseado no papel */}
+      <ProtectedRoute path="/" component={RedirectPage} />
+      
       {/* Portal Admin - Rotas acessíveis via hierarquia de permissões */}
       <AdminRoute path="/admin" component={AdminDashboardPage} />
       <StaffRoute path="/admin/licenses" component={AdminLicensesPage} requiredRole="operational" />
@@ -32,7 +36,7 @@ function Router() {
       <StaffRoute path="/admin/vehicles" component={AdminVehiclesPage} requiredRole="operational" />
       
       {/* Sistema de Controle de Licenças - Rotas do usuário */}
-      <ProtectedRoute path="/" component={DashboardPage} />
+      <ProtectedRoute path="/dashboard" component={RegularDashboardPage} />
       <ProtectedRoute path="/my-companies" component={MyCompaniesPage} />
       <ProtectedRoute path="/vehicles" component={VehiclesPage} />
       <ProtectedRoute path="/request-license" component={RequestLicensePage} />

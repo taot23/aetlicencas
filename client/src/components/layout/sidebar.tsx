@@ -63,30 +63,35 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
       
       <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
-        {/* Seção do Usuário Regular */}
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-white hover:bg-gray-700",
-            location === "/" ? "bg-gray-700" : "bg-transparent"
-          )}
-          onClick={() => handleNavigate("/")}
-        >
-          <Home className="mr-3 h-5 w-5" />
-          Dashboard
-        </Button>
+        {/* Seção do Usuário Regular - Dashboard é visível apenas para usuários não-administrativos */}
+        {!isOperational && (
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-white hover:bg-gray-700",
+              (location === "/" || location === "/dashboard") ? "bg-gray-700" : "bg-transparent"
+            )}
+            onClick={() => handleNavigate("/")}
+          >
+            <Home className="mr-3 h-5 w-5" />
+            Dashboard
+          </Button>
+        )}
         
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-white hover:bg-gray-700",
-            location === "/my-companies" ? "bg-gray-700" : "bg-transparent"
-          )}
-          onClick={() => handleNavigate("/my-companies")}
-        >
-          <Building2 className="mr-3 h-5 w-5" />
-          Minhas Empresas
-        </Button>
+        {/* Minhas Empresas é visível apenas para usuários não-administrativos */}
+        {!isOperational && (
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-white hover:bg-gray-700",
+              location === "/my-companies" ? "bg-gray-700" : "bg-transparent"
+            )}
+            onClick={() => handleNavigate("/my-companies")}
+          >
+            <Building2 className="mr-3 h-5 w-5" />
+            Minhas Empresas
+          </Button>
+        )}
         
         <Button
           variant="ghost"
