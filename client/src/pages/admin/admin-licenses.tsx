@@ -1047,30 +1047,41 @@ export default function AdminLicensesPage() {
                       : "-"} {selectedLicense.length ? "m" : ""}
                   </p>
                 </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Largura</h3>
+                <div className={`p-2 ${!selectedLicense.width ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
+                  <h3 className={`font-medium text-sm ${!selectedLicense.width ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
+                    {!selectedLicense.width && <AlertCircle className="h-3.5 w-3.5" />}
+                    Largura <span className={!selectedLicense.width ? "text-red-600" : ""}>(obrigatório)</span>
+                  </h3>
                   <p className="text-base">
                     {selectedLicense.width ? 
                       (Number(selectedLicense.width) > 100 ? 
                         (Number(selectedLicense.width) / 100).toFixed(2) 
-                        : Number(selectedLicense.width).toFixed(2)) 
-                      : "-"} {selectedLicense.width ? "m" : ""}
+                        : Number(selectedLicense.width).toFixed(2)) + " m"
+                      : <span className="text-red-500">Campo obrigatório não preenchido</span>}
                   </p>
                 </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Altura</h3>
+                <div className={`p-2 ${!selectedLicense.height ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
+                  <h3 className={`font-medium text-sm ${!selectedLicense.height ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
+                    {!selectedLicense.height && <AlertCircle className="h-3.5 w-3.5" />}
+                    Altura <span className={!selectedLicense.height ? "text-red-600" : ""}>(obrigatório)</span>
+                  </h3>
                   <p className="text-base">
                     {selectedLicense.height ? 
                       (Number(selectedLicense.height) > 100 ? 
                         (Number(selectedLicense.height) / 100).toFixed(2) 
-                        : Number(selectedLicense.height).toFixed(2)) 
-                      : "-"} {selectedLicense.height ? "m" : ""}
+                        : Number(selectedLicense.height).toFixed(2)) + " m"
+                      : <span className="text-red-500">Campo obrigatório não preenchido</span>}
                   </p>
                 </div>
-                <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
-                  <h3 className="font-medium text-sm text-gray-500">Tipo de Carga</h3>
+                <div className={`p-2 ${!selectedLicense.cargoType ? "bg-red-50" : "bg-white"} rounded-md shadow-sm sm:col-span-2`}>
+                  <h3 className={`font-medium text-sm ${!selectedLicense.cargoType ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
+                    {!selectedLicense.cargoType && <AlertCircle className="h-3.5 w-3.5" />}
+                    Tipo de Carga <span className={!selectedLicense.cargoType ? "text-red-600" : ""}>(obrigatório)</span>
+                  </h3>
                   <p className="text-base">
-                    {getCargoTypeLabel(selectedLicense.cargoType)}
+                    {selectedLicense.cargoType ? 
+                      getCargoTypeLabel(selectedLicense.cargoType) : 
+                      <span className="text-red-500">Campo obrigatório não preenchido</span>}
                   </p>
                 </div>
               </div>
