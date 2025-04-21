@@ -843,10 +843,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const licenseData = { ...req.body };
       
+      console.log("Dados de licença recebidos:", JSON.stringify(licenseData, null, 2));
+      console.log("Tipo de licença:", licenseData.type);
+      console.log("Tipo de carga:", licenseData.cargoType);
+      console.log("Comprimento:", licenseData.length);
+      console.log("Largura:", licenseData.width);
+      console.log("Altura:", licenseData.height);
+      
       // Validate license data
       try {
         insertLicenseRequestSchema.parse(licenseData);
       } catch (error: any) {
+        console.error("Erro de validação completo:", error);
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
