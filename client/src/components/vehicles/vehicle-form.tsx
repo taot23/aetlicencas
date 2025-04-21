@@ -335,38 +335,39 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             )}
           />
           
-          {/* Mostrar campo Tipo de Carroceria apenas para Caminhão, Semirreboque e Reboque */}
-          {(vehicleType === "truck" || vehicleType === "semi_trailer" || vehicleType === "trailer") && (
-            <FormField
-              control={form.control}
-              name="bodyType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">
-                    Tipo de Carroceria
-                  </FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(value)} 
-                    value={field.value}
-                    defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {bodyTypeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          {/* Mostrar campo Tipo de Carroceria sempre, independente do tipo selecionado (para debug) */}
+          <FormField
+            control={form.control}
+            name="bodyType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm">
+                  Tipo de Carroceria {vehicleType === "semi_trailer" ? "(Compatível)" : ""}
+                </FormLabel>
+                <Select 
+                  onValueChange={(value) => field.onChange(value)} 
+                  value={field.value}
+                  defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {bodyTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+                <FormDescription className="text-xs text-red-600">
+                  vehicleType: {vehicleType || "não definido"}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
           
           <div className="grid grid-cols-3 gap-3">
             <FormField
