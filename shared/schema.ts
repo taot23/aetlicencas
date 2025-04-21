@@ -192,13 +192,15 @@ export const vehicles = pgTable("vehicles", {
 export const insertVehicleSchema = createInsertSchema(vehicles)
   .omit({ id: true, userId: true })
   .extend({
-    // Substituir validação de tare para aceitar números decimais
-    tare: z.number().optional().default(0),
-    axleCount: z.number().optional(),
-    brand: z.string().optional(),
-    model: z.string().optional(),
-    year: z.number().optional(),
-    renavam: z.string().optional(),
+    // Campos obrigatórios com validações
+    plate: z.string().min(1, "A placa é obrigatória"),
+    type: z.string().min(1, "O tipo de veículo é obrigatório"),
+    renavam: z.string().min(1, "O RENAVAM é obrigatório"),
+    brand: z.string().min(1, "A marca é obrigatória"),
+    model: z.string().min(1, "O modelo é obrigatório"),
+    tare: z.number().min(1, "A tara deve ser maior que zero"),
+    axleCount: z.number().min(1, "A quantidade de eixos deve ser maior que zero"),
+    year: z.number().min(1950, "O ano de fabricação é obrigatório"),
     remarks: z.string().optional(),
     crlvFile: z.any().optional(),
   });
