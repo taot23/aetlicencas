@@ -43,15 +43,35 @@ const VEHICLE_TYPES = {
 
 // Esquema estendido para validação do formulário
 const formSchema = insertVehicleSchema.extend({
+  // PLACA - obrigatório
   plate: z.string()
     .min(1, "A placa é obrigatória")
     .refine(
       (value) => /^[A-Za-z]{3}\d[A-Za-z0-9]\d{2}$/.test(value.toUpperCase()), 
       { message: "Formato de placa inválido. Use o formato Mercosul (AAA1A11) ou antigo (AAA1111)." }
     ),
-  // Adicionamos valores padrão para os campos obrigatórios que faltavam
-  tare: z.number().default(0), // Peso em kg
-  crlvYear: z.number().default(new Date().getFullYear()) // Ano do CRLV (usando o ano atual como padrão)
+  // RENAVAM - obrigatório
+  renavam: z.string()
+    .min(1, "O RENAVAM é obrigatório"),
+  // TIPO DE VEÍCULO - já é obrigatório por padrão
+  // MARCA - obrigatório
+  brand: z.string()
+    .min(1, "A marca do veículo é obrigatória"),
+  // MODELO - obrigatório
+  model: z.string()
+    .min(1, "O modelo do veículo é obrigatório"),
+  // QTD EIXO - obrigatório
+  axleCount: z.number()
+    .min(1, "A quantidade de eixos é obrigatória"),
+  // TARA - obrigatório
+  tare: z.number()
+    .min(1, "O peso (TARA) é obrigatório"), 
+  // ANO DE FABRICAÇÃO - obrigatório
+  year: z.number()
+    .min(1950, "O ano deve ser maior que 1950")
+    .max(new Date().getFullYear() + 1, `O ano deve ser no máximo ${new Date().getFullYear() + 1}`),
+  // Ano do CRLV
+  crlvYear: z.number().default(new Date().getFullYear())
 });
 
 type VehicleFormValues = z.infer<typeof formSchema>;
@@ -89,6 +109,7 @@ export function VehicleFormModal({
       type: 'tractor',
       renavam: '',
       tare: 0, // Peso padrão (será enviado mesmo que não exibido no formulário)
+      axleCount: 0, // Quantidade de eixos padrão
       crlvYear: new Date().getFullYear() // Ano CRLV padrão
     }
   });
@@ -186,12 +207,16 @@ export function VehicleFormModal({
               name="plate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Placa</FormLabel>
+                  <FormLabel className="flex items-center">
+                    Placa
+                    <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       {...field} 
                       maxLength={7}
                       onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      required
                     />
                   </FormControl>
                   <FormMessage />
@@ -205,9 +230,12 @@ export function VehicleFormModal({
                 name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Marca</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Marca
+                      <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} required />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -219,9 +247,12 @@ export function VehicleFormModal({
                 name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Modelo</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Modelo
+                      <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} required />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -235,7 +266,10 @@ export function VehicleFormModal({
                 name="year"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ano</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Ano de Fabricação
+                      <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -243,6 +277,7 @@ export function VehicleFormModal({
                         min="1950"
                         max={new Date().getFullYear() + 1}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        required
                       />
                     </FormControl>
                     <FormMessage />
@@ -255,10 +290,14 @@ export function VehicleFormModal({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Tipo de Veículo
+                      <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <Select 
                       value={field.value} 
                       onValueChange={field.onChange}
+                      required
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -284,9 +323,12 @@ export function VehicleFormModal({
               name="renavam"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>RENAVAM (opcional)</FormLabel>
+                  <FormLabel className="flex items-center">
+                    RENAVAM
+                    <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -296,16 +338,20 @@ export function VehicleFormModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="tare"
+                name="axleCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Peso (kg)</FormLabel>
+                    <FormLabel className="flex items-center">
+                      Quantidade de Eixos
+                      <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
                         type="number" 
-                        min="0"
+                        min="1"
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        required
                       />
                     </FormControl>
                     <FormMessage />
@@ -313,6 +359,31 @@ export function VehicleFormModal({
                 )}
               />
               
+              <FormField
+                control={form.control}
+                name="tare"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      TARA (kg)
+                      <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        min="1"
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="crlvYear"
@@ -327,6 +398,20 @@ export function VehicleFormModal({
                         max={new Date().getFullYear() + 1}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                
+              <FormField
+                control={form.control}
+                name="remarks"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
