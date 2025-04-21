@@ -112,8 +112,8 @@ export function VehicleFormModal({
       year: new Date().getFullYear(),
       type: 'tractor',
       renavam: '',
-      tare: 0, // Peso padrão (será enviado mesmo que não exibido no formulário)
-      axleCount: 0, // Quantidade de eixos padrão
+      tare: '', // Campo vazio para forçar preenchimento
+      axleCount: '', // Campo vazio para forçar preenchimento
       crlvYear: new Date().getFullYear() // Ano CRLV padrão
     },
     mode: "onBlur", // Validar ao perder o foco
@@ -386,11 +386,18 @@ export function VehicleFormModal({
                         {...field} 
                         type="number" 
                         min="1"
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          field.onChange(value && value > 0 ? value : '');
+                        }}
                         required
+                        placeholder="Mínimo 1"
                       />
                     </FormControl>
                     <FormMessage />
+                    {field.value === 0 && (
+                      <p className="text-xs text-red-500 mt-1">A quantidade de eixos não pode ser zero</p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -409,11 +416,18 @@ export function VehicleFormModal({
                         {...field} 
                         type="number" 
                         min="1"
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          field.onChange(value && value > 0 ? value : '');
+                        }}
                         required
+                        placeholder="Mínimo 1"
                       />
                     </FormControl>
                     <FormMessage />
+                    {field.value === 0 && (
+                      <p className="text-xs text-red-500 mt-1">O peso (TARA) não pode ser zero</p>
+                    )}
                   </FormItem>
                 )}
               />
