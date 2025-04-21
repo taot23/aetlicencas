@@ -34,11 +34,21 @@ import {
 
 // Constante para tipos de veículos
 const VEHICLE_TYPES = {
-  tractor: "Unidade Tratora (Cavalo)",
+  tractor_unit: "Unidade Tratora (Cavalo)",
+  truck: "Caminhão",
   semi_trailer: "Semirreboque",
   trailer: "Reboque",
   dolly: "Dolly",
   flatbed: "Prancha"
+};
+
+// Constante para tipos de carroceria
+const BODY_TYPES = {
+  open: "ABERTA",
+  dump: "BASCULANTE",
+  container: "PORTA-CONTÊINER",
+  closed: "FECHADA",
+  tank: "TANQUE"
 };
 
 // Esquema estendido para validação do formulário
@@ -97,6 +107,7 @@ export function VehicleFormModal({
 }: VehicleFormModalProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string>('tractor_unit');
   
   // Removemos a busca automática de veículos existentes
   // conforme solicitado pelo cliente
@@ -112,7 +123,8 @@ export function VehicleFormModal({
       brand: '',
       model: '',
       year: new Date().getFullYear(),
-      type: 'tractor',
+      type: 'tractor_unit',
+      bodyType: '',
       renavam: '',
       tare: undefined, // Campo vazio para forçar preenchimento
       axleCount: undefined, // Campo vazio para forçar preenchimento
@@ -334,7 +346,16 @@ export function VehicleFormModal({
                     </FormLabel>
                     <Select 
                       value={field.value} 
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        console.log("Novo tipo de veículo selecionado:", value);
+                        field.onChange(value);
+                        setSelectedVehicleType(value);
+                        
+                        // Limpar campo carroceria se o novo tipo não for compatível
+                        if (value !== "truck" && value !== "semi_trailer" && value !== "trailer") {
+                          form.setValue("bodyType", "");
+                        }
+                      }}
                       required
                     >
                       <FormControl>
@@ -356,6 +377,39 @@ export function VehicleFormModal({
               />
             </div>
             
+            {/* Campo de Tipo de Carroceria - só aparece para tipos compatíveis */}
+            {(selectedVehicleType === "truck" || selectedVehicleType === "semi_trailer" || selectedVehicleType === "trailer") && (
+              <FormField
+                control={form.control}
+                name="bodyType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      Tipo de Carroceria
+                    </FormLabel>
+                    <Select 
+                      value={field.value} 
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de carroceria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(BODY_TYPES).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="renavam"

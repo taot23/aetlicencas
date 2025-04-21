@@ -49,6 +49,14 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   // Estado para controlar os placeholders dinâmicos
   const [vehicleType, setVehicleType] = useState<string>(vehicle?.type || "");
   
+  // Atualizar vehicleType quando o veículo mudar
+  useEffect(() => {
+    if (vehicle?.type) {
+      setVehicleType(vehicle.type);
+      console.log("Tipo de veículo do banco:", vehicle.type);
+    }
+  }, [vehicle]);
+  
   // Estado para o CMT (Capacidade Máxima de Tração)
   const [cmt, setCmt] = useState<number | undefined>(undefined);
   
@@ -335,39 +343,38 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             )}
           />
           
-          {/* Mostrar campo Tipo de Carroceria sempre, independente do tipo selecionado (para debug) */}
-          <FormField
-            control={form.control}
-            name="bodyType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm">
-                  Tipo de Carroceria {vehicleType === "semi_trailer" ? "(Compatível)" : ""}
-                </FormLabel>
-                <Select 
-                  onValueChange={(value) => field.onChange(value)} 
-                  value={field.value}
-                  defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {bodyTypeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-                <FormDescription className="text-xs text-red-600">
-                  vehicleType: {vehicleType || "não definido"}
-                </FormDescription>
-              </FormItem>
-            )}
-          />
+          {/* Mostrar campo Tipo de Carroceria apenas para tipos compatíveis */}
+          {(vehicleType === "truck" || vehicleType === "semi_trailer" || vehicleType === "trailer") && (
+            <FormField
+              control={form.control}
+              name="bodyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">
+                    Tipo de Carroceria
+                  </FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value)} 
+                    value={field.value}
+                    defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {bodyTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           
           <div className="grid grid-cols-3 gap-3">
             <FormField
