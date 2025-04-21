@@ -906,11 +906,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a request number
       const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
       
-      const licenseRequest = await storage.createLicenseRequest(userId, {
+      // Garantir que os campos obrigatórios sejam enviados corretamente para o banco de dados
+      // Conversão explícita de tipos para evitar problemas de nulos
+      const sanitizedData = {
         ...licenseData,
+        width: licenseData.width !== undefined ? Number(licenseData.width) : null,
+        height: licenseData.height !== undefined ? Number(licenseData.height) : null,
+        cargoType: licenseData.cargoType || null,
         requestNumber,
         isDraft: false,
-      });
+      };
+      
+      console.log("Dados sanitizados para envio ao banco:", sanitizedData);
+      
+      const licenseRequest = await storage.createLicenseRequest(userId, sanitizedData);
       
       res.status(201).json(licenseRequest);
     } catch (error) {
@@ -998,17 +1007,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.message || "Erro de validação" });
       }
       
-      console.log('Creating license request with data:', {
+      // Garantir que os campos obrigatórios sejam enviados corretamente para o banco de dados
+      // Conversão explícita de tipos para evitar problemas de nulos
+      const sanitizedData = {
         ...licenseData,
-        requestNumber,
-        isDraft: false
-      });
-      
-      const licenseRequest = await storage.createLicenseRequest(userId, {
-        ...licenseData,
+        width: licenseData.width !== undefined ? Number(licenseData.width) : null,
+        height: licenseData.height !== undefined ? Number(licenseData.height) : null,
+        cargoType: licenseData.cargoType || null,
         requestNumber,
         isDraft: false,
-      });
+      };
+      
+      console.log('Creating license request with data:', sanitizedData);
+      
+      const licenseRequest = await storage.createLicenseRequest(userId, sanitizedData);
       
       res.json(licenseRequest);
     } catch (error) {
