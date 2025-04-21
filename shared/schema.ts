@@ -170,6 +170,7 @@ export const vehicles = pgTable("vehicles", {
   userId: integer("user_id").notNull().references(() => users.id),
   plate: text("plate").notNull(),
   type: text("type").notNull(), // Unidade Tratora, Semirreboque, Reboque, Dolly, Prancha
+  bodyType: text("body_type"), // Tipo de Carroceria: ABERTA, BASCULANTE, PORTA-CONTÊINER, FECHADA, TANQUE
   brand: text("brand"),
   model: text("model"),
   year: integer("year"),
@@ -195,6 +196,7 @@ export const insertVehicleSchema = createInsertSchema(vehicles)
     // Campos obrigatórios com validações
     plate: z.string().min(1, "A placa é obrigatória"),
     type: z.string().min(1, "O tipo de veículo é obrigatório"),
+    bodyType: z.string().optional(), // Tipo de carroceria
     renavam: z.string().min(1, "O RENAVAM é obrigatório"),
     brand: z.string().min(1, "A marca é obrigatória"),
     model: z.string().min(1, "O modelo é obrigatório"),
@@ -396,4 +398,23 @@ export const vehicleTypeOptions = [
   { value: "trailer", label: "Reboque" },
   { value: "dolly", label: "Dolly" },
   { value: "flatbed", label: "Prancha" },
+];
+
+// Novo enum para tipos de carroceria
+export const bodyTypeEnum = z.enum([
+  "open", // ABERTA
+  "dump", // BASCULANTE
+  "container", // PORTA-CONTÊINER
+  "closed", // FECHADA
+  "tank", // TANQUE
+]);
+
+export type BodyType = z.infer<typeof bodyTypeEnum>;
+
+export const bodyTypeOptions = [
+  { value: "open", label: "ABERTA" },
+  { value: "dump", label: "BASCULANTE" },
+  { value: "container", label: "PORTA-CONTÊINER" },
+  { value: "closed", label: "FECHADA" },
+  { value: "tank", label: "TANQUE" },
 ];
