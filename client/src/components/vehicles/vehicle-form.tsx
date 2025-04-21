@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertVehicleSchema, vehicleTypeOptions, Vehicle } from "@shared/schema";
+import { insertVehicleSchema, vehicleTypeOptions, bodyTypeOptions, Vehicle } from "@shared/schema";
 import { z } from "zod";
 import {
   Form,
@@ -57,6 +57,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
     defaultValues: vehicle ? {
       plate: vehicle.plate,
       type: vehicle.type,
+      bodyType: vehicle.bodyType || "",
       tare: vehicle.tare,
       crlvYear: vehicle.crlvYear,
       brand: vehicle.brand || "",
@@ -68,6 +69,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
     } : {
       plate: "",
       type: "", // Sem valor padrão para o tipo
+      bodyType: "", // Sem valor padrão para o tipo de carroceria
       tare: undefined,
       crlvYear: new Date().getFullYear(),
       brand: "",
@@ -175,6 +177,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       const vehicleData = {
         plate: values.plate.toUpperCase(),
         type: values.type,
+        bodyType: values.bodyType || undefined,
         tare: Number(values.tare),
         crlvYear: Number(values.crlvYear),
         brand: values.brand,
@@ -191,6 +194,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       formData.append("tare", vehicleData.tare.toString());
       formData.append("crlvYear", vehicleData.crlvYear.toString());
       
+      if (vehicleData.bodyType) formData.append("bodyType", vehicleData.bodyType);
       if (vehicleData.brand) formData.append("brand", vehicleData.brand);
       if (vehicleData.model) formData.append("model", vehicleData.model);
       if (vehicleData.year) formData.append("year", vehicleData.year.toString());
@@ -212,6 +216,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       const vehicleData = {
         plate: values.plate.toUpperCase(),
         type: values.type,
+        bodyType: values.bodyType || undefined,
         tare: Number(values.tare),
         crlvYear: Number(values.crlvYear),
         brand: values.brand,
@@ -308,6 +313,36 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   </FormControl>
                   <SelectContent>
                     {vehicleTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="bodyType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm">
+                  Tipo de Carroceria
+                </FormLabel>
+                <Select 
+                  onValueChange={(value) => field.onChange(value)} 
+                  value={field.value}
+                  defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {bodyTypeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
