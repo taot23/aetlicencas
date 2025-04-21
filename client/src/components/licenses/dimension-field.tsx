@@ -63,6 +63,14 @@ export function DimensionField({
   function handleBlur() {
     document.body.classList.remove('keyboard-active');
     
+    // Garante que um valor está definido quando o campo é obrigatório
+    if (fieldType === "comprimento" && (!displayValue || displayValue === '')) {
+      // Se for comprimento e o campo estiver vazio, definir o valor mínimo
+      setDisplayValue('19,80');
+      updateFormValue('19,80');
+      return;
+    }
+    
     // Para campo de comprimento: adicionar zeros após vírgula se necessário
     if (fieldType === "comprimento" && displayValue.includes(',')) {
       const parts = displayValue.split(',');
@@ -75,6 +83,10 @@ export function DimensionField({
         setDisplayValue(parts[0] + ',' + parts[1] + '0');
         updateFormValue(parts[0] + ',' + parts[1] + '0');
       }
+    } else if (fieldType === "comprimento" && !displayValue.includes(',')) {
+      // Se não tem vírgula, adicionar ,00
+      setDisplayValue(displayValue + ',00');
+      updateFormValue(displayValue + ',00');
     }
   }
 
@@ -159,11 +171,15 @@ export function DimensionField({
     updateFormValue(value);
   }
 
+  // Gerar ID único para o campo
+  const fieldId = `${fieldType}_input_${field.name}`;
+  
   return (
     <FormItem>
-      <FormLabel className="text-base font-medium">{label}</FormLabel>
+      <FormLabel htmlFor={fieldId} className="text-base font-medium">{label}</FormLabel>
       <FormControl>
         <Input 
+          id={fieldId}
           type="text" 
           inputMode="decimal"
           placeholder={placeholder}
