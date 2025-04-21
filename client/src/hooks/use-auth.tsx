@@ -16,6 +16,7 @@ type AuthContextType = {
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
+  checkRole: (role: 'admin' | 'supervisor' | 'operational') => boolean;
 };
 
 const loginSchema = z.object({
@@ -45,6 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+  
+  // Helper para verificar os papéis de usuário
+  const checkRole = (role: 'admin' | 'supervisor' | 'operational'): boolean => {
+    if (!user) return false;
+    
+    switch (role) {
+      case 'admin':
+        return user.role === 'admin' || !!user.isAdmin;
+      case 'supervisor':
+        return user.role === 'admin' || user.role === 'supervisor' || !!user.isAdmin;
+      case 'operational':
+        return user.role === 'admin' || user.role === 'supervisor' || user.role === 'operational' || !!user.isAdmin;
+      default:
+        return false;
+    }
+  };
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -119,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        checkRole,
       }}
     >
       {children}

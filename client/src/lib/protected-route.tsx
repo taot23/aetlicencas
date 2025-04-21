@@ -45,7 +45,11 @@ export function ProtectedRoute({
     return <RedirectToAuth path={path} />;
   }
 
-  return <Route path={path} component={Component} />;
+  // Passa a chave única para o componente para ajudar na identificação
+  // e evitar reconstrução desnecessária
+  return <Route path={path}>
+    <Component />
+  </Route>;
 }
 
 // Rota para administradores do sistema
