@@ -1038,19 +1038,30 @@ export default function AdminLicensesPage() {
                 {/* Informações de dimensões */}
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Comprimento</h3>
-                  <p className="text-base">{selectedLicense.length || "-"} m</p>
+                  <p className="text-base">{selectedLicense.length ? (selectedLicense.length > 100 ? (selectedLicense.length / 100).toFixed(2) : selectedLicense.length.toFixed(2)) : "-"} m</p>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Largura</h3>
-                  <p className="text-base">{selectedLicense.width || "-"} m</p>
+                  <p className="text-base">{selectedLicense.width ? (selectedLicense.width > 100 ? (selectedLicense.width / 100).toFixed(2) : selectedLicense.width.toFixed(2)) : "-"} m</p>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Altura</h3>
-                  <p className="text-base">{selectedLicense.height || "-"} m</p>
+                  <p className="text-base">{selectedLicense.height ? (selectedLicense.height > 100 ? (selectedLicense.height / 100).toFixed(2) : selectedLicense.height.toFixed(2)) : "-"} m</p>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
                   <h3 className="font-medium text-sm text-gray-500">Tipo de Carga</h3>
-                  <p className="text-base">{selectedLicense.cargoType || "-"}</p>
+                  <p className="text-base">
+                    {selectedLicense.cargoType ? (
+                      selectedLicense.cargoType === "dry_cargo" ? "Carga Seca" :
+                      selectedLicense.cargoType === "liquid_cargo" ? "Carga Líquida" :
+                      selectedLicense.cargoType === "live_cargo" ? "Carga Viva" :
+                      selectedLicense.cargoType === "sugar_cane" ? "Cana de Açúcar" :
+                      selectedLicense.cargoType === "indivisible_cargo" ? "Carga Indivisível" :
+                      selectedLicense.cargoType === "agricultural_machinery" ? "Máquinas Agrícolas" :
+                      selectedLicense.cargoType === "oversized" ? "SUPERDIMENSIONADA" :
+                      selectedLicense.cargoType
+                    ) : "-"}
+                  </p>
                 </div>
               </div>
               
