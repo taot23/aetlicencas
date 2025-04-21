@@ -122,6 +122,10 @@ export default function AdminLicensesPage() {
   const [location] = useLocation();
   const [visibleStateFlows, setVisibleStateFlows] = useState<string[]>([]);
   
+  // Estado para ordenação
+  const [sortField, setSortField] = useState<string>("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  
   // Verificar se estamos na rota de gerenciar-licencas (staff) ou admin
   const isStaffRoute = location.includes('gerenciar-licencas');
   const apiEndpoint = isStaffRoute ? '/api/staff/licenses' : '/api/admin/licenses';
@@ -195,39 +199,75 @@ export default function AdminLicensesPage() {
   });
 
   // Filtrar licenças com critérios múltiplos
-  const filteredLicenses = licenses.filter(license => {
-    // Filtro de busca (número do pedido, placa ou transportador)
-    const matchesSearch = !searchTerm || 
-      license.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      license.mainVehiclePlate.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filtro de status
-    const matchesStatus = !statusFilter || statusFilter === "all" || license.status === statusFilter;
-    
-    // Filtro de transportador
-    const matchesTransporter = !transporterFilter || transporterFilter === "all" || (
-      license.transporterId != null && license.transporterId.toString() === transporterFilter
-    );
-    
-    // Filtro de data
-    let matchesDate = true;
-    if (dateFilter) {
-      const requestDate = license.createdAt ? new Date(license.createdAt) : null;
-      const filterDate = new Date(dateFilter);
+  const filteredLicenses = licenses
+    .filter(license => {
+      // Filtro de busca (número do pedido, placa ou transportador)
+      const matchesSearch = !searchTerm || 
+        license.requestNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        license.mainVehiclePlate?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      if (requestDate) {
-        // Comparar apenas ano, mês e dia
-        matchesDate = 
-          requestDate.getFullYear() === filterDate.getFullYear() &&
-          requestDate.getMonth() === filterDate.getMonth() &&
-          requestDate.getDate() === filterDate.getDate();
-      } else {
-        matchesDate = false;
+      // Filtro de status
+      const matchesStatus = !statusFilter || statusFilter === "all" || license.status === statusFilter;
+      
+      // Filtro de transportador
+      const matchesTransporter = !transporterFilter || transporterFilter === "all" || (
+        license.transporterId != null && license.transporterId.toString() === transporterFilter
+      );
+      
+      // Filtro de data
+      let matchesDate = true;
+      if (dateFilter) {
+        const requestDate = license.createdAt ? new Date(license.createdAt) : null;
+        const filterDate = new Date(dateFilter);
+        
+        if (requestDate) {
+          // Comparar apenas ano, mês e dia
+          matchesDate = 
+            requestDate.getFullYear() === filterDate.getFullYear() &&
+            requestDate.getMonth() === filterDate.getMonth() &&
+            requestDate.getDate() === filterDate.getDate();
+        } else {
+          matchesDate = false;
+        }
       }
-    }
-    
-    return matchesSearch && matchesStatus && matchesTransporter && matchesDate;
-  });
+      
+      return matchesSearch && matchesStatus && matchesTransporter && matchesDate;
+    })
+    // Aplicar ordenação
+    .sort((a, b) => {
+      const getValue = (license: LicenseRequest, field: string) => {
+        switch (field) {
+          case 'requestNumber':
+            return license.requestNumber || '';
+          case 'type':
+            return license.type || '';
+          case 'mainVehiclePlate':
+            return license.mainVehiclePlate || '';
+          case 'status':
+            return license.status || '';
+          case 'createdAt':
+            return new Date(license.createdAt || 0).getTime();
+          default:
+            return '';
+        }
+      };
+      
+      const aValue = getValue(a, sortField);
+      const bValue = getValue(b, sortField);
+      
+      // Se ambos os valores são strings, ordenar ignorando case
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const comparison = aValue.localeCompare(bValue);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      }
+      
+      // Se são números (timestamp para datas)
+      if (sortDirection === 'asc') {
+        return (aValue as number) - (bValue as number);
+      } else {
+        return (bValue as number) - (aValue as number);
+      }
+    });
 
   // Função removida pois o status agora só será editado por estado individual
 
@@ -445,12 +485,107 @@ export default function AdminLicensesPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nº Solicitação</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Veículo Principal</TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                              if (sortField === 'requestNumber') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('requestNumber');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Nº Solicitação
+                              {sortField === 'requestNumber' && (
+                                <span className="ml-1">
+                                  {sortDirection === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                              if (sortField === 'type') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('type');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Tipo
+                              {sortField === 'type' && (
+                                <span className="ml-1">
+                                  {sortDirection === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                              if (sortField === 'mainVehiclePlate') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('mainVehiclePlate');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Veículo Principal
+                              {sortField === 'mainVehiclePlate' && (
+                                <span className="ml-1">
+                                  {sortDirection === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead>Estados</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Data de Solicitação</TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                              if (sortField === 'status') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('status');
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Status
+                              {sortField === 'status' && (
+                                <span className="ml-1">
+                                  {sortDirection === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                              if (sortField === 'createdAt') {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField('createdAt');
+                                setSortDirection('desc'); // Padrão decrescente para datas
+                              }
+                            }}
+                          >
+                            <div className="flex items-center">
+                              Data de Solicitação
+                              {sortField === 'createdAt' && (
+                                <span className="ml-1">
+                                  {sortDirection === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -490,8 +625,10 @@ export default function AdminLicensesPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleViewDetails(license)}
+                                    className="flex items-center"
                                   >
-                                    Editar
+                                    <Pencil className="h-4 w-4 mr-1" />
+                                    Detalhes
                                   </Button>
                                 </div>
                               </TableCell>
@@ -543,8 +680,10 @@ export default function AdminLicensesPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleViewDetails(license)}
+                                  className="flex items-center"
                                 >
-                                  Editar
+                                  <Pencil className="h-4 w-4 mr-1" />
+                                  Detalhes
                                 </Button>
                               </div>
                             </div>
