@@ -15,24 +15,21 @@ import AdminLicensesPage from "@/pages/admin/admin-licenses";
 import AdminTransportersPage from "@/pages/admin/admin-transporters";
 import AdminUsersPage from "@/pages/admin/admin-users";
 import AdminVehiclesPage from "@/pages/admin/admin-vehicles";
-import { ProtectedRoute, AdminRoute, OperationalRoute } from "./lib/protected-route";
+import { ProtectedRoute, AdminRoute, StaffRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
       
-      {/* Portal Admin - Rotas separadas */}
+      {/* Portal Admin - Rotas acessíveis via hierarquia de permissões */}
       <AdminRoute path="/admin" component={AdminDashboardPage} />
-      <AdminRoute path="/admin/licenses" component={AdminLicensesPage} />
-      <AdminRoute path="/admin/transporters" component={AdminTransportersPage} />
+      <StaffRoute path="/admin/licenses" component={AdminLicensesPage} requiredRole="operational" />
+      <StaffRoute path="/admin/transporters" component={AdminTransportersPage} requiredRole="operational" />
       <AdminRoute path="/admin/users" component={AdminUsersPage} />
-      <AdminRoute path="/admin/vehicles" component={AdminVehiclesPage} />
-      
-      {/* Rotas para usuários Operacionais */}
-      <OperationalRoute path="/gerenciar-licencas" component={AdminLicensesPage} />
+      <StaffRoute path="/admin/vehicles" component={AdminVehiclesPage} requiredRole="operational" />
       
       {/* Sistema de Controle de Licenças - Rotas do usuário */}
       <ProtectedRoute path="/" component={DashboardPage} />

@@ -4,10 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, Home, Truck, FileText, ClipboardList, ListChecks, LogOut, ChevronRight, Building2, ClipboardEdit } from "lucide-react";
+import { 
+  Menu, 
+  Home, 
+  Truck, 
+  FileText, 
+  ClipboardList, 
+  ListChecks, 
+  LogOut, 
+  ChevronRight, 
+  Building2, 
+  ClipboardEdit,
+  LayoutDashboard,
+  Users,
+  Settings
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Logo } from "@/components/ui/logo";
+import { Separator } from "@/components/ui/separator";
 
 interface SidebarProps {
   className?: string;
@@ -16,7 +31,9 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [location, setLocation] = useLocation();
   const { user, logoutMutation } = useAuth();
-  const isOperational = user?.role === 'operational' || user?.role === 'supervisor' || user?.isAdmin;
+  const isAdmin = user?.role === 'admin' || user?.isAdmin;
+  const isSupervisor = isAdmin || user?.role === 'supervisor';
+  const isOperational = isSupervisor || user?.role === 'operational';
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -43,6 +60,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
       
       <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
+        {/* Seção do Usuário Regular */}
         <Button
           variant="ghost"
           className={cn(
@@ -115,21 +133,85 @@ export function Sidebar({ className }: SidebarProps) {
           Licenças Emitidas
         </Button>
         
-        {isOperational && (
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-white hover:bg-gray-700",
-              location === "/gerenciar-licencas" ? "bg-gray-700" : "bg-transparent"
+        {/* Seção de Funcionalidades Administrativas */}
+        {(isAdmin || isSupervisor || isOperational) && (
+          <>
+            <div className="pt-2 pb-2">
+              <Separator className="bg-gray-700" />
+              <p className="text-xs text-gray-400 uppercase mt-2 ml-2 font-semibold">Administração</p>
+            </div>
+            
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start text-white hover:bg-gray-700",
+                  location === "/admin" ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={() => handleNavigate("/admin")}
+              >
+                <LayoutDashboard className="mr-3 h-5 w-5" />
+                Painel Admin
+              </Button>
             )}
-            onClick={() => handleNavigate("/gerenciar-licencas")}
-          >
-            <ClipboardEdit className="mr-3 h-5 w-5" />
-            Gerenciar Licenças
-          </Button>
+            
+            {isOperational && (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start text-white hover:bg-gray-700",
+                  (location === "/admin/licenses" || location === "/gerenciar-licencas") ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={() => handleNavigate("/admin/licenses")}
+              >
+                <ClipboardEdit className="mr-3 h-5 w-5" />
+                Gerenciar Licenças
+              </Button>
+            )}
+            
+            {isOperational && (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start text-white hover:bg-gray-700",
+                  location === "/admin/transporters" ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={() => handleNavigate("/admin/transporters")}
+              >
+                <Building2 className="mr-3 h-5 w-5" />
+                Transportadores
+              </Button>
+            )}
+            
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start text-white hover:bg-gray-700",
+                  location === "/admin/users" ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={() => handleNavigate("/admin/users")}
+              >
+                <Users className="mr-3 h-5 w-5" />
+                Usuários
+              </Button>
+            )}
+            
+            {isOperational && (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start text-white hover:bg-gray-700",
+                  location === "/admin/vehicles" ? "bg-gray-700" : "bg-transparent"
+                )}
+                onClick={() => handleNavigate("/admin/vehicles")}
+              >
+                <Truck className="mr-3 h-5 w-5" />
+                Todos Veículos
+              </Button>
+            )}
+          </>
         )}
-        
-        {/* Botão do Painel Admin foi removido a pedido do cliente */}
       </div>
       
       <div className="p-4 border-t border-gray-700">
@@ -139,7 +221,12 @@ export function Sidebar({ className }: SidebarProps) {
           </Avatar>
           <div className="ml-3">
             <p className="text-sm font-medium text-white">{user?.fullName}</p>
-            <p className="text-xs text-gray-300">{user?.email}</p>
+            <p className="text-xs text-gray-300">
+              {user?.email}
+              {isAdmin && <span className="ml-1 bg-blue-600 text-white text-[10px] px-1 py-0.5 rounded">Admin</span>}
+              {user?.role === 'supervisor' && <span className="ml-1 bg-green-600 text-white text-[10px] px-1 py-0.5 rounded">Supervisor</span>}
+              {user?.role === 'operational' && <span className="ml-1 bg-orange-600 text-white text-[10px] px-1 py-0.5 rounded">Operacional</span>}
+            </p>
           </div>
           <Button 
             variant="ghost" 
