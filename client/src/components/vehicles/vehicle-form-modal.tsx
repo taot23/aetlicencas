@@ -54,6 +54,7 @@ const formSchema = insertVehicleSchema.extend({
   renavam: z.string()
     .min(1, "O RENAVAM é obrigatório"),
   // TIPO DE VEÍCULO - já é obrigatório por padrão
+  type: z.string().min(1, "O tipo do veículo é obrigatório"),
   // MARCA - obrigatório
   brand: z.string()
     .min(1, "A marca do veículo é obrigatória"),
@@ -62,14 +63,17 @@ const formSchema = insertVehicleSchema.extend({
     .min(1, "O modelo do veículo é obrigatório"),
   // QTD EIXO - obrigatório
   axleCount: z.number()
-    .min(1, "A quantidade de eixos é obrigatória"),
+    .min(1, "A quantidade de eixos é obrigatória")
+    .refine(value => value > 0, "A quantidade de eixos deve ser maior que zero"),
   // TARA - obrigatório
   tare: z.number()
-    .min(1, "O peso (TARA) é obrigatório"), 
+    .min(1, "O peso (TARA) é obrigatório")
+    .refine(value => value > 0, "O peso deve ser maior que zero"), 
   // ANO DE FABRICAÇÃO - obrigatório
   year: z.number()
     .min(1950, "O ano deve ser maior que 1950")
-    .max(new Date().getFullYear() + 1, `O ano deve ser no máximo ${new Date().getFullYear() + 1}`),
+    .max(new Date().getFullYear() + 1, `O ano deve ser no máximo ${new Date().getFullYear() + 1}`)
+    .refine(value => value > 0, "O ano de fabricação é obrigatório"),
   // Ano do CRLV
   crlvYear: z.number().default(new Date().getFullYear())
 });
@@ -111,7 +115,8 @@ export function VehicleFormModal({
       tare: 0, // Peso padrão (será enviado mesmo que não exibido no formulário)
       axleCount: 0, // Quantidade de eixos padrão
       crlvYear: new Date().getFullYear() // Ano CRLV padrão
-    }
+    },
+    mode: "onBlur", // Validar ao perder o foco
   });
   
   // Removemos a atualização automática do formulário
@@ -173,6 +178,34 @@ export function VehicleFormModal({
   });
 
   const onSubmit = (data: VehicleFormValues) => {
+    // Verificar todos os campos obrigatórios antes de salvar
+    const camposObrigatorios = {
+      plate: 'Placa',
+      renavam: 'RENAVAM',
+      type: 'Tipo de Veículo',
+      brand: 'Marca',
+      model: 'Modelo',
+      axleCount: 'Quantidade de Eixos',
+      tare: 'TARA',
+      year: 'Ano de Fabricação'
+    };
+    
+    const camposFaltantes = Object.entries(camposObrigatorios)
+      .filter(([key, _]) => {
+        const valor = data[key as keyof VehicleFormValues];
+        return !valor || (typeof valor === 'number' && valor <= 0) || (typeof valor === 'string' && valor.trim() === '');
+      })
+      .map(([_, label]) => label);
+    
+    if (camposFaltantes.length > 0) {
+      toast({
+        title: "Campos obrigatórios",
+        description: `Os seguintes campos são obrigatórios: ${camposFaltantes.join(', ')}`,
+        variant: "destructive"
+      });
+      return; // Impede o envio se houver campos faltantes
+    }
+    
     setIsSaving(true);
     // Converte a placa para maiúsculas antes de salvar
     saveMutation.mutate({
@@ -198,6 +231,9 @@ export function VehicleFormModal({
               : 'Preencha os dados do veículo para cadastrá-lo'
             }
           </DialogDescription>
+          <div className="text-xs text-muted-foreground mt-1">
+            Os campos marcados com <span className="text-red-500">*</span> são obrigatórios
+          </div>
         </DialogHeader>
 
         <Form {...form}>
