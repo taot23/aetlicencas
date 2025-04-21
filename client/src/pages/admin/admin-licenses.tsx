@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import { getLicenseTypeLabel } from "@/lib/utils";
+import { getLicenseTypeLabel, getCargoTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1070,16 +1070,7 @@ export default function AdminLicensesPage() {
                 <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
                   <h3 className="font-medium text-sm text-gray-500">Tipo de Carga</h3>
                   <p className="text-base">
-                    {selectedLicense.cargoType ? (
-                      selectedLicense.cargoType === "dry_cargo" ? "Carga Seca" :
-                      selectedLicense.cargoType === "liquid_cargo" ? "Carga Líquida" :
-                      selectedLicense.cargoType === "live_cargo" ? "Carga Viva" :
-                      selectedLicense.cargoType === "sugar_cane" ? "Cana de Açúcar" :
-                      selectedLicense.cargoType === "indivisible_cargo" ? "Carga Indivisível" :
-                      selectedLicense.cargoType === "agricultural_machinery" ? "Máquinas Agrícolas" :
-                      selectedLicense.cargoType === "oversized" ? "SUPERDIMENSIONADA" :
-                      selectedLicense.cargoType
-                    ) : "-"}
+                    {getCargoTypeLabel(selectedLicense.cargoType)}
                   </p>
                 </div>
               </div>

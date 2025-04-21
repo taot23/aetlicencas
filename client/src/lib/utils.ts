@@ -24,8 +24,25 @@ export function getLicenseTypeLabel(type: string): string {
     bitrain_7_axles: "Bitrem 7 eixos",
     bitrain_6_axles: "Bitrem 6 eixos",
     flatbed: "Prancha",
-    rodotrain: "Rodotrem 9 eixos" // Para compatibilidade
+    rodotrain: "Rodotrem 9 eixos", // Para compatibilidade
+    romeu_e_julieta: "Romeu e Julieta"
   };
   
   return licenseTypes[type] || type;
+}
+
+export function getCargoTypeLabel(cargoType: string | null | undefined): string {
+  if (!cargoType) return "-";
+  
+  const cargoTypes: Record<string, string> = {
+    dry_cargo: "Carga Seca",
+    liquid_cargo: "Carga Líquida",
+    live_cargo: "Carga Viva",
+    sugar_cane: "Cana de Açúcar",
+    indivisible_cargo: "Carga Indivisível",
+    agricultural_machinery: "Máquinas Agrícolas",
+    oversized: "SUPERDIMENSIONADA"
+  };
+  
+  return cargoTypes[cargoType] || cargoType;
 }
