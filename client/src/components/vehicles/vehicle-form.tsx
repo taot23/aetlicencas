@@ -245,6 +245,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   
   // Limpar campo de carroceria quando o tipo de veículo mudar para um não compatível
   useEffect(() => {
+    console.log("Current vehicleType:", vehicleType);
+    console.log("Condition result:", vehicleType !== "truck" && vehicleType !== "semi_trailer" && vehicleType !== "trailer");
+    console.log("Should show bodyType field:", vehicleType === "truck" || vehicleType === "semi_trailer" || vehicleType === "trailer");
     if (vehicleType !== "truck" && vehicleType !== "semi_trailer" && vehicleType !== "trailer") {
       form.setValue("bodyType", "");
     }
@@ -310,6 +313,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   onValueChange={(value) => {
                     field.onChange(value);
                     setVehicleType(value);
+                    console.log("Selected vehicle type:", value);
                   }} 
                   value={field.value}
                   defaultValue={field.value}>
