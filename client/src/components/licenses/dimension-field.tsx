@@ -9,9 +9,16 @@ interface DimensionFieldProps {
   label: string;
   placeholder: string;
   description: string;
+  fieldType?: "comprimento" | "largura" | "altura"; // Tipo de campo para comportamento específico
 }
 
-export function DimensionField({ field, label, placeholder, description }: DimensionFieldProps) {
+export function DimensionField({ 
+  field, 
+  label, 
+  placeholder, 
+  description, 
+  fieldType = "comprimento" 
+}: DimensionFieldProps) {
   const [displayValue, setDisplayValue] = useState<string>('');
 
   // Ao inicializar, converter o valor numérico para exibição
@@ -48,6 +55,25 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
         setTimeout(() => {
           input.setSelectionRange(selectionStart - 2, selectionStart - 2);
         }, 0);
+      }
+    }
+  }
+
+  // Função para tratar o evento onBlur (quando o campo perde o foco)
+  function handleBlur() {
+    document.body.classList.remove('keyboard-active');
+    
+    // Para campo de comprimento: adicionar zeros após vírgula se necessário
+    if (fieldType === "comprimento" && displayValue.includes(',')) {
+      const parts = displayValue.split(',');
+      if (parts[1] === '') {
+        // Se tem vírgula mas nada depois, adiciona "00"
+        setDisplayValue(parts[0] + ',00');
+        updateFormValue(parts[0] + ',00');
+      } else if (parts[1].length === 1) {
+        // Se tem só um dígito após a vírgula, adiciona um zero
+        setDisplayValue(parts[0] + ',' + parts[1] + '0');
+        updateFormValue(parts[0] + ',' + parts[1] + '0');
       }
     }
   }
@@ -93,12 +119,21 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
       value = value.replace('.', ',');
     }
     
-    // Adicionar automaticamente vírgula após 2 dígitos
-    if (value.length === 2 && !hasComma && !value.includes(',') && /^\d\d$/.test(value)) {
-      value = value + ',';
-      valueChanged = true;
-      // Ajustar posição do cursor
-      cursorPos = 3;
+    // Adicionar automaticamente vírgula baseado no tipo de campo
+    if (fieldType === "comprimento") {
+      // Para comprimento: adicionar vírgula após 2 dígitos
+      if (value.length === 2 && !hasComma && !value.includes(',') && /^\d\d$/.test(value)) {
+        value = value + ',';
+        valueChanged = true;
+        cursorPos = 3;
+      }
+    } else {
+      // Para largura e altura: adicionar vírgula após 1 dígito
+      if (value.length === 1 && !hasComma && !value.includes(',') && /^\d$/.test(value)) {
+        value = value + ',';
+        valueChanged = true;
+        cursorPos = 2;
+      }
     }
     
     // Limitar a 2 casas decimais durante a digitação
@@ -141,9 +176,7 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
               e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 300);
           }}
-          onBlur={() => {
-            document.body.classList.remove('keyboard-active');
-          }}
+          onBlur={handleBlur}
           onChange={processInput}
           onKeyDown={handleKeyDown}
         />
