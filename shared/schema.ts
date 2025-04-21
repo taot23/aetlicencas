@@ -308,16 +308,90 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
     states: z.array(z.string()).min(1, "Selecione pelo menos um estado"),
     cargoType: cargoTypeEnum.optional(),
     length: z.coerce.number()
-      .min(19.8, "O comprimento deve ser de no mínimo 19,80 metros")
-      .max(30.0, "O comprimento deve ser de no máximo 30,00 metros")
-      .refine(val => licenseTypeEnum.safeParse("flatbed").success ? true : val >= 19.8, "O comprimento deve ser de no mínimo 19,80 metros para este tipo de conjunto"),
+      .superRefine((val, ctx) => {
+        // Se for tipo prancha, diferentes regras se aplicam
+        if (ctx.data && (ctx.data as any).type === "flatbed") {
+          // Se for carga superdimensionada, não tem limite
+          if ((ctx.data as any).cargoType === "oversized") {
+            return; // Válido
+          }
+          // Para prancha normal, máximo de 25m sem mínimo
+          if (val > 25.0) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "O comprimento máximo para prancha é de 25,00 metros",
+            });
+          }
+        } else {
+          // Para outros tipos, entre 19.8m e 30m
+          if (val < 19.8) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "O comprimento deve ser de no mínimo 19,80 metros",
+            });
+          } else if (val > 30.0) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "O comprimento deve ser de no máximo 30,00 metros",
+            });
+          }
+        }
+      }),
     width: z.coerce.number()
-      .min(1, "A largura deve ser maior que 0")
-      .max(3.2, "A largura máxima permitida é 3,20 metros")
+      .superRefine((val, ctx) => {
+        if (!val) return; // Se não for fornecido, ok
+        
+        // Se for tipo prancha, diferentes regras se aplicam
+        if (ctx.data && (ctx.data as any).type === "flatbed") {
+          // Se for carga superdimensionada, não tem limite
+          if ((ctx.data as any).cargoType === "oversized") {
+            return; // Válido
+          }
+          // Para prancha normal, máximo de 3.20m
+          if (val > 3.20) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "A largura máxima para prancha é de 3,20 metros",
+            });
+          }
+        } else {
+          // Para outros tipos, máximo de 2.60m
+          if (val > 2.60) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "A largura máxima permitida é 2,60 metros",
+            });
+          }
+        }
+      })
       .optional(),
     height: z.coerce.number()
-      .min(1, "A altura deve ser maior que 0")
-      .max(4.95, "A altura máxima permitida é 4,95 metros")
+      .superRefine((val, ctx) => {
+        if (!val) return; // Se não for fornecido, ok
+        
+        // Se for tipo prancha, diferentes regras se aplicam
+        if (ctx.data && (ctx.data as any).type === "flatbed") {
+          // Se for carga superdimensionada, não tem limite
+          if ((ctx.data as any).cargoType === "oversized") {
+            return; // Válido
+          }
+          // Para prancha normal, máximo de 4.95m
+          if (val > 4.95) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "A altura máxima para prancha é de 4,95 metros",
+            });
+          }
+        } else {
+          // Para outros tipos, máximo de 4.40m
+          if (val > 4.40) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "A altura máxima permitida é 4,40 metros",
+            });
+          }
+        }
+      })
       .optional(),
     additionalPlates: z.array(z.string()).optional().default([]),
     additionalPlatesDocuments: z.array(z.string()).optional().default([]),
