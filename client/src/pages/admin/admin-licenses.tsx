@@ -11,7 +11,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, MapPin, X, UploadCloud, Pencil, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { 
+  Loader2, Search, FileText, CheckCircle, XCircle, File, Clock, 
+  MapPin, X, UploadCloud, Pencil, AlertCircle, Eye, EyeOff, Trash2 
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { ProgressFlow, StateProgressFlow } from "@/components/licenses/progress-flow";
 import {
@@ -118,6 +131,7 @@ export default function AdminLicensesPage() {
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const [licenseDetailsOpen, setLicenseDetailsOpen] = useState(false);
   const [stateStatusDialogOpen, setStateStatusDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState("");
   const [location] = useLocation();
   const [visibleStateFlows, setVisibleStateFlows] = useState<string[]>([]);
@@ -192,6 +206,32 @@ export default function AdminLicensesPage() {
     onError: (error: Error) => {
       toast({
         title: "Erro ao atualizar status do estado",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutação para excluir licença
+  const deleteLicenseMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/licenses/${id}`);
+      return response.ok;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Licença excluída",
+        description: "A licença foi excluída com sucesso!",
+      });
+      // Invalidar as queries para manter a consistência
+      queryClient.invalidateQueries({ queryKey: [apiEndpoint] });
+      setDeleteDialogOpen(false);
+      setLicenseDetailsOpen(false);
+      setSelectedLicense(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao excluir licença",
         description: error.message,
         variant: "destructive",
       });
@@ -349,6 +389,18 @@ export default function AdminLicensesPage() {
       id: selectedLicense.id,
       data
     });
+  };
+  
+  // Função para excluir a licença selecionada
+  const handleDeleteLicense = () => {
+    if (!selectedLicense) return;
+    setDeleteDialogOpen(true);
+  };
+  
+  // Função para confirmar a exclusão da licença
+  const handleConfirmDelete = () => {
+    if (!selectedLicense) return;
+    deleteLicenseMutation.mutate(selectedLicense.id);
   };
 
   // Formatar data com tratamento de erros
@@ -1297,8 +1349,8 @@ export default function AdminLicensesPage() {
                 )}
               </div>
 
-              <div className="flex justify-center items-center mt-6 mb-2">
-                <div className="bg-gray-50 rounded-md px-8 py-3 shadow-sm w-fit mx-auto">
+              <div className="flex justify-center items-center gap-4 mt-6 mb-2">
+                <div className="bg-gray-50 rounded-md px-8 py-3 shadow-sm mx-auto">
                   <Button 
                     onClick={() => setLicenseDetailsOpen(false)}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md"
@@ -1307,11 +1359,52 @@ export default function AdminLicensesPage() {
                     Fechar detalhes
                   </Button>
                 </div>
+                
+                <div className="bg-gray-50 rounded-md px-8 py-3 shadow-sm mx-auto">
+                  <Button 
+                    onClick={handleDeleteLicense}
+                    variant="destructive"
+                    className="px-8 py-2 rounded-md"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Licença
+                  </Button>
+                </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Diálogo de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Licença</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja excluir esta licença?
+              Esta ação não pode ser desfeita e todos os dados associados serão perdidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteLicenseMutation.isPending}
+            >
+              {deleteLicenseMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
