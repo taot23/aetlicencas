@@ -43,7 +43,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   const formSchema = insertVehicleSchema.extend({
     tare: z.coerce.number().min(0.1, "O peso deve ser maior que zero"),
     crlvYear: z.coerce.number().min(1990, "O ano deve ser posterior a 1990"),
-    axleCount: z.coerce.number().optional(),
+    axleCount: z.coerce.number().min(1, "A quantidade de eixos deve ser maior que zero").optional(),
   });
 
   // Estado para controlar os placeholders dinâmicos
@@ -78,7 +78,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
     } : {
       plate: "",
       type: "", // Sem valor padrão para o tipo
-      tare: 0,
+      tare: undefined,
       crlvYear: new Date().getFullYear(),
       brand: "",
       model: "",
@@ -357,18 +357,28 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="axleCount"
               render={({ field }) => (
                 <FormItem className="col-span-2 md:col-span-1">
-                  <FormLabel className="text-xs sm:text-sm">Qtd. Eixos</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Qtd. Eixos <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="" 
+                      placeholder="Mínimo 1" 
                       {...field} 
                       value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      onChange={(e) => {
+                        const value = e.target.valueAsNumber;
+                        field.onChange(value && value > 0 ? value : '');
+                      }}
+                      min="1"
                       className="h-8 sm:h-9 text-sm" 
+                      required
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
+                  {field.value === 0 && (
+                    <p className="text-xs text-red-500 mt-1">A quantidade de eixos não pode ser zero</p>
+                  )}
                 </FormItem>
               )}
             />
