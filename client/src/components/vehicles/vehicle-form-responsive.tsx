@@ -268,7 +268,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="plate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">Placa</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Placa <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} className="h-8 sm:h-9 text-sm" />
                   </FormControl>
@@ -282,7 +284,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="renavam"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">Renavam</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Renavam <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} className="h-8 sm:h-9 text-sm" />
                   </FormControl>
@@ -297,7 +301,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs sm:text-sm">Tipo de Veículo</FormLabel>
+                <FormLabel className="text-xs sm:text-sm flex items-center">
+                  Tipo de Veículo <span className="text-red-500 ml-1">*</span>
+                </FormLabel>
                 <Select 
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -329,7 +335,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="brand"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">Marca</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Marca <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} className="h-8 sm:h-9 text-sm" />
                   </FormControl>
@@ -343,7 +351,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">Modelo</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Modelo <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} className="h-8 sm:h-9 text-sm" />
                   </FormControl>
@@ -436,7 +446,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">Ano de Fabricação</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Ano de Fabricação <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
