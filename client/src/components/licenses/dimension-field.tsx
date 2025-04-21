@@ -1,5 +1,5 @@
 // Componente para campos de dimensão com tratamento inteligente para valores decimais
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useEffect, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { FormControl, FormDescription, FormMessage, FormItem, FormLabel } from "@/components/ui/form";
 
@@ -14,18 +14,65 @@ interface DimensionFieldProps {
 export function DimensionField({ field, label, placeholder, description }: DimensionFieldProps) {
   const [displayValue, setDisplayValue] = useState<string>('');
 
+  // Ao inicializar, converter o valor numérico para exibição
+  useEffect(() => {
+    if (displayValue === '' && typeof field.value === 'number') {
+      setDisplayValue(field.value.toString().replace('.', ','));
+    }
+  }, [field.value, displayValue]);
+
+  // Função para lidar com teclas especiais como backspace
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace') {
+      const input = e.currentTarget;
+      const selectionStart = input.selectionStart;
+      const selectionEnd = input.selectionEnd;
+      
+      // Se temos uma seleção, deixa o comportamento padrão
+      if (selectionStart !== selectionEnd) return;
+      
+      // Se o cursor está logo após a vírgula e estamos tentando apagar a vírgula
+      if (selectionStart === displayValue.indexOf(',') + 1) {
+        e.preventDefault();
+        
+        // Apagar o caractere antes da vírgula também (a vírgula + o número antes dela)
+        const newValue = displayValue.substring(0, selectionStart - 2) + 
+                         displayValue.substring(selectionStart);
+        
+        setDisplayValue(newValue);
+        
+        // Atualizar o valor no formulário
+        updateFormValue(newValue);
+        
+        // Posicionar o cursor corretamente
+        setTimeout(() => {
+          input.setSelectionRange(selectionStart - 2, selectionStart - 2);
+        }, 0);
+      }
+    }
+  }
+
+  // Função para atualizar o valor no formulário
+  function updateFormValue(value: string) {
+    // Sanitizar para o modelo interno (sempre com ponto)
+    const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
+    
+    // Converter para float (para o backend)
+    const numericValue = sanitized === '' ? undefined : parseFloat(sanitized);
+    
+    // Atualizar o campo interno com o valor numérico
+    field.onChange(numericValue);
+  }
+
   // Função local para processar a entrada de dimensões
   function processInput(e: ChangeEvent<HTMLInputElement>) {
     // Campo inteligente para dimensões que aceita tanto ponto quanto vírgula
     let value = e.target.value;
     let cursorPos = e.target.selectionStart || 0;
     let valueChanged = false;
-
-    console.log("Valor original:", value);
     
     // Limitar a digitação apenas a números, vírgula e ponto
     value = value.replace(/[^\d.,]/g, '');
-    console.log("Após filtrar caracteres:", value);
     
     // Limitar a 5 caracteres no total (incluindo vírgula)
     if (value.length > 5) {
@@ -63,8 +110,6 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
       }
     }
     
-    console.log("Valor final no input:", value);
-    
     // Atualizar o valor de exibição
     setDisplayValue(value);
     
@@ -75,22 +120,8 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
       }, 0);
     }
     
-    // Sanitizar para o modelo interno (sempre com ponto)
-    const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
-    
-    // Converter para float (para o backend)
-    const numericValue = sanitized === '' ? undefined : parseFloat(sanitized);
-    
-    console.log("Valor sanitizado:", sanitized);
-    console.log("Valor numérico:", numericValue);
-    
-    // Atualizar o campo interno com o valor numérico
-    field.onChange(numericValue);
-  }
-
-  // Ao inicializar, converter o valor numérico para exibição
-  if (displayValue === '' && typeof field.value === 'number') {
-    setDisplayValue(field.value.toString().replace('.', ','));
+    // Atualizar o valor no formulário
+    updateFormValue(value);
   }
 
   return (
@@ -114,6 +145,7 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
             document.body.classList.remove('keyboard-active');
           }}
           onChange={processInput}
+          onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormDescription className="text-xs text-muted-foreground mt-1">
