@@ -793,6 +793,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               render={({ field }) => (
                 <DimensionField
                   field={field}
+                  fieldType="comprimento"
                   label="Comprimento (metros)"
                   placeholder="Ex.: 19,80"
                   description={
@@ -812,6 +813,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               render={({ field }) => (
                 <DimensionField
                   field={field}
+                  fieldType="largura"
                   label="Largura do Conjunto (metros)"
                   placeholder="Ex.: 2,60"
                   description={
@@ -831,6 +833,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               render={({ field }) => (
                 <DimensionField
                   field={field}
+                  fieldType="altura"
                   label="Altura do Conjunto (metros)"
                   placeholder="Ex.: 4,40"
                   description={
