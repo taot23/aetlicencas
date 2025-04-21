@@ -60,7 +60,7 @@ export function AdminRoute({
   path: string;
   component: () => React.JSX.Element;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, checkRole } = useAuth();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
@@ -70,6 +70,14 @@ export function AdminRoute({
       if (!user) return;
       
       try {
+        // Verifica direto usando o helper para casos óbvios
+        if (checkRole('admin')) {
+          setIsAdmin(true);
+          setIsCheckingAdmin(false);
+          return;
+        }
+        
+        // Caso não seja óbvio, faz uma verificação no servidor
         const res = await fetch("/api/admin/check", {
           credentials: "include",
         });
@@ -96,7 +104,7 @@ export function AdminRoute({
     } else {
       setIsCheckingAdmin(false);
     }
-  }, [user, toast]);
+  }, [user, toast, checkRole]);
 
   if (isLoading || isCheckingAdmin) {
     return <LoadingRoute path={path} />;
@@ -110,7 +118,9 @@ export function AdminRoute({
     return <RedirectToHome path={path} />;
   }
 
-  return <Route path={path} component={Component} />;
+  return <Route path={path}>
+    <Component />
+  </Route>;
 }
 
 // Rota apenas para usuários Operacionais e Supervisores
@@ -123,7 +133,7 @@ export function StaffRoute({
   component: () => React.JSX.Element;
   requiredRole?: "operational" | "supervisor" | "any";
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, checkRole } = useAuth();
   const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
@@ -133,7 +143,20 @@ export function StaffRoute({
       if (!user) return;
 
       try {
-        // Determine qual endpoint usar com base no perfil requerido
+        // Verifica diretamente usando o helper para verificação rápida
+        if (requiredRole === "supervisor" && checkRole('supervisor')) {
+          setIsAuthorized(true);
+          setIsChecking(false);
+          return;
+        }
+        
+        if (requiredRole === "operational" && checkRole('operational')) {
+          setIsAuthorized(true);
+          setIsChecking(false);
+          return;
+        }
+        
+        // Se não for óbvio, faz a verificação no servidor
         const endpoint = 
           requiredRole === "supervisor" 
             ? "/api/staff/check-supervisor"
@@ -170,7 +193,7 @@ export function StaffRoute({
     } else {
       setIsChecking(false);
     }
-  }, [user, toast, requiredRole]);
+  }, [user, toast, requiredRole, checkRole]);
 
   if (isLoading || isChecking) {
     return <LoadingRoute path={path} />;
@@ -184,7 +207,9 @@ export function StaffRoute({
     return <RedirectToHome path={path} />;
   }
 
-  return <Route path={path} component={Component} />;
+  return <Route path={path}>
+    <Component />
+  </Route>;
 }
 
 // Rota apenas para usuários Supervisores

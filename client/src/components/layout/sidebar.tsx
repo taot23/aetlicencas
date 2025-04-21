@@ -49,7 +49,10 @@ export function Sidebar({ className }: SidebarProps) {
   };
 
   const handleNavigate = (path: string) => {
-    setLocation(path);
+    // Verifica se já está na mesma página para evitar recargas desnecessárias
+    if (location !== path) {
+      setLocation(path);
+    }
     setOpen(false);
   };
 
