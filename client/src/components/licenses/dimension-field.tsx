@@ -71,8 +71,15 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
     // Sanitizar para o modelo interno (sempre com ponto)
     const sanitized = value.replace(/,/g, '.').replace(/(\..*)\./g, '$1');
     
+    // Converter para float (para o backend)
+    const numericValue = sanitized === '' ? undefined : parseFloat(sanitized);
+    
+    // Converter para inteiro em centímetros (já que o banco armazena em cm)
+    // No entanto, preservamos o float para a interface, para mostrar em metros
+    const valueToPersist = numericValue !== undefined ? numericValue : undefined;
+    
     // Atualizar o campo interno com o valor numérico
-    field.onChange(sanitized === '' ? undefined : parseFloat(sanitized) || 0);
+    field.onChange(valueToPersist);
   }
 
   return (
