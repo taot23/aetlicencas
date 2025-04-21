@@ -154,7 +154,7 @@ export function Sidebar({ className }: SidebarProps) {
                 onClick={() => handleNavigate("/admin")}
               >
                 <LayoutDashboard className="mr-3 h-5 w-5" />
-                Painel Admin
+                Relatórios
               </Button>
             )}
             
