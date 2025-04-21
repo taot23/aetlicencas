@@ -1047,6 +1047,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para excluir uma licença - acessível apenas para Admin
+  app.delete('/api/admin/licenses/:id', requireAdmin, async (req, res) => {
+    try {
+      const licenseId = parseInt(req.params.id);
+      
+      // Verificar se a licença existe
+      const existingLicense = await storage.getLicenseRequestById(licenseId);
+      if (!existingLicense) {
+        return res.status(404).json({ message: 'Licença não encontrada' });
+      }
+      
+      // Excluir a licença
+      await storage.deleteLicenseRequest(licenseId);
+      
+      res.status(200).json({ message: 'Licença excluída com sucesso' });
+    } catch (error: any) {
+      console.error('Erro ao excluir licença:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
   // Rota para staff (operational/supervisor) obter todas as licenças
   app.get('/api/staff/licenses', requireOperational, async (req, res) => {
     try {
