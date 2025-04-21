@@ -1,5 +1,5 @@
 // Componente para campos de dimensão com tratamento inteligente para valores decimais
-import { ChangeEvent } from "react";
+import { ChangeEvent, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { FormControl, FormDescription, FormMessage, FormItem, FormLabel } from "@/components/ui/form";
 
@@ -12,15 +12,20 @@ interface DimensionFieldProps {
 }
 
 export function DimensionField({ field, label, placeholder, description }: DimensionFieldProps) {
+  const [displayValue, setDisplayValue] = useState<string>('');
+
   // Função local para processar a entrada de dimensões
   function processInput(e: ChangeEvent<HTMLInputElement>) {
     // Campo inteligente para dimensões que aceita tanto ponto quanto vírgula
     let value = e.target.value;
     let cursorPos = e.target.selectionStart || 0;
     let valueChanged = false;
+
+    console.log("Valor original:", value);
     
     // Limitar a digitação apenas a números, vírgula e ponto
     value = value.replace(/[^\d.,]/g, '');
+    console.log("Após filtrar caracteres:", value);
     
     // Limitar a 5 caracteres no total (incluindo vírgula)
     if (value.length > 5) {
@@ -58,8 +63,10 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
       }
     }
     
-    // Preservar o exato valor digitado na tela
-    e.target.value = value;
+    console.log("Valor final no input:", value);
+    
+    // Atualizar o valor de exibição
+    setDisplayValue(value);
     
     // Posicionar o cursor corretamente se o valor mudou
     if (valueChanged) {
@@ -74,12 +81,16 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
     // Converter para float (para o backend)
     const numericValue = sanitized === '' ? undefined : parseFloat(sanitized);
     
-    // Converter para inteiro em centímetros (já que o banco armazena em cm)
-    // No entanto, preservamos o float para a interface, para mostrar em metros
-    const valueToPersist = numericValue !== undefined ? numericValue : undefined;
+    console.log("Valor sanitizado:", sanitized);
+    console.log("Valor numérico:", numericValue);
     
     // Atualizar o campo interno com o valor numérico
-    field.onChange(valueToPersist);
+    field.onChange(numericValue);
+  }
+
+  // Ao inicializar, converter o valor numérico para exibição
+  if (displayValue === '' && typeof field.value === 'number') {
+    setDisplayValue(field.value.toString().replace('.', ','));
   }
 
   return (
@@ -89,15 +100,9 @@ export function DimensionField({ field, label, placeholder, description }: Dimen
         <Input 
           type="text" 
           inputMode="decimal"
-          pattern="[0-9]*[.,]?[0-9]*"
-          placeholder={placeholder} 
-          {...field}
+          placeholder={placeholder}
+          value={displayValue}
           className="mobile-input h-10"
-          value={
-            typeof field.value === 'number' 
-              ? field.value.toString().replace('.', ',') 
-              : field.value || ''
-          }
           onFocus={(e) => {
             document.body.classList.add('keyboard-active');
             window.scrollTo(0, 0);
