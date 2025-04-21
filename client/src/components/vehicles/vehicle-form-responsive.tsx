@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertVehicleSchema, vehicleTypeOptions, Vehicle } from "@shared/schema";
+import { insertVehicleSchema, vehicleTypeOptions, bodyTypeOptions, Vehicle } from "@shared/schema";
 import { z } from "zod";
 import {
   Form,
@@ -185,6 +185,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       const vehicleData = {
         plate: values.plate.toUpperCase(),
         type: values.type,
+        bodyType: values.bodyType || undefined,
         tare: Number(values.tare),
         crlvYear: Number(values.crlvYear),
         brand: values.brand,
@@ -201,6 +202,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       formData.append("tare", vehicleData.tare.toString());
       formData.append("crlvYear", vehicleData.crlvYear.toString());
       
+      if (vehicleData.bodyType) formData.append("bodyType", vehicleData.bodyType);
       if (vehicleData.brand) formData.append("brand", vehicleData.brand);
       if (vehicleData.model) formData.append("model", vehicleData.model);
       if (vehicleData.year) formData.append("year", vehicleData.year.toString());
@@ -222,6 +224,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       const vehicleData = {
         plate: values.plate.toUpperCase(),
         type: values.type,
+        bodyType: values.bodyType || undefined,
         tare: Number(values.tare),
         crlvYear: Number(values.crlvYear),
         brand: values.brand,
@@ -308,6 +311,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                   onValueChange={(value) => {
                     field.onChange(value);
                     setVehicleType(value);
+                    
+                    // Limpar campo carroceria se o novo tipo não for compatível
+                    if (value !== "truck" && value !== "semi_trailer" && value !== "trailer") {
+                      form.setValue("bodyType", "");
+                    }
                   }} 
                   value={field.value}
                   defaultValue={field.value}>
@@ -328,6 +336,39 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               </FormItem>
             )}
           />
+          
+          {/* Campo de tipo de carroceria - só aparece para tipos compatíveis */}
+          {(vehicleType === "truck" || vehicleType === "semi_trailer" || vehicleType === "trailer") && (
+            <FormField
+              control={form.control}
+              name="bodyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs sm:text-sm">
+                    Tipo de Carroceria
+                  </FormLabel>
+                  <Select 
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                    defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-8 sm:h-9 text-sm">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {bodyTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          )}
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <FormField
