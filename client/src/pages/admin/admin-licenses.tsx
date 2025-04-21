@@ -1013,7 +1013,7 @@ export default function AdminLicensesPage() {
                 </div>
               )}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-md">
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
                   <p className="font-medium text-base">{selectedLicense.requestNumber}</p>
@@ -1033,6 +1033,24 @@ export default function AdminLicensesPage() {
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
                   <p className="text-base">{formatDate(selectedLicense.createdAt)}</p>
+                </div>
+                
+                {/* Informações de dimensões */}
+                <div className="p-2 bg-white rounded-md shadow-sm">
+                  <h3 className="font-medium text-sm text-gray-500">Comprimento</h3>
+                  <p className="text-base">{selectedLicense.length || "-"} m</p>
+                </div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
+                  <h3 className="font-medium text-sm text-gray-500">Largura</h3>
+                  <p className="text-base">{selectedLicense.width || "-"} m</p>
+                </div>
+                <div className="p-2 bg-white rounded-md shadow-sm">
+                  <h3 className="font-medium text-sm text-gray-500">Altura</h3>
+                  <p className="text-base">{selectedLicense.height || "-"} m</p>
+                </div>
+                <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
+                  <h3 className="font-medium text-sm text-gray-500">Tipo de Carga</h3>
+                  <p className="text-base">{selectedLicense.cargoType || "-"}</p>
                 </div>
               </div>
               

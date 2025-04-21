@@ -85,28 +85,12 @@ export const TransporterInfo = ({
         <div className="space-y-2">
           <p className="text-gray-900 font-medium">
             {transporter.name}
-            {transporter.personType === "pj" && transporter.tradeName && ` (${transporter.tradeName})`}
           </p>
           {transporter.documentNumber && (
             <p className="text-sm text-gray-700">
               <span className="font-medium">
                 {transporter.personType === "pj" ? "CNPJ" : "CPF"}:
               </span> {transporter.documentNumber}
-            </p>
-          )}
-          {(transporter.city || transporter.state) && (
-            <p className="text-sm text-gray-700">
-              <span className="font-medium">Local:</span> {transporter.city}{transporter.state && `, ${transporter.state}`}
-            </p>
-          )}
-          {transporter.phone && (
-            <p className="text-sm text-gray-700">
-              <span className="font-medium">Telefone:</span> {transporter.phone}
-            </p>
-          )}
-          {transporter.email && (
-            <p className="text-sm text-gray-700">
-              <span className="font-medium">Email:</span> {transporter.email}
             </p>
           )}
         </div>
