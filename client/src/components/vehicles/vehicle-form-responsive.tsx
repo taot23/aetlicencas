@@ -390,18 +390,28 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="tare"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">Tara (kg)</FormLabel>
+                  <FormLabel className="text-xs sm:text-sm flex items-center">
+                    Tara (kg) <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="" 
+                      placeholder="Mínimo 1" 
                       {...field}
                       value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      className="h-8 sm:h-9 text-sm" 
+                      onChange={(e) => {
+                        const value = e.target.valueAsNumber;
+                        field.onChange(value && value > 0 ? value : '');
+                      }}
+                      min="1"
+                      className="h-8 sm:h-9 text-sm"
+                      required
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
+                  {field.value === 0 && (
+                    <p className="text-xs text-red-500 mt-1">O peso (TARA) não pode ser zero</p>
+                  )}
                 </FormItem>
               )}
             />
