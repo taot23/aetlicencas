@@ -357,18 +357,28 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="axleCount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Qtd. Eixos</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Qtd. Eixos <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="" 
+                      placeholder="Mínimo 1" 
                       {...field} 
                       value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      className="h-9" 
+                      onChange={(e) => {
+                        const value = e.target.valueAsNumber;
+                        field.onChange(value && value > 0 ? value : '');
+                      }}
+                      min="1"
+                      className="h-9"
+                      required
                     />
                   </FormControl>
                   <FormMessage />
+                  {field.value === 0 && (
+                    <p className="text-xs text-red-500 mt-1">A quantidade de eixos não pode ser zero</p>
+                  )}
                 </FormItem>
               )}
             />
@@ -380,18 +390,28 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="tare"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Tara (kg)</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Tara (kg) <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="" 
+                      placeholder="Mínimo 1" 
                       {...field}
                       value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      className="h-9" 
+                      onChange={(e) => {
+                        const value = e.target.valueAsNumber;
+                        field.onChange(value && value > 0 ? value : '');
+                      }}
+                      min="1"
+                      className="h-9"
+                      required
                     />
                   </FormControl>
                   <FormMessage />
+                  {field.value === 0 && (
+                    <p className="text-xs text-red-500 mt-1">O peso (TARA) não pode ser zero</p>
+                  )}
                 </FormItem>
               )}
             />
@@ -416,7 +436,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Ano de Fabricação</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Ano de Fabricação <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
@@ -424,7 +446,8 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
                       {...field} 
                       value={field.value || ''} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      className="h-9" 
+                      className="h-9"
+                      required
                     />
                   </FormControl>
                   <FormMessage />

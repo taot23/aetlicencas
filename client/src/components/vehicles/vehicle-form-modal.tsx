@@ -62,13 +62,15 @@ const formSchema = insertVehicleSchema.extend({
   model: z.string()
     .min(1, "O modelo do veículo é obrigatório"),
   // QTD EIXO - obrigatório
-  axleCount: z.number()
+  axleCount: z.coerce.number()
     .min(1, "A quantidade de eixos é obrigatória")
-    .refine(value => value > 0, "A quantidade de eixos deve ser maior que zero"),
+    .refine(value => value > 0, "A quantidade de eixos deve ser maior que zero")
+    .or(z.string()),
   // TARA - obrigatório
-  tare: z.number()
+  tare: z.coerce.number()
     .min(1, "O peso (TARA) é obrigatório")
-    .refine(value => value > 0, "O peso deve ser maior que zero"), 
+    .refine(value => value > 0, "O peso deve ser maior que zero")
+    .or(z.string()), 
   // ANO DE FABRICAÇÃO - obrigatório
   year: z.number()
     .min(1950, "O ano deve ser maior que 1950")
@@ -112,8 +114,8 @@ export function VehicleFormModal({
       year: new Date().getFullYear(),
       type: 'tractor',
       renavam: '',
-      tare: '', // Campo vazio para forçar preenchimento
-      axleCount: '', // Campo vazio para forçar preenchimento
+      tare: undefined, // Campo vazio para forçar preenchimento
+      axleCount: undefined, // Campo vazio para forçar preenchimento
       crlvYear: new Date().getFullYear() // Ano CRLV padrão
     },
     mode: "onBlur", // Validar ao perder o foco
