@@ -272,6 +272,7 @@ export default function AdminLicensesPage() {
   // Função removida pois o status agora só será editado por estado individual
 
   const handleViewDetails = (license: LicenseRequest) => {
+    console.log("Detalhes da licença:", license);
     setSelectedLicense(license);
     // Inicialmente, todos os estados têm o fluxo oculto
     setVisibleStateFlows([]);

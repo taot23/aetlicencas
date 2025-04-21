@@ -1034,6 +1034,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
       const licenses = await storage.getAllLicenseRequests();
+      
+      // Log para diagnóstico
+      if (licenses.length > 0) {
+        console.log("Licença exemplo recuperada:", JSON.stringify(licenses[licenses.length - 1], null, 2));
+      }
+      
       res.json(licenses);
     } catch (error) {
       console.error('Error fetching all license requests:', error);
