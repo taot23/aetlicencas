@@ -43,7 +43,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
   const formSchema = insertVehicleSchema.extend({
     tare: z.coerce.number().min(0.1, "O peso deve ser maior que zero"),
     crlvYear: z.coerce.number().min(1990, "O ano deve ser posterior a 1990"),
-    axleCount: z.coerce.number().optional(),
+    axleCount: z.coerce.number().min(1, "A quantidade de eixos deve ser maior que zero").optional(),
   });
 
   // Estado para controlar os placeholders dinâmicos
@@ -68,7 +68,7 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
     } : {
       plate: "",
       type: "", // Sem valor padrão para o tipo
-      tare: 0,
+      tare: undefined,
       crlvYear: new Date().getFullYear(),
       brand: "",
       model: "",
@@ -258,9 +258,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="plate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Placa</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Placa <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="ABC-1234" {...field} className="h-9" />
+                    <Input placeholder="ABC-1234" {...field} className="h-9" required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -272,9 +274,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="renavam"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Renavam</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Renavam <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Renavam" {...field} className="h-9" />
+                    <Input placeholder="Renavam" {...field} className="h-9" required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -287,7 +291,9 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm">Tipo de Veículo</FormLabel>
+                <FormLabel className="text-sm flex items-center">
+                  Tipo de Veículo <span className="text-red-500 ml-1">*</span>
+                </FormLabel>
                 <Select 
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -319,9 +325,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="brand"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Marca</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Marca <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="" {...field} className="h-9" />
+                    <Input placeholder="" {...field} className="h-9" required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -333,9 +341,11 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Modelo</FormLabel>
+                  <FormLabel className="text-sm flex items-center">
+                    Modelo <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="" {...field} className="h-9" />
+                    <Input placeholder="" {...field} className="h-9" required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
