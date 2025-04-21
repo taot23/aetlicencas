@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -242,6 +242,13 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
       setFile(e.target.files[0]);
     }
   };
+  
+  // Limpar campo de carroceria quando o tipo de veículo mudar para um não compatível
+  useEffect(() => {
+    if (vehicleType !== "truck" && vehicleType !== "semi_trailer" && vehicleType !== "trailer") {
+      form.setValue("bodyType", "");
+    }
+  }, [vehicleType, form]);
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending || 
     createWithoutFileMutation.isPending || updateWithoutFileMutation.isPending;
@@ -324,35 +331,38 @@ export function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) 
             )}
           />
           
-          <FormField
-            control={form.control}
-            name="bodyType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm">
-                  Tipo de Carroceria
-                </FormLabel>
-                <Select 
-                  onValueChange={(value) => field.onChange(value)} 
-                  value={field.value}
-                  defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {bodyTypeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Mostrar campo Tipo de Carroceria apenas para Caminhão, Semirreboque e Reboque */}
+          {(vehicleType === "truck" || vehicleType === "semi_trailer" || vehicleType === "trailer") && (
+            <FormField
+              control={form.control}
+              name="bodyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">
+                    Tipo de Carroceria
+                  </FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value)} 
+                    value={field.value}
+                    defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {bodyTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           
           <div className="grid grid-cols-3 gap-3">
             <FormField
