@@ -1039,15 +1039,33 @@ export default function AdminLicensesPage() {
                 {/* Informações de dimensões */}
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Comprimento</h3>
-                  <p className="text-base">{selectedLicense.length ? (selectedLicense.length > 100 ? (selectedLicense.length / 100).toFixed(2) : selectedLicense.length.toFixed(2)) : "-"} m</p>
+                  <p className="text-base">
+                    {selectedLicense.length ? 
+                      (Number(selectedLicense.length) > 100 ? 
+                        (Number(selectedLicense.length) / 100).toFixed(2) 
+                        : Number(selectedLicense.length).toFixed(2)) 
+                      : "-"} {selectedLicense.length ? "m" : ""}
+                  </p>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Largura</h3>
-                  <p className="text-base">{selectedLicense.width ? (selectedLicense.width > 100 ? (selectedLicense.width / 100).toFixed(2) : selectedLicense.width.toFixed(2)) : "-"} m</p>
+                  <p className="text-base">
+                    {selectedLicense.width ? 
+                      (Number(selectedLicense.width) > 100 ? 
+                        (Number(selectedLicense.width) / 100).toFixed(2) 
+                        : Number(selectedLicense.width).toFixed(2)) 
+                      : "-"} {selectedLicense.width ? "m" : ""}
+                  </p>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm">
                   <h3 className="font-medium text-sm text-gray-500">Altura</h3>
-                  <p className="text-base">{selectedLicense.height ? (selectedLicense.height > 100 ? (selectedLicense.height / 100).toFixed(2) : selectedLicense.height.toFixed(2)) : "-"} m</p>
+                  <p className="text-base">
+                    {selectedLicense.height ? 
+                      (Number(selectedLicense.height) > 100 ? 
+                        (Number(selectedLicense.height) / 100).toFixed(2) 
+                        : Number(selectedLicense.height).toFixed(2)) 
+                      : "-"} {selectedLicense.height ? "m" : ""}
+                  </p>
                 </div>
                 <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
                   <h3 className="font-medium text-sm text-gray-500">Tipo de Carga</h3>
