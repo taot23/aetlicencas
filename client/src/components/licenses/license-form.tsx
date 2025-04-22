@@ -890,43 +890,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="dollyId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dolly</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o dolly" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : dollys.length > 0 ? (
-                        dollys.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
-            {/* Seção de carretas lado a lado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {/* Sequência lógica de componentes do Rodotrem */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <FormField
                 control={form.control}
                 name="firstTrailerId"
@@ -953,6 +919,40 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                           ))
                         ) : (
                           <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dollyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dolly</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o dolly" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : dollys.length > 0 ? (
+                          dollys.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
