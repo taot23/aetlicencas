@@ -934,10 +934,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para enviar um pedido de licença (usado no formulário frontened)
   app.post('/api/licenses/submit', requireAuth, async (req, res) => {
     try {
-      console.log('Received submit request with data:', req.body);
+      console.log('Received submit request with data:', JSON.stringify(req.body, null, 2));
       
       const userId = req.user!.id;
       const licenseData = { ...req.body };
+      
+      console.log("Tipo de licença:", licenseData.type);
+      console.log("Tipo de carga:", licenseData.cargoType);
+      console.log("Comprimento:", licenseData.length);
+      console.log("Largura:", licenseData.width);
+      console.log("Altura:", licenseData.height);
       
       // Se é um rascunho existente, redireciona para a rota correspondente
       if (licenseData.id) {
