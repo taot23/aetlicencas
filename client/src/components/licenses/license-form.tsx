@@ -129,7 +129,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   const trucks = vehicles?.filter(v => v.type === "truck") || [];
   const semiTrailers = vehicles?.filter(v => v.type === "semi_trailer") || [];
   const trailers = vehicles?.filter(v => v.type === "trailer") || [];
-  const dollys = vehicles?.filter(v => v.type === "dolly") || [];
+  const dollies = vehicles?.filter(v => v.type === "dolly") || [];
   const flatbeds = vehicles?.filter(v => v.type === "flatbed") || [];
 
   // Define a schema that can be validated partially (for drafts)
@@ -932,7 +932,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         title="Dolly"
                         description="Dispositivo de acoplamento"
                         value={field.value}
-                        vehicleOptions={dollies}
+                        vehicleOptions={dollys}
                         isLoading={isLoadingVehicles}
                         onChange={(value) => field.onChange(value)}
                         onAdd={() => setShowVehicleDialog(true)} 
@@ -995,7 +995,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 {form.watch("dollyId") && (
                   <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md">
                     Dolly: {
-                      dollies.find(v => v.id === form.watch("dollyId"))?.plate || "Selecionado"
+                      dollys.find((v) => v.id === form.watch("dollyId"))?.plate || "Selecionado"
                     }
                   </div>
                 )}
