@@ -320,7 +320,7 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
             
             <div>
               <span className="text-gray-500 block">Fabricação:</span>
-              <span className="font-medium">{vehicleDetails.manufacturingYear}</span>
+              <span className="font-medium">{vehicleDetails.year}</span>
             </div>
             
             <div>
@@ -330,16 +330,16 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
             
             <div>
               <span className="text-gray-500 block">TARA:</span>
-              <span className="font-medium">{vehicleDetails.tara} kg</span>
+              <span className="font-medium">{vehicleDetails.tare} kg</span>
             </div>
           </div>
           
           {/* Seção de documentos */}
-          {vehicleDetails.documentUrl && (
+          {vehicleDetails.crlvUrl && (
             <div className="mt-3 flex items-center gap-2">
               <FileText className="h-4 w-4 text-blue-600" />
               <a 
-                href={vehicleDetails.documentUrl}
+                href={vehicleDetails.crlvUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs text-blue-600 hover:underline"

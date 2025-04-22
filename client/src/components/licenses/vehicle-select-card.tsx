@@ -250,20 +250,20 @@ export function VehicleSelectCard({
                 <span className="text-green-600">RENAVAM:</span> {selectedVehicle.renavam}
               </div>
               <div>
-                <span className="text-green-600">Ano:</span> {selectedVehicle.manufacturingYear}
+                <span className="text-green-600">Ano:</span> {selectedVehicle.year}
               </div>
               <div>
                 <span className="text-green-600">Eixos:</span> {selectedVehicle.axleCount}
               </div>
               <div>
-                <span className="text-green-600">TARA:</span> {selectedVehicle.tara} kg
+                <span className="text-green-600">TARA:</span> {selectedVehicle.tare} kg
               </div>
             </div>
             
-            {selectedVehicle.documentUrl && (
+            {selectedVehicle.crlvUrl && (
               <div className="mt-2 border-t border-green-200 pt-2">
                 <a 
-                  href={selectedVehicle.documentUrl} 
+                  href={selectedVehicle.crlvUrl} 
                   target="_blank" 
                   rel="noreferrer"
                   className="text-xs flex items-center text-blue-600 hover:underline"
