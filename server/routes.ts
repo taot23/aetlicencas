@@ -1021,9 +1021,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isDraft: false,
       };
       
-      console.log('Creating license request with data:', sanitizedData);
+      console.log('Creating license request with data:', JSON.stringify(sanitizedData, null, 2));
       
       const licenseRequest = await storage.createLicenseRequest(userId, sanitizedData);
+      
+      console.log('License request saved to database:', JSON.stringify(licenseRequest, null, 2));
       
       res.json(licenseRequest);
     } catch (error) {
@@ -1884,6 +1886,59 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
     } catch (error) {
       console.error('Error updating license state status:', error);
       res.status(500).json({ message: 'Erro ao atualizar status do estado da licença' });
+    }
+  });
+  
+  // Endpoint de teste para atualizar apenas dimensões de uma licença
+  app.post('/api/test/license-dimensions/:id', requireAdmin, async (req, res) => {
+    try {
+      const licenseId = parseInt(req.params.id);
+      const { width, height, cargoType } = req.body;
+      
+      console.log(`Atualizando licença ${licenseId} com dimensões:`, {
+        width, height, cargoType
+      });
+      
+      // Sanitizar os dados antes de atualizar
+      const updateData = {
+        width: width !== undefined ? Number(width) : null,
+        height: height !== undefined ? Number(height) : null,
+        cargoType: cargoType || null
+      };
+      
+      // Log para diagnóstico
+      console.log('Dados sanitizados para atualização:', JSON.stringify(updateData, null, 2));
+      
+      // Atualizar o banco de dados
+      const results = await db.update(licenseRequests)
+        .set(updateData)
+        .where(eq(licenseRequests.id, licenseId))
+        .returning();
+      
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Licença não encontrada' });
+      }
+      
+      console.log('Licença atualizada com sucesso:', JSON.stringify(results[0], null, 2));
+      
+      // Buscar a licença diretamente do banco para verificar se a atualização funcionou
+      const dbResults = await db.select()
+        .from(licenseRequests)
+        .where(eq(licenseRequests.id, licenseId));
+      
+      if (dbResults.length === 0) {
+        return res.status(404).json({ error: 'Não foi possível verificar a licença após atualização' });
+      }
+      
+      console.log('Licença verificada após atualização:', JSON.stringify(dbResults[0], null, 2));
+      
+      res.json({
+        updated: results[0],
+        verification: dbResults[0]
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar dimensões da licença:', error);
+      res.status(500).json({ error: String(error) });
     }
   });
 
