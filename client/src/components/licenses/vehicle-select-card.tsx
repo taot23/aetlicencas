@@ -18,7 +18,7 @@ import {
 interface VehicleSelectCardProps {
   title: string;
   description?: string;
-  value: number | undefined;
+  value: number | null | undefined;
   vehicleOptions: Vehicle[];
   isLoading: boolean;
   onChange: (value: number) => void;
@@ -237,7 +237,7 @@ export function VehicleSelectCard({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onChange(0)} // Valor 0 para limpar a seleção
+                onClick={() => onChange(undefined as unknown as number)} // Passar undefined para limpar a seleção
                 className="h-7 px-2 py-0 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                 disabled={disabled}
               >
