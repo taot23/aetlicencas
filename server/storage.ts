@@ -1011,14 +1011,30 @@ export class DatabaseStorage implements IStorage {
   async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
     const now = new Date();
     
-    const license = {
+    // Garantir que os campos width, height e cargoType são tratados corretamente
+    const sanitizedData = {
       ...licenseData,
+      width: licenseData.width !== undefined ? Number(licenseData.width) : null,
+      height: licenseData.height !== undefined ? Number(licenseData.height) : null,
+      cargoType: licenseData.cargoType || null
+    };
+    
+    console.log("Dados sanitizados no createLicenseRequest:", sanitizedData);
+    
+    const license = {
+      ...sanitizedData,
       userId,
       createdAt: now,
       updatedAt: now
     };
     
+    console.log("Dados finais para inserção no banco:", license);
+    
     const results = await db.insert(licenseRequests).values(license).returning();
+    
+    // Log para diagnóstico do que foi efetivamente salvo
+    console.log("Resultado da inserção no banco:", results[0]);
+    
     return results[0];
   }
 
@@ -1029,14 +1045,32 @@ export class DatabaseStorage implements IStorage {
   async updateLicenseDraft(id: number, draftData: Partial<LicenseRequest>): Promise<LicenseRequest> {
     const now = new Date();
     
+    // Garantir que os campos width, height e cargoType são tratados corretamente
+    const sanitizedData = {
+      ...draftData
+    };
+    
+    // Somente converter se os campos estiverem presentes na atualização
+    if (draftData.width !== undefined) {
+      sanitizedData.width = Number(draftData.width);
+    }
+    
+    if (draftData.height !== undefined) {
+      sanitizedData.height = Number(draftData.height);
+    }
+    
+    console.log("Dados sanitizados no updateLicenseDraft:", sanitizedData);
+    
     const results = await db.update(licenseRequests)
-      .set({ ...draftData, updatedAt: now })
+      .set({ ...sanitizedData, updatedAt: now })
       .where(eq(licenseRequests.id, id))
       .returning();
     
     if (results.length === 0) {
       throw new Error("Rascunho não encontrado");
     }
+    
+    console.log("Resultado da atualização no banco:", results[0]);
     
     return results[0];
   }
@@ -1048,19 +1082,36 @@ export class DatabaseStorage implements IStorage {
   async submitLicenseDraft(id: number, requestNumber: string): Promise<LicenseRequest> {
     const now = new Date();
     
+    // Obter o draft atual para sanitizar os dados antes de submeter
+    const currentDraft = await this.getLicenseRequestById(id);
+    if (!currentDraft) {
+      throw new Error("Rascunho não encontrado");
+    }
+    
+    // Sanitizar os dados importantes antes da submissão
+    const updateData: any = { 
+      isDraft: false, 
+      requestNumber,
+      status: "pending_registration", 
+      updatedAt: now,
+      // Garantir que os campos de dimensão e tipo de carga estão corretos
+      width: currentDraft.width !== undefined ? Number(currentDraft.width) : null,
+      height: currentDraft.height !== undefined ? Number(currentDraft.height) : null,
+      cargoType: currentDraft.cargoType || null
+    };
+    
+    console.log("Dados sanitizados no submitLicenseDraft:", updateData);
+    
     const results = await db.update(licenseRequests)
-      .set({ 
-        isDraft: false, 
-        requestNumber,
-        status: "pending_registration", 
-        updatedAt: now 
-      })
+      .set(updateData)
       .where(eq(licenseRequests.id, id))
       .returning();
     
     if (results.length === 0) {
       throw new Error("Rascunho não encontrado");
     }
+    
+    console.log("Resultado da submissão no banco:", results[0]);
     
     return results[0];
   }

@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, hashPassword } from "./auth";
+import { db } from "./db";
 import { v4 as uuidv4 } from "uuid";
 import { 
   insertUserSchema, 
@@ -12,8 +13,10 @@ import {
   updateLicenseStatusSchema,
   updateLicenseStateSchema,
   LicenseStatus,
-  userRoleEnum
+  userRoleEnum,
+  licenseRequests
 } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
 import path from "path";
