@@ -1049,7 +1049,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log para diagnóstico
       if (licenses.length > 0) {
+        // Get direct database row of last license for comparison
+        const lastLicenseId = licenses[licenses.length - 1].id;
+        const dbResult = await db.select().from(licenseRequests).where(eq(licenseRequests.id, lastLicenseId));
+        
         console.log("Licença exemplo recuperada:", JSON.stringify(licenses[licenses.length - 1], null, 2));
+        console.log("Mesma licença diretamente do banco de dados:", JSON.stringify(dbResult[0], null, 2));
       }
       
       res.json(licenses);
