@@ -860,41 +860,26 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             
             {/* Unidade Tratora - Esta é a unidade principal que desbloqueia a linha de frente */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <Truck className="h-4 w-4 mr-1 text-blue-600" />
-                Unidade Tratora (Obrigatório)
-              </h4>
               <FormField
                 control={form.control}
                 name="tractorUnitId"
                 render={({ field }) => (
                   <FormItem>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-blue-50 border-blue-200 focus:ring-blue-500">
-                          <SelectValue placeholder="Selecione a unidade tratora" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : tractorUnits.length > 0 ? (
-                          tractorUnits.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_tractor">Nenhuma unidade tratora cadastrada</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Selecione a unidade tratora principal (cavalo mecânico) para este conjunto
-                    </FormDescription>
+                    <VehicleSelectCard
+                      title="Unidade Tratora (Cavalo Mecânico)"
+                      description="Esta é a unidade principal que irá puxar o conjunto"
+                      value={field.value}
+                      vehicleOptions={tractorUnits}
+                      isLoading={isLoadingVehicles}
+                      onChange={(value) => field.onChange(value)}
+                      onAdd={() => setShowVehicleDialog(true)} 
+                      requiredForProgress={true}
+                      vehicleType="tractor_unit"
+                      onEdit={(vehicle) => {
+                        // Implementar edição de veículo
+                        setShowVehicleDialog(true);
+                      }}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -919,30 +904,20 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                   name="firstTrailerId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>1ª Carreta</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))} 
-                        defaultValue={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a 1ª carreta" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : semiTrailers.length > 0 ? (
-                            semiTrailers.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <VehicleSelectCard
+                        title="1ª Carreta"
+                        description="Primeiro semirreboque da composição"
+                        value={field.value}
+                        vehicleOptions={semiTrailers}
+                        isLoading={isLoadingVehicles}
+                        onChange={(value) => field.onChange(value)}
+                        onAdd={() => setShowVehicleDialog(true)} 
+                        requiredForProgress={true}
+                        vehicleType="semi_trailer"
+                        onEdit={(vehicle) => {
+                          setShowVehicleDialog(true);
+                        }}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -953,30 +928,20 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                   name="dollyId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Dolly</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))} 
-                        defaultValue={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o dolly" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : dollys.length > 0 ? (
-                            dollys.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_dolly">Nenhum dolly cadastrado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <VehicleSelectCard
+                        title="Dolly"
+                        description="Dispositivo de acoplamento"
+                        value={field.value}
+                        vehicleOptions={dollys}
+                        isLoading={isLoadingVehicles}
+                        onChange={(value) => field.onChange(value)}
+                        onAdd={() => setShowVehicleDialog(true)} 
+                        requiredForProgress={true}
+                        vehicleType="dolly"
+                        onEdit={(vehicle) => {
+                          setShowVehicleDialog(true);
+                        }}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -987,30 +952,20 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                   name="secondTrailerId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>2ª Carreta</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))} 
-                        defaultValue={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a 2ª carreta" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {isLoadingVehicles ? (
-                            <SelectItem value="loading">Carregando...</SelectItem>
-                          ) : semiTrailers.length > 0 ? (
-                            semiTrailers.map((vehicle) => (
-                              <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                                {vehicle.plate}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <VehicleSelectCard
+                        title="2ª Carreta"
+                        description="Segundo semirreboque da composição"
+                        value={field.value}
+                        vehicleOptions={semiTrailers}
+                        isLoading={isLoadingVehicles}
+                        onChange={(value) => field.onChange(value)}
+                        onAdd={() => setShowVehicleDialog(true)} 
+                        requiredForProgress={true}
+                        vehicleType="semi_trailer"
+                        onEdit={(vehicle) => {
+                          setShowVehicleDialog(true);
+                        }}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
