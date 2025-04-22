@@ -1045,73 +1045,76 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="firstTrailerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>1ª Carreta</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a 1ª carreta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : semiTrailers.length > 0 ? (
-                        semiTrailers.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Seção de carretas lado a lado */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="firstTrailerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>1ª Carreta</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a 1ª carreta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : semiTrailers.length > 0 ? (
+                          semiTrailers.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="secondTrailerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>2ª Carreta</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a 2ª carreta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingVehicles ? (
-                        <SelectItem value="loading">Carregando...</SelectItem>
-                      ) : semiTrailers.length > 0 ? (
-                        semiTrailers.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.plate}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="secondTrailerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2ª Carreta</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a 2ª carreta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : semiTrailers.length > 0 ? (
+                          semiTrailers.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_trailer">Nenhum semirreboque cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         )}
 
