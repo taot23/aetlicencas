@@ -932,7 +932,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                         title="Dolly"
                         description="Dispositivo de acoplamento"
                         value={field.value}
-                        vehicleOptions={dollys}
+                        vehicleOptions={dollies}
                         isLoading={isLoadingVehicles}
                         onChange={(value) => field.onChange(value)}
                         onAdd={() => setShowVehicleDialog(true)} 
@@ -995,7 +995,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 {form.watch("dollyId") && (
                   <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md">
                     Dolly: {
-                      dollys.find(v => v.id === form.watch("dollyId"))?.plate || "Selecionado"
+                      dollies.find(v => v.id === form.watch("dollyId"))?.plate || "Selecionado"
                     }
                   </div>
                 )}
@@ -1300,35 +1300,20 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 name="firstTrailerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reboque</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o reboque" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {isLoadingVehicles ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : trailers.length > 0 ? (
-                          trailers.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                              {vehicle.plate}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_trailer">
-                            <div className="flex flex-col">
-                              <span>Nenhum reboque cadastrado</span>
-                              <span className="text-xs text-muted-foreground">Você precisa cadastrar um veículo do tipo "Reboque"</span>
-                            </div>
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <VehicleSelectCard
+                      title="Reboque"
+                      description="Componente principal do Romeu e Julieta"
+                      value={field.value}
+                      vehicleOptions={trailers}
+                      isLoading={isLoadingVehicles}
+                      onChange={(value) => field.onChange(value)}
+                      onAdd={() => setShowVehicleDialog(true)} 
+                      requiredForProgress={true}
+                      vehicleType="trailer"
+                      onEdit={(vehicle) => {
+                        setShowVehicleDialog(true);
+                      }}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
