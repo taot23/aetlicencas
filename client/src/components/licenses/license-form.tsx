@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CampoPlacaAdicional } from "./placas-adicionais";
+import { VehicleSelectCard } from "./vehicle-select-card";
 import { 
   LoaderCircle,
   X, 
