@@ -346,6 +346,39 @@ export class TransactionalStorage implements IStorage {
   }
   
   async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
+    // Sanitizar campos de dimensões e tipo de carga com valores padrão baseados no tipo de licença
+    let width = licenseData.width;
+    let height = licenseData.height;
+    let cargoType = licenseData.cargoType;
+    
+    // Se a largura não estiver definida, usar valor padrão com base no tipo de licença
+    if (width === undefined || width === null) {
+      width = licenseData.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+    }
+    
+    // Se a altura não estiver definida, usar valor padrão com base no tipo de licença
+    if (height === undefined || height === null) {
+      height = licenseData.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+    }
+    
+    // Se o tipo de carga não estiver definido, usar valor padrão com base no tipo de licença
+    if (cargoType === undefined || cargoType === null || cargoType === "") {
+      cargoType = licenseData.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+    }
+    
+    // Log para diagnóstico
+    console.log("CreateLicenseRequest - dados originais:", {
+      width: licenseData.width,
+      height: licenseData.height,
+      cargoType: licenseData.cargoType
+    });
+    
+    console.log("CreateLicenseRequest - dados sanitizados:", {
+      width,
+      height,
+      cargoType
+    });
+    
     const [licenseRequest] = await db
       .insert(licenseRequests)
       .values({
@@ -360,6 +393,10 @@ export class TransactionalStorage implements IStorage {
         secondTrailerId: licenseData.secondTrailerId,
         flatbedId: licenseData.flatbedId,
         length: licenseData.length,
+        // Usar os valores sanitizados
+        width: Number(width),
+        height: Number(height),
+        cargoType,
         additionalPlates: licenseData.additionalPlates || [],
         additionalPlatesDocuments: licenseData.additionalPlatesDocuments || [],
         states: licenseData.states,
