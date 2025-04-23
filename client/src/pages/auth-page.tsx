@@ -219,7 +219,7 @@ export default function AuthPage() {
 
       <div className="hidden md:flex md:flex-1 bg-blue-700 text-white p-10 items-center justify-center">
         <div className="max-w-md">
-          <h1 className="text-3xl font-bold mb-6 text-center">NVS Licenças AET</h1>
+          <h1 className="text-3xl font-bold mb-6 text-center">NVS Licenças</h1>
           <p className="text-xl mb-6">
             Um sistema completo para gerenciamento de veículos e controle de licenças de Autorização Especial de Trânsito.
           </p>
