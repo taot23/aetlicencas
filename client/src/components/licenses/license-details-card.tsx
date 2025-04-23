@@ -146,13 +146,16 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             </div>
           </div>
           
-          {/* Exibir outros veículos se existirem */}
+          {/* Exibir veículos da linha de frente */}
           {license.firstTrailerId && (
             <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white">
               <div className="flex justify-between items-center py-1.5 px-2">
                 <div className="flex flex-col">
                   <span className="font-medium text-xs text-gray-800">1ª Carreta</span>
-                  <span className="text-[10px] text-gray-500">ID: {license.firstTrailerId}</span>
+                  <span className="text-[10px] text-gray-500">
+                    ID: {license.firstTrailerId}
+                    {license.firstTrailerPlate && ` - Placa: ${license.firstTrailerPlate}`}
+                  </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
                   Semi-reboque
@@ -166,7 +169,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               <div className="flex justify-between items-center py-1.5 px-2">
                 <div className="flex flex-col">
                   <span className="font-medium text-xs text-gray-800">Dolly</span>
-                  <span className="text-[10px] text-gray-500">ID: {license.dollyId}</span>
+                  <span className="text-[10px] text-gray-500">
+                    ID: {license.dollyId}
+                    {license.dollyPlate && ` - Placa: ${license.dollyPlate}`}
+                  </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
                   Dolly
@@ -180,7 +186,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               <div className="flex justify-between items-center py-1.5 px-2">
                 <div className="flex flex-col">
                   <span className="font-medium text-xs text-gray-800">2ª Carreta</span>
-                  <span className="text-[10px] text-gray-500">ID: {license.secondTrailerId}</span>
+                  <span className="text-[10px] text-gray-500">
+                    ID: {license.secondTrailerId}
+                    {license.secondTrailerPlate && ` - Placa: ${license.secondTrailerPlate}`}
+                  </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
                   Reboque
@@ -194,7 +203,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               <div className="flex justify-between items-center py-1.5 px-2">
                 <div className="flex flex-col">
                   <span className="font-medium text-xs text-gray-800">Prancha</span>
-                  <span className="text-[10px] text-gray-500">ID: {license.flatbedId}</span>
+                  <span className="text-[10px] text-gray-500">
+                    ID: {license.flatbedId}
+                    {license.flatbedPlate && ` - Placa: ${license.flatbedPlate}`}
+                  </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
                   Prancha
