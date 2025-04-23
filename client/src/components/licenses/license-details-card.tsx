@@ -154,7 +154,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <span className="font-medium text-xs text-gray-800">1ª Carreta</span>
                   <span className="text-[10px] text-gray-500">
                     ID: {license.firstTrailerId}
-                    {license.firstTrailerPlate && ` - Placa: ${license.firstTrailerPlate}`}
                   </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
@@ -171,7 +170,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <span className="font-medium text-xs text-gray-800">Dolly</span>
                   <span className="text-[10px] text-gray-500">
                     ID: {license.dollyId}
-                    {license.dollyPlate && ` - Placa: ${license.dollyPlate}`}
                   </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
@@ -188,7 +186,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <span className="font-medium text-xs text-gray-800">2ª Carreta</span>
                   <span className="text-[10px] text-gray-500">
                     ID: {license.secondTrailerId}
-                    {license.secondTrailerPlate && ` - Placa: ${license.secondTrailerPlate}`}
                   </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
@@ -205,7 +202,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <span className="font-medium text-xs text-gray-800">Prancha</span>
                   <span className="text-[10px] text-gray-500">
                     ID: {license.flatbedId}
-                    {license.flatbedPlate && ` - Placa: ${license.flatbedPlate}`}
                   </span>
                 </div>
                 <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
@@ -223,12 +219,27 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
         </div>
         
+        {/* Exibir placas adicionais */}
+        {license.additionalPlates && license.additionalPlates.length > 0 && (
+          <div className="mt-3 border-t pt-2">
+            <h4 className="font-medium text-xs text-gray-700 mb-1.5">Placas Adicionais ({license.additionalPlates.length})</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {license.additionalPlates.map((plate, index) => (
+                <span key={index} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                  {plate}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-2 text-right text-xs text-gray-500">
           Total: {1 + 
             (license.firstTrailerId ? 1 : 0) + 
             (license.dollyId ? 1 : 0) + 
             (license.secondTrailerId ? 1 : 0) + 
-            (license.flatbedId ? 1 : 0)} veículos
+            (license.flatbedId ? 1 : 0)} veículos na composição + 
+          {license.additionalPlates?.length || 0} placas adicionais
         </div>
       </div>
     </div>
