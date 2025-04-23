@@ -1235,12 +1235,29 @@ export default function AdminLicensesPage() {
               </div>
               
               <div className="p-2 bg-white rounded-md shadow-sm">
-                <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
-                <p className="text-base truncate">
-                  {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
-                    ? selectedLicense.additionalPlates.join(", ")
-                    : "Nenhum veículo adicional"}
-                </p>
+                <h3 className="font-medium text-sm text-gray-500 mb-1.5">Veículos Adicionais</h3>
+                {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0 ? (
+                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1">
+                    {selectedLicense.additionalPlates.map((plate, index) => (
+                      <div 
+                        key={`plate-${index}`}
+                        className="rounded border border-gray-100 shadow-none overflow-hidden"
+                      >
+                        <div className="flex justify-between items-center py-1.5 px-2">
+                          <span className="font-medium text-xs text-gray-800">{plate}</span>
+                          <Badge 
+                            variant="outline" 
+                            className="bg-blue-50 text-blue-800 border-blue-100 px-1.5 text-[10px] flex items-center gap-0.5 h-5"
+                          >
+                            Adicional
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Nenhum veículo adicional</p>
+                )}
               </div>
 
               <div className="p-3 bg-gray-50 rounded-md">
