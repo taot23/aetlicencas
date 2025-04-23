@@ -1011,12 +1011,32 @@ export class DatabaseStorage implements IStorage {
   async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
     const now = new Date();
     
+    // Sanitizar campos de dimensões e tipo de carga com valores padrão baseados no tipo de licença
+    let width = licenseData.width;
+    let height = licenseData.height;
+    let cargoType = licenseData.cargoType;
+    
+    // Se a largura não estiver definida, usar valor padrão com base no tipo de licença
+    if (width === undefined || width === null) {
+      width = licenseData.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+    }
+    
+    // Se a altura não estiver definida, usar valor padrão com base no tipo de licença
+    if (height === undefined || height === null) {
+      height = licenseData.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+    }
+    
+    // Se o tipo de carga não estiver definido, usar valor padrão com base no tipo de licença
+    if (cargoType === undefined || cargoType === null || cargoType === "") {
+      cargoType = licenseData.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+    }
+    
     // Garantir que os campos width, height e cargoType são tratados corretamente
     const sanitizedData = {
       ...licenseData,
-      width: licenseData.width !== undefined ? Number(licenseData.width) : null,
-      height: licenseData.height !== undefined ? Number(licenseData.height) : null,
-      cargoType: licenseData.cargoType || null
+      width: Number(width),
+      height: Number(height),
+      cargoType
     };
     
     console.log("Dados sanitizados no createLicenseRequest:", sanitizedData);
@@ -1045,18 +1065,40 @@ export class DatabaseStorage implements IStorage {
   async updateLicenseDraft(id: number, draftData: Partial<LicenseRequest>): Promise<LicenseRequest> {
     const now = new Date();
     
+    // Obter os dados atuais do rascunho para decisões mais informadas sobre valores padrão
+    const currentDraft = await this.getLicenseRequestById(id);
+    if (!currentDraft) {
+      throw new Error("Rascunho não encontrado");
+    }
+    
     // Garantir que os campos width, height e cargoType são tratados corretamente
     const sanitizedData = {
       ...draftData
     };
     
+    // Se estamos alterando o tipo de licença, podemos precisar atualizar os valores padrão
+    const licenseType = draftData.type || currentDraft.type;
+    
     // Somente converter se os campos estiverem presentes na atualização
     if (draftData.width !== undefined) {
       sanitizedData.width = Number(draftData.width);
+    } else if (currentDraft.width === null || currentDraft.width === undefined) {
+      // Se o valor atual é null mas não estamos atualizando, definir valor padrão
+      sanitizedData.width = licenseType === "flatbed" ? 320 : 260;
     }
     
     if (draftData.height !== undefined) {
       sanitizedData.height = Number(draftData.height);
+    } else if (currentDraft.height === null || currentDraft.height === undefined) {
+      // Se o valor atual é null mas não estamos atualizando, definir valor padrão
+      sanitizedData.height = licenseType === "flatbed" ? 495 : 440;
+    }
+    
+    if (draftData.cargoType !== undefined) {
+      sanitizedData.cargoType = draftData.cargoType;
+    } else if (currentDraft.cargoType === null || currentDraft.cargoType === undefined || currentDraft.cargoType === "") {
+      // Se o valor atual é null mas não estamos atualizando, definir valor padrão
+      sanitizedData.cargoType = licenseType === "flatbed" ? "indivisible_cargo" : "dry_cargo";
     }
     
     console.log("Dados sanitizados no updateLicenseDraft:", sanitizedData);
@@ -1088,6 +1130,26 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Rascunho não encontrado");
     }
     
+    // Sanitizar campos de dimensões e tipo de carga com valores padrão baseados no tipo de licença
+    let width = currentDraft.width;
+    let height = currentDraft.height;
+    let cargoType = currentDraft.cargoType;
+    
+    // Se a largura não estiver definida, usar valor padrão com base no tipo de licença
+    if (width === undefined || width === null) {
+      width = currentDraft.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+    }
+    
+    // Se a altura não estiver definida, usar valor padrão com base no tipo de licença
+    if (height === undefined || height === null) {
+      height = currentDraft.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+    }
+    
+    // Se o tipo de carga não estiver definido, usar valor padrão com base no tipo de licença
+    if (cargoType === undefined || cargoType === null || cargoType === "") {
+      cargoType = currentDraft.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+    }
+    
     // Sanitizar os dados importantes antes da submissão
     const updateData: any = { 
       isDraft: false, 
@@ -1095,9 +1157,9 @@ export class DatabaseStorage implements IStorage {
       status: "pending_registration", 
       updatedAt: now,
       // Garantir que os campos de dimensão e tipo de carga estão corretos
-      width: currentDraft.width !== undefined ? Number(currentDraft.width) : null,
-      height: currentDraft.height !== undefined ? Number(currentDraft.height) : null,
-      cargoType: currentDraft.cargoType || null
+      width: Number(width),
+      height: Number(height),
+      cargoType
     };
     
     console.log("Dados sanitizados no submitLicenseDraft:", updateData);
