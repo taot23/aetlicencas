@@ -8,6 +8,15 @@ interface LicenseDetailsCardProps {
 }
 
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
+  // Log para debug
+  console.log("LicenseDetailsCard - valores recebidos:", {
+    length: license.length,
+    width: license.width,
+    height: license.height,
+    cargoType: license.cargoType,
+    mainVehiclePlate: license.mainVehiclePlate
+  });
+  
   // Formatar valores para exibição
   const formatDimension = (value: number | null | undefined): string => {
     if (value === null || value === undefined) {
@@ -59,34 +68,34 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         <p className="text-base">{formatDimension(license.length)}</p>
       </div>
       
-      <div className={`p-2 ${!license.width ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
-        <h3 className={`font-medium text-sm ${!license.width ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-          {!license.width && <AlertCircle className="h-3.5 w-3.5" />}
-          Largura <span className={!license.width ? "text-red-600" : ""}>(obrigatório)</span>
+      <div className={`p-2 ${license.width === null || license.width === undefined ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
+        <h3 className={`font-medium text-sm ${license.width === null || license.width === undefined ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
+          {(license.width === null || license.width === undefined) && <AlertCircle className="h-3.5 w-3.5" />}
+          Largura <span className={license.width === null || license.width === undefined ? "text-red-600" : ""}>(obrigatório)</span>
         </h3>
         <p className="text-base">
-          {license.width ? 
+          {license.width !== null && license.width !== undefined ? 
             formatDimension(license.width) : 
             <span className="text-red-500">Campo obrigatório não preenchido</span>}
         </p>
       </div>
       
-      <div className={`p-2 ${!license.height ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
-        <h3 className={`font-medium text-sm ${!license.height ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-          {!license.height && <AlertCircle className="h-3.5 w-3.5" />}
-          Altura <span className={!license.height ? "text-red-600" : ""}>(obrigatório)</span>
+      <div className={`p-2 ${license.height === null || license.height === undefined ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
+        <h3 className={`font-medium text-sm ${license.height === null || license.height === undefined ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
+          {(license.height === null || license.height === undefined) && <AlertCircle className="h-3.5 w-3.5" />}
+          Altura <span className={license.height === null || license.height === undefined ? "text-red-600" : ""}>(obrigatório)</span>
         </h3>
         <p className="text-base">
-          {license.height ? 
+          {license.height !== null && license.height !== undefined ? 
             formatDimension(license.height) : 
             <span className="text-red-500">Campo obrigatório não preenchido</span>}
         </p>
       </div>
       
-      <div className={`p-2 ${!license.cargoType ? "bg-red-50" : "bg-white"} rounded-md shadow-sm sm:col-span-2`}>
-        <h3 className={`font-medium text-sm ${!license.cargoType ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-          {!license.cargoType && <AlertCircle className="h-3.5 w-3.5" />}
-          Tipo de Carga <span className={!license.cargoType ? "text-red-600" : ""}>(obrigatório)</span>
+      <div className={`p-2 ${license.cargoType === null || license.cargoType === undefined || license.cargoType === "" ? "bg-red-50" : "bg-white"} rounded-md shadow-sm sm:col-span-2`}>
+        <h3 className={`font-medium text-sm ${license.cargoType === null || license.cargoType === undefined || license.cargoType === "" ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
+          {(license.cargoType === null || license.cargoType === undefined || license.cargoType === "") && <AlertCircle className="h-3.5 w-3.5" />}
+          Tipo de Carga <span className={license.cargoType === null || license.cargoType === undefined || license.cargoType === "" ? "text-red-600" : ""}>(obrigatório)</span>
         </h3>
         <p className="text-base">
           {license.cargoType ? 
@@ -123,6 +132,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <span className="font-medium text-xs text-gray-800">1ª Carreta</span>
                   <span className="text-[10px] text-gray-500">ID: {license.firstTrailerId}</span>
                 </div>
+                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
+                  Semi-reboque
+                </div>
               </div>
             </div>
           )}
@@ -133,6 +145,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 <div className="flex flex-col">
                   <span className="font-medium text-xs text-gray-800">Dolly</span>
                   <span className="text-[10px] text-gray-500">ID: {license.dollyId}</span>
+                </div>
+                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
+                  Dolly
                 </div>
               </div>
             </div>
@@ -145,6 +160,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <span className="font-medium text-xs text-gray-800">2ª Carreta</span>
                   <span className="text-[10px] text-gray-500">ID: {license.secondTrailerId}</span>
                 </div>
+                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
+                  Reboque
+                </div>
               </div>
             </div>
           )}
@@ -155,6 +173,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 <div className="flex flex-col">
                   <span className="font-medium text-xs text-gray-800">Prancha</span>
                   <span className="text-[10px] text-gray-500">ID: {license.flatbedId}</span>
+                </div>
+                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
+                  Prancha
                 </div>
               </div>
             </div>
