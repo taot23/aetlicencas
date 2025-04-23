@@ -632,19 +632,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Dados de rascunho recebidos:", JSON.stringify(draftData, null, 2));
       
-      // Garantir que todos os campos obrigatórios não sejam nulos
-      if (draftData.type === "flatbed") {
-        // Para prancha: verifica requisitos específicos
-        console.log("Rascunho: É prancha");
-        if (!draftData.width) draftData.width = 260; // 2.60m padrão
-        if (!draftData.height) draftData.height = 440; // 4.40m padrão
-        if (!draftData.cargoType) draftData.cargoType = "indivisible_cargo"; // Carga indivisível padrão
-      } else if (draftData.type) {
-        // Para não-prancha: verifica requisitos gerais
-        console.log("Rascunho: Não é prancha");
-        if (!draftData.width) draftData.width = 260; // 2.60m padrão
-        if (!draftData.height) draftData.height = 440; // 4.40m padrão
-        if (!draftData.cargoType) draftData.cargoType = "dry_cargo"; // Carga seca padrão
+      // Sanitização mais rigorosa dos campos de dimensões com valores padrão
+      console.log("Rascunho: Sanitizando dados para tipo " + draftData.type);
+      
+      // Valores padrão baseados no tipo de licença - prancha tem limites diferentes
+      const isPrancha = draftData.type === "flatbed";
+      
+      // Verificar width (largura)
+      if (draftData.width === undefined || draftData.width === null || draftData.width === "") {
+        draftData.width = isPrancha ? 320 : 260; // 3.20m para prancha, 2.60m para outros
+        console.log(`Aplicando valor padrão para largura: ${draftData.width}`);
+      } else {
+        // Garantir que é um número
+        draftData.width = Number(draftData.width);
+        console.log(`Convertendo largura para número: ${draftData.width}`);
+      }
+      
+      // Verificar height (altura)
+      if (draftData.height === undefined || draftData.height === null || draftData.height === "") {
+        draftData.height = isPrancha ? 495 : 440; // 4.95m para prancha, 4.40m para outros
+        console.log(`Aplicando valor padrão para altura: ${draftData.height}`);
+      } else {
+        // Garantir que é um número
+        draftData.height = Number(draftData.height);
+        console.log(`Convertendo altura para número: ${draftData.height}`);
+      }
+      
+      // Verificar cargoType (tipo de carga)
+      if (draftData.cargoType === undefined || draftData.cargoType === null || draftData.cargoType === "") {
+        draftData.cargoType = isPrancha ? "indivisible_cargo" : "dry_cargo";
+        console.log(`Aplicando valor padrão para tipo de carga: ${draftData.cargoType}`);
       }
       
       // Validate draft data
@@ -950,19 +967,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Comprimento da licença:", licenseData.length);
       console.log("Tipo do valor do comprimento:", typeof licenseData.length);
       
-      // Garantir que todos os campos obrigatórios não sejam nulos
-      if (licenseData.type === "flatbed") {
-        // Para prancha: verifica requisitos específicos
-        console.log("É prancha: min 19.8m, max 25m");
-        if (!licenseData.width) licenseData.width = 260; // 2.60m padrão
-        if (!licenseData.height) licenseData.height = 440; // 4.40m padrão
-        if (!licenseData.cargoType) licenseData.cargoType = "indivisible_cargo"; // Carga indivisível padrão
+      // Sanitização mais rigorosa dos campos de dimensões com valores padrão
+      console.log("Sanitizando dados para tipo " + licenseData.type);
+      
+      // Valores padrão baseados no tipo de licença - prancha tem limites diferentes
+      const isPrancha = licenseData.type === "flatbed";
+      
+      // Verificar width (largura)
+      if (licenseData.width === undefined || licenseData.width === null || licenseData.width === "") {
+        licenseData.width = isPrancha ? 320 : 260; // 3.20m para prancha, 2.60m para outros
+        console.log(`Aplicando valor padrão para largura: ${licenseData.width}`);
       } else {
-        // Para não-prancha: verifica requisitos gerais
-        console.log("Não é prancha: min 19.8m, max 30m");
-        if (!licenseData.width) licenseData.width = 260; // 2.60m padrão
-        if (!licenseData.height) licenseData.height = 440; // 4.40m padrão
-        if (!licenseData.cargoType) licenseData.cargoType = "dry_cargo"; // Carga seca padrão
+        // Garantir que é um número
+        licenseData.width = Number(licenseData.width);
+        console.log(`Convertendo largura para número: ${licenseData.width}`);
+      }
+      
+      // Verificar height (altura)
+      if (licenseData.height === undefined || licenseData.height === null || licenseData.height === "") {
+        licenseData.height = isPrancha ? 495 : 440; // 4.95m para prancha, 4.40m para outros
+        console.log(`Aplicando valor padrão para altura: ${licenseData.height}`);
+      } else {
+        // Garantir que é um número
+        licenseData.height = Number(licenseData.height);
+        console.log(`Convertendo altura para número: ${licenseData.height}`);
+      }
+      
+      // Verificar cargoType (tipo de carga)
+      if (licenseData.cargoType === undefined || licenseData.cargoType === null || licenseData.cargoType === "") {
+        licenseData.cargoType = isPrancha ? "indivisible_cargo" : "dry_cargo";
+        console.log(`Aplicando valor padrão para tipo de carga: ${licenseData.cargoType}`);
       }
       
       console.log("Dados sanitizados para envio ao banco:", licenseData);
@@ -1130,20 +1164,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.message || "Erro de validação" });
       }
       
-      // Sanitizar campos de dimensões e tipo de carga
-      if (licenseData.width === undefined || licenseData.width === null) {
-        // Valores padrão com base no tipo de licença
-        licenseData.width = licenseData.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+      // Sanitização mais rigorosa dos campos de dimensões com valores padrão
+      console.log("Sanitizando dados para tipo " + licenseData.type);
+      
+      // Valores padrão baseados no tipo de licença - prancha tem limites diferentes
+      const isPrancha = licenseData.type === "flatbed";
+      
+      // Verificar width (largura)
+      if (licenseData.width === undefined || licenseData.width === null || licenseData.width === "") {
+        licenseData.width = isPrancha ? 320 : 260; // 3.20m para prancha, 2.60m para outros
+        console.log(`Aplicando valor padrão para largura: ${licenseData.width}`);
+      } else {
+        // Garantir que é um número
+        licenseData.width = Number(licenseData.width);
+        console.log(`Convertendo largura para número: ${licenseData.width}`);
       }
       
-      if (licenseData.height === undefined || licenseData.height === null) {
-        // Valores padrão com base no tipo de licença
-        licenseData.height = licenseData.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+      // Verificar height (altura)
+      if (licenseData.height === undefined || licenseData.height === null || licenseData.height === "") {
+        licenseData.height = isPrancha ? 495 : 440; // 4.95m para prancha, 4.40m para outros
+        console.log(`Aplicando valor padrão para altura: ${licenseData.height}`);
+      } else {
+        // Garantir que é um número
+        licenseData.height = Number(licenseData.height);
+        console.log(`Convertendo altura para número: ${licenseData.height}`);
       }
       
+      // Verificar cargoType (tipo de carga)
       if (licenseData.cargoType === undefined || licenseData.cargoType === null || licenseData.cargoType === "") {
-        // Valores padrão com base no tipo de licença
-        licenseData.cargoType = licenseData.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+        licenseData.cargoType = isPrancha ? "indivisible_cargo" : "dry_cargo";
+        console.log(`Aplicando valor padrão para tipo de carga: ${licenseData.cargoType}`);
       }
       
       // Garantir que os campos obrigatórios sejam enviados corretamente para o banco de dados
