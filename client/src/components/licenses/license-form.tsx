@@ -1270,29 +1270,77 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             {/* Resumo da composição */}
             <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Composição selecionada:</h4>
-              <div className="flex flex-wrap gap-2">
-                {form.watch("tractorUnitId") && (
-                  <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center">
-                    <Truck className="h-3 w-3 mr-1" />
-                    Unidade Tratora: {
-                      tractorUnits.find(v => v.id === form.watch("tractorUnitId"))?.plate || "Selecionado"
-                    }
+              <div className="flex flex-col gap-3">
+                {/* Veículos principais */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="text-xs font-medium text-gray-600 mr-1">Veículos principais:</div>
+                  {form.watch("tractorUnitId") && (
+                    <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Unidade Principal:</span> {
+                        tractorUnits.find(v => v.id === form.watch("tractorUnitId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                  {form.watch("firstTrailerId") && (
+                    <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">1ª Carreta:</span> {
+                        semiTrailers.find(v => v.id === form.watch("firstTrailerId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                  {form.watch("dollyId") && (
+                    <div className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Dolly:</span> {
+                        dollys.find(v => v.id === form.watch("dollyId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                  {form.watch("secondTrailerId") && (
+                    <div className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">2ª Carreta:</span> {
+                        semiTrailers.find(v => v.id === form.watch("secondTrailerId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                  {form.watch("flatbedId") && (
+                    <div className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Prancha:</span> {
+                        flatbeds.find(v => v.id === form.watch("flatbedId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                </div>
+                
+                {/* Placas adicionais */}
+                {form.watch("additionalPlates") && form.watch("additionalPlates").length > 0 && (
+                  <div className="flex flex-col">
+                    <div className="text-xs font-medium text-gray-600 mb-1">Placas adicionais:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {form.watch("additionalPlates").map((plate, index) => (
+                        plate && <div key={index} className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md flex items-center">
+                          <span className="font-medium mr-1">{index + 1}:</span> {plate}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {form.watch("firstTrailerId") && (
-                  <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-md">
-                    1ª Carreta: {
-                      semiTrailers.find(v => v.id === form.watch("firstTrailerId"))?.plate || "Selecionado"
-                    }
-                  </div>
-                )}
-                {form.watch("secondTrailerId") && (
-                  <div className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-md">
-                    2ª Carreta: {
-                      semiTrailers.find(v => v.id === form.watch("secondTrailerId"))?.plate || "Selecionado"
-                    }
-                  </div>
-                )}
+
+                {/* Total de veículos */}
+                <div className="text-xs text-gray-500 mt-1">
+                  Total: {[
+                    form.watch("tractorUnitId") ? 1 : 0,
+                    form.watch("firstTrailerId") ? 1 : 0,
+                    form.watch("dollyId") ? 1 : 0,
+                    form.watch("secondTrailerId") ? 1 : 0,
+                    form.watch("flatbedId") ? 1 : 0,
+                    form.watch("additionalPlates") ? form.watch("additionalPlates").filter(p => p).length : 0
+                  ].reduce((a, b) => a + b, 0)} veículos
+                </div>
               </div>
             </div>
           </div>
@@ -1398,22 +1446,50 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             {/* Resumo da composição */}
             <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Composição selecionada:</h4>
-              <div className="flex flex-wrap gap-2">
-                {form.watch("tractorUnitId") && (
-                  <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center">
-                    <Truck className="h-3 w-3 mr-1" />
-                    Unidade Tratora: {
-                      tractorUnits.find(v => v.id === form.watch("tractorUnitId"))?.plate || "Selecionado"
-                    }
+              <div className="flex flex-col gap-3">
+                {/* Veículos principais */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="text-xs font-medium text-gray-600 mr-1">Veículos principais:</div>
+                  {form.watch("tractorUnitId") && (
+                    <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Unidade Principal:</span> {
+                        tractorUnits.find(v => v.id === form.watch("tractorUnitId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                  {form.watch("flatbedId") && (
+                    <div className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Prancha:</span> {
+                        flatbeds.find(v => v.id === form.watch("flatbedId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                </div>
+                
+                {/* Placas adicionais */}
+                {form.watch("additionalPlates") && form.watch("additionalPlates").length > 0 && (
+                  <div className="flex flex-col">
+                    <div className="text-xs font-medium text-gray-600 mb-1">Placas adicionais:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {form.watch("additionalPlates").map((plate, index) => (
+                        plate && <div key={index} className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md flex items-center">
+                          <span className="font-medium mr-1">{index + 1}:</span> {plate}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {form.watch("flatbedId") && (
-                  <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-md">
-                    Prancha: {
-                      flatbeds.find(v => v.id === form.watch("flatbedId"))?.plate || "Selecionado"
-                    }
-                  </div>
-                )}
+
+                {/* Total de veículos */}
+                <div className="text-xs text-gray-500 mt-1">
+                  Total: {[
+                    form.watch("tractorUnitId") ? 1 : 0,
+                    form.watch("flatbedId") ? 1 : 0,
+                    form.watch("additionalPlates") ? form.watch("additionalPlates").filter(p => p).length : 0
+                  ].reduce((a, b) => a + b, 0)} veículos
+                </div>
               </div>
             </div>
           </div>
@@ -1526,22 +1602,50 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
             {/* Resumo da composição */}
             <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Composição selecionada:</h4>
-              <div className="flex flex-wrap gap-2">
-                {form.watch("tractorUnitId") && (
-                  <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center">
-                    <Truck className="h-3 w-3 mr-1" />
-                    Caminhão: {
-                      trucks.find(v => v.id === form.watch("tractorUnitId"))?.plate || "Selecionado"
-                    }
+              <div className="flex flex-col gap-3">
+                {/* Veículos principais */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="text-xs font-medium text-gray-600 mr-1">Veículos principais:</div>
+                  {form.watch("tractorUnitId") && (
+                    <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Caminhão:</span> {
+                        trucks.find(v => v.id === form.watch("tractorUnitId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                  {form.watch("firstTrailerId") && (
+                    <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-md flex items-center">
+                      <Truck className="h-3 w-3 mr-1" />
+                      <span className="font-medium">Reboque:</span> {
+                        trailers.find(v => v.id === form.watch("firstTrailerId"))?.plate || "Selecionado"
+                      }
+                    </div>
+                  )}
+                </div>
+                
+                {/* Placas adicionais */}
+                {form.watch("additionalPlates") && form.watch("additionalPlates").length > 0 && (
+                  <div className="flex flex-col">
+                    <div className="text-xs font-medium text-gray-600 mb-1">Placas adicionais:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {form.watch("additionalPlates").map((plate, index) => (
+                        plate && <div key={index} className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md flex items-center">
+                          <span className="font-medium mr-1">{index + 1}:</span> {plate}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {form.watch("firstTrailerId") && (
-                  <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-md">
-                    Reboque: {
-                      trailers.find(v => v.id === form.watch("firstTrailerId"))?.plate || "Selecionado"
-                    }
-                  </div>
-                )}
+
+                {/* Total de veículos */}
+                <div className="text-xs text-gray-500 mt-1">
+                  Total: {[
+                    form.watch("tractorUnitId") ? 1 : 0,
+                    form.watch("firstTrailerId") ? 1 : 0,
+                    form.watch("additionalPlates") ? form.watch("additionalPlates").filter(p => p).length : 0
+                  ].reduce((a, b) => a + b, 0)} veículos
+                </div>
               </div>
             </div>
           </div>
