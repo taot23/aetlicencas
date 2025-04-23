@@ -1226,20 +1226,33 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 name="tractorUnitId"
                 render={({ field }) => (
                   <FormItem>
-                    <VehicleSelectCard
-                      title="Unidade Tratora (Cavalo Mecânico)"
-                      description="Esta é a unidade principal que irá puxar o conjunto"
-                      value={field.value}
-                      vehicleOptions={tractorUnits}
-                      isLoading={isLoadingVehicles}
-                      onChange={(value) => field.onChange(value)}
-                      onAdd={() => setShowVehicleDialog(true)} 
-                      requiredForProgress={true}
-                      vehicleType="tractor_unit"
-                      onEdit={(vehicle) => {
-                        setShowVehicleDialog(true);
-                      }}
-                    />
+                    <FormLabel className="font-medium">Unidade Tratora (Cavalo Mecânico)</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-10 bg-blue-50 border-blue-200">
+                          <SelectValue placeholder="Selecione a unidade tratora" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : tractorUnits.length > 0 ? (
+                          tractorUnits.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate} - {vehicle.brand} {vehicle.model}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_tractor">Nenhum cavalo mecânico cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-xs text-muted-foreground mt-1">
+                      Esta é a unidade principal que irá puxar o conjunto
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1341,20 +1354,33 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
                 name="tractorUnitId"
                 render={({ field }) => (
                   <FormItem>
-                    <VehicleSelectCard
-                      title="Caminhão"
-                      description="Unidade principal do Romeu e Julieta"
-                      value={field.value}
-                      vehicleOptions={trucks}
-                      isLoading={isLoadingVehicles}
-                      onChange={(value) => field.onChange(value)}
-                      onAdd={() => setShowVehicleDialog(true)} 
-                      requiredForProgress={true}
-                      vehicleType="truck"
-                      onEdit={(vehicle) => {
-                        setShowVehicleDialog(true);
-                      }}
-                    />
+                    <FormLabel className="font-medium">Caminhão</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-10 bg-blue-50 border-blue-200">
+                          <SelectValue placeholder="Selecione o caminhão" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingVehicles ? (
+                          <SelectItem value="loading">Carregando...</SelectItem>
+                        ) : trucks.length > 0 ? (
+                          trucks.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.plate} - {vehicle.brand} {vehicle.model}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_truck">Nenhum caminhão cadastrado</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-xs text-muted-foreground mt-1">
+                      Unidade principal do Romeu e Julieta
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
