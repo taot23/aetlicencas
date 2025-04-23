@@ -364,6 +364,9 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                   className="w-full"
                   autoComplete="off"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Limite máximo de 80 caracteres por vez. Para adicionar mais placas, clique em Adicionar e continue.
+                </p>
                 {inputError && (
                   <p className="text-sm text-red-500 mt-1">{inputError}</p>
                 )}
