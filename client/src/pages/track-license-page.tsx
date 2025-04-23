@@ -21,6 +21,7 @@ import { getLicenseTypeLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { SortableHeader } from "@/components/ui/sortable-header";
+import { LicenseDetailsCard } from "@/components/licenses/license-details-card";
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
