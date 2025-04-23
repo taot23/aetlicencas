@@ -113,6 +113,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   const [licenseType, setLicenseType] = useState<string>(draft?.type || "");
   const [cargoType, setCargoType] = useState<string>("");
   const [showVehicleDialog, setShowVehicleDialog] = useState(false);
+  const [showRequiredFieldsWarning, setShowRequiredFieldsWarning] = useState(false);
 
   // Fetch vehicles for the dropdown selectors
   const { data: vehicles, isLoading: isLoadingVehicles } = useQuery<Vehicle[]>({
@@ -386,12 +387,42 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     }
   };
 
+  // Função para verificar se os campos obrigatórios estão preenchidos
+  const checkRequiredFields = () => {
+    const values = form.getValues();
+    const isWidthEmpty = values.width === undefined || values.width === null;
+    const isHeightEmpty = values.height === undefined || values.height === null;
+    const isCargoTypeEmpty = values.cargoType === undefined || values.cargoType === null || values.cargoType === '';
+    
+    return isWidthEmpty || isHeightEmpty || isCargoTypeEmpty;
+  };
+
   const handleSaveDraft = () => {
     form.setValue("isDraft", true);
     form.handleSubmit(onSubmit)();
   };
 
   const handleSubmitRequest = () => {
+    // Verificar se os campos obrigatórios estão preenchidos
+    if (checkRequiredFields()) {
+      // Mostrar aviso e não prosseguir com a submissão
+      setShowRequiredFieldsWarning(true);
+      
+      // Rolar para o topo para garantir que o usuário veja o aviso
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Notificar o usuário através de toast
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios para enviar sua solicitação",
+        variant: "destructive",
+      });
+      
+      return;
+    }
+    
+    // Se tudo estiver preenchido, continuar com a submissão
+    setShowRequiredFieldsWarning(false);
     form.setValue("isDraft", false);
     form.handleSubmit(onSubmit)();
   };
@@ -448,6 +479,43 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        
+        {/* Aviso de campos obrigatórios não preenchidos */}
+        {showRequiredFieldsWarning && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-md">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Atenção! Campos obrigatórios não preenchidos
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Os seguintes campos são obrigatórios para enviar a solicitação:
+                  </p>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    {form.getValues('width') === undefined && (
+                      <li>Largura do conjunto</li>
+                    )}
+                    {form.getValues('height') === undefined && (
+                      <li>Altura do conjunto</li>
+                    )}
+                    {(form.getValues('cargoType') === undefined || form.getValues('cargoType') === '') && (
+                      <li>Tipo de carga</li>
+                    )}
+                  </ul>
+                  <p className="mt-2">
+                    Por favor, preencha todos os campos marcados como <span className="text-yellow-600 font-medium">Obrigatório</span> antes de enviar.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       
       <Dialog open={showVehicleDialog} onOpenChange={setShowVehicleDialog}>
         <DialogContent className="sm:max-w-[500px]">
