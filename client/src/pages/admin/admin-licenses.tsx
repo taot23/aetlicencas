@@ -1138,128 +1138,64 @@ export default function AdminLicensesPage() {
                 </div>
               </div>
               
-              {/* Nova seção de Composição de Veículos baseada na imagem */}
-              <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                <div className="flex justify-between items-center mb-2">
+              {/* Nova seção de Composição de Veículos - Versão otimizada e compacta */}
+              <div className="p-2.5 bg-gray-50 rounded-md border border-gray-200">
+                <div className="flex justify-between items-center mb-1.5">
                   <h4 className="font-medium text-sm">Composição de Veículos</h4>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                      Adicionar Veículo Trator
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs bg-indigo-100 border-indigo-300 hover:bg-indigo-200">
-                      Adicionar Carreta
-                    </Button>
-                  </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                  {/* Unidade Tratora */}
-                  <div className="bg-white rounded-md p-3 border border-gray-200 relative">
-                    <div className="absolute top-2 right-2 flex space-x-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                        <Search className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                        <X className="h-4 w-4" />
-                      </Button>
+                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1.5">
+                  {/* Veículo principal (cavalo/truck) */}
+                  <div className="rounded border border-blue-100 shadow-none overflow-hidden bg-white">
+                    <div className="flex justify-between items-center py-1.5 px-2">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-xs text-gray-800">{selectedLicense.mainVehiclePlate || "TRK1234"}</span>
+                        <span className="text-[10px] text-gray-500">Unidade Principal</span>
+                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className="bg-blue-50 text-blue-800 border-blue-100 px-1.5 text-[10px] flex items-center gap-0.5 h-5"
+                      >
+                        Principal
+                      </Badge>
                     </div>
-                    <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Unidade Tratora</div>
-                    <div className="text-base font-medium">{selectedLicense.mainVehiclePlate || "TRK1234"}</div>
-                    <div className="text-sm text-gray-600 mt-1">Cavalo</div>
                   </div>
                   
-                  {/* Carretas */}
+                  {/* Placas Adicionais */}
                   {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0 ? (
                     selectedLicense.additionalPlates.map((plate, index) => (
-                      <div key={index} className="bg-white rounded-md p-3 border border-gray-200 relative">
-                        <div className="absolute top-2 right-2 flex space-x-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                            <Search className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
-                        <div className="text-base font-medium">{plate}</div>
-                        <div className="text-sm text-gray-600 mt-1">2 eixos</div>
-                      </div>
-                    ))
-                  ) : (
-                    <>
-                      <div className="bg-white rounded-md p-3 border border-gray-200 relative">
-                        <div className="absolute top-2 right-2 flex space-x-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                            <Search className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
-                        <div className="text-base font-medium">SEM1234</div>
-                        <div className="text-sm text-gray-600 mt-1">3 eixos</div>
-                      </div>
-                      <div className="bg-white rounded-md p-3 border border-gray-200 relative">
-                        <div className="absolute top-2 right-2 flex space-x-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600 hover:text-green-800">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-800">
-                            <Search className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600 hover:text-red-800">
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Semirreboque</div>
-                        <div className="text-base font-medium">SEM5678</div>
-                        <div className="text-sm text-gray-600 mt-1">3 eixos</div>
-                      </div>
-                    </>
-                  )}
-                </div>
-                
-                <div className="mt-3 text-right border-t pt-2">
-                  <div className="text-sm font-medium">Total Unidades Acopladas: {(selectedLicense.additionalPlates?.length || 0) + 1}</div>
-                </div>
-              </div>
-              
-              <div className="p-2 bg-white rounded-md shadow-sm">
-                <h3 className="font-medium text-sm text-gray-500 mb-1.5">Veículos Adicionais</h3>
-                {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0 ? (
-                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1">
-                    {selectedLicense.additionalPlates.map((plate, index) => (
                       <div 
-                        key={`plate-${index}`}
-                        className="rounded border border-gray-100 shadow-none overflow-hidden"
+                        key={`veic-${index}`}
+                        className="rounded border border-gray-100 shadow-none overflow-hidden bg-white"
                       >
                         <div className="flex justify-between items-center py-1.5 px-2">
-                          <span className="font-medium text-xs text-gray-800">{plate}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-xs text-gray-800">{plate}</span>
+                            <span className="text-[10px] text-gray-500">Veículo Adicional</span>
+                          </div>
                           <Badge 
                             variant="outline" 
-                            className="bg-blue-50 text-blue-800 border-blue-100 px-1.5 text-[10px] flex items-center gap-0.5 h-5"
+                            className="bg-gray-50 text-gray-600 border-gray-100 px-1.5 text-[10px] flex items-center gap-0.5 h-5"
                           >
                             Adicional
                           </Badge>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Nenhum veículo adicional</p>
-                )}
+                    ))
+                  ) : (
+                    <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white col-span-2">
+                      <div className="flex justify-center items-center py-2 px-3">
+                        <span className="text-xs text-gray-500">Nenhum veículo adicional</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-2 text-right border-t border-gray-100 pt-1.5">
+                  <div className="text-xs font-medium text-gray-700">Total: {(selectedLicense.additionalPlates?.length || 0) + 1} veículos</div>
+                </div>
               </div>
-
+              
               <div className="p-3 bg-gray-50 rounded-md">
                 <h3 className="font-medium text-sm text-gray-500 mb-2">Estados Solicitados</h3>
                 <div className="flex flex-wrap gap-2">
