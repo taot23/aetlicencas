@@ -174,9 +174,19 @@ export function DimensionField({
   // Gerar ID único para o campo
   const fieldId = `${fieldType}_input_${field.name}`;
   
+  // Verificar se o campo está vazio para mostrar alerta
+  const isEmpty = field.value === undefined || field.value === null || field.value === '';
+  
   return (
     <FormItem>
-      <FormLabel htmlFor={fieldId} className="text-base font-medium">{label}</FormLabel>
+      <FormLabel htmlFor={fieldId} className="text-base font-medium flex items-center">
+        {label}
+        {isEmpty && (
+          <span className="ml-2 text-xs font-normal px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+            Obrigatório
+          </span>
+        )}
+      </FormLabel>
       <FormControl>
         <Input 
           id={fieldId}
@@ -184,7 +194,7 @@ export function DimensionField({
           inputMode="decimal"
           placeholder={placeholder}
           value={displayValue}
-          className="mobile-input h-10"
+          className={`mobile-input h-10 ${isEmpty ? 'border-amber-500 focus:ring-amber-500' : ''}`}
           onFocus={(e) => {
             document.body.classList.add('keyboard-active');
             window.scrollTo(0, 0);
@@ -197,6 +207,11 @@ export function DimensionField({
           onKeyDown={handleKeyDown}
         />
       </FormControl>
+      {isEmpty && (
+        <div className="mt-1 text-sm text-amber-600 font-medium">
+          Este campo é obrigatório. Por favor, preencha um valor.
+        </div>
+      )}
       <FormDescription className="text-xs text-muted-foreground mt-1">
         {description}
       </FormDescription>

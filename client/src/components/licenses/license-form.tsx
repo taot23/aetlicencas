@@ -749,42 +749,61 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
               <FormField
                 control={form.control}
                 name="cargoType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Tipo de Carga</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Selecione o tipo de carga" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
+                render={({ field }) => {
+                  // Verificar se o campo está vazio
+                  const isEmpty = field.value === undefined || field.value === null || field.value === '';
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium flex items-center">
+                        Tipo de Carga
+                        {isEmpty && (
+                          <span className="ml-2 text-xs font-normal px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                            Obrigatório
+                          </span>
+                        )}
+                      </FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={`h-10 ${isEmpty ? 'border-amber-500 ring-1 ring-amber-500' : ''}`}>
+                            <SelectValue placeholder="Selecione o tipo de carga" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {licenseType === 'flatbed' 
+                            ? FLATBED_CARGO_TYPES.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))
+                            : NON_FLATBED_CARGO_TYPES.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))
+                          }
+                        </SelectContent>
+                      </Select>
+                      
+                      {isEmpty && (
+                        <div className="mt-1 text-sm text-amber-600 font-medium">
+                          Este campo é obrigatório. Por favor, selecione um tipo de carga.
+                        </div>
+                      )}
+                      
+                      <FormDescription className="text-xs text-muted-foreground mt-1">
                         {licenseType === 'flatbed' 
-                          ? FLATBED_CARGO_TYPES.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))
-                          : NON_FLATBED_CARGO_TYPES.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))
+                          ? 'Selecione o tipo de carga para este conjunto de prancha'
+                          : 'Selecione o tipo de carga para este conjunto'
                         }
-                      </SelectContent>
-                    </Select>
-                    <FormDescription className="text-xs text-muted-foreground mt-1">
-                      {licenseType === 'flatbed' 
-                        ? 'Selecione o tipo de carga para este conjunto de prancha'
-                        : 'Selecione o tipo de carga para este conjunto'
-                      }
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             )}
 
