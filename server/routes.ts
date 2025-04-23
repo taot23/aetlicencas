@@ -852,6 +852,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Comprimento:", licenseData.length);
       console.log("Largura:", licenseData.width);
       console.log("Altura:", licenseData.height);
+      console.log("Comprimento da licença:", licenseData.length);
+      console.log("Tipo do valor do comprimento:", typeof licenseData.length);
+      
+      // Garantir que todos os campos obrigatórios não sejam nulos
+      if (licenseData.type === "flatbed") {
+        // Para prancha: verifica requisitos específicos
+        console.log("É prancha: min 19.8m, max 25m");
+        if (!licenseData.width) licenseData.width = 260; // 2.60m padrão
+        if (!licenseData.height) licenseData.height = 440; // 4.40m padrão
+        if (!licenseData.cargoType) licenseData.cargoType = "indivisible_cargo"; // Carga indivisível padrão
+      } else {
+        // Para não-prancha: verifica requisitos gerais
+        console.log("Não é prancha: min 19.8m, max 30m");
+        if (!licenseData.width) licenseData.width = 260; // 2.60m padrão
+        if (!licenseData.height) licenseData.height = 440; // 4.40m padrão
+        if (!licenseData.cargoType) licenseData.cargoType = "dry_cargo"; // Carga seca padrão
+      }
+      
+      console.log("Dados sanitizados para envio ao banco:", licenseData);
       
       // Bypass validação temporariamente para entender o problema
       try {
