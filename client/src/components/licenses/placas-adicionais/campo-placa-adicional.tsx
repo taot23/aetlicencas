@@ -324,7 +324,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                 <Input
                   ref={inputRef}
                   value={plateInput}
-                  maxLength={80} // Aumentamos para permitir múltiplas placas
+                  maxLength={960} // Permite até 120 placas (8 caracteres por placa)
                   onChange={(e) => {
                     // Converter para maiúsculas e continuar digitação
                     setPlateInput(e.target.value.toUpperCase());
@@ -365,7 +365,7 @@ export function CampoPlacaAdicional({ form, vehicles, isLoadingVehicles, license
                   autoComplete="off"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Limite máximo de 80 caracteres por vez. Para adicionar mais placas, clique em Adicionar e continue.
+                  Limite máximo de 960 caracteres (até 120 placas). Para adicionar mais placas, clique em Adicionar e continue.
                 </p>
                 {inputError && (
                   <p className="text-sm text-red-500 mt-1">{inputError}</p>
