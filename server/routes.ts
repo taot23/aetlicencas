@@ -630,6 +630,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const draftData = { ...req.body };
       
+      console.log("Dados de rascunho recebidos:", JSON.stringify(draftData, null, 2));
+      
+      // Garantir que todos os campos obrigatórios não sejam nulos
+      if (draftData.type === "flatbed") {
+        // Para prancha: verifica requisitos específicos
+        console.log("Rascunho: É prancha");
+        if (!draftData.width) draftData.width = 260; // 2.60m padrão
+        if (!draftData.height) draftData.height = 440; // 4.40m padrão
+        if (!draftData.cargoType) draftData.cargoType = "indivisible_cargo"; // Carga indivisível padrão
+      } else if (draftData.type) {
+        // Para não-prancha: verifica requisitos gerais
+        console.log("Rascunho: Não é prancha");
+        if (!draftData.width) draftData.width = 260; // 2.60m padrão
+        if (!draftData.height) draftData.height = 440; // 4.40m padrão
+        if (!draftData.cargoType) draftData.cargoType = "dry_cargo"; // Carga seca padrão
+      }
+      
       // Validate draft data
       try {
         insertDraftLicenseSchema.parse(draftData);
@@ -641,10 +658,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a draft request number
       const draftNumber = `RASCUNHO-${uuidv4().substring(0, 8)}`;
       
-      const draft = await storage.createLicenseDraft(userId, {
+      // Garantir que os campos obrigatórios sejam enviados corretamente para o banco de dados
+      const sanitizedData = {
         ...draftData,
+        width: draftData.width !== undefined ? Number(draftData.width) : null,
+        height: draftData.height !== undefined ? Number(draftData.height) : null,
+        cargoType: draftData.cargoType || null,
         requestNumber: draftNumber,
-      });
+        isDraft: true,
+      };
+      
+      console.log("Dados sanitizados para envio ao banco:", sanitizedData);
+      
+      const draft = await storage.createLicenseDraft(userId, sanitizedData);
       
       res.status(201).json(draft);
     } catch (error) {
@@ -670,6 +696,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const draftData = { ...req.body };
       
+      console.log("Dados para atualização de rascunho recebidos:", JSON.stringify(draftData, null, 2));
+      
+      // Garantir que todos os campos obrigatórios não sejam nulos
+      if (draftData.type === "flatbed" || existingDraft.type === "flatbed") {
+        // Para prancha: verifica requisitos específicos
+        console.log("Atualização de rascunho: É prancha");
+        if (!draftData.width) draftData.width = existingDraft.width || 260; // Manter valor existente ou valor padrão
+        if (!draftData.height) draftData.height = existingDraft.height || 440; // Manter valor existente ou valor padrão
+        if (!draftData.cargoType) draftData.cargoType = existingDraft.cargoType || "indivisible_cargo"; // Manter valor existente ou valor padrão
+      } else if (draftData.type || existingDraft.type) {
+        // Para não-prancha: verifica requisitos gerais
+        console.log("Atualização de rascunho: Não é prancha");
+        if (!draftData.width) draftData.width = existingDraft.width || 260; // Manter valor existente ou valor padrão
+        if (!draftData.height) draftData.height = existingDraft.height || 440; // Manter valor existente ou valor padrão
+        if (!draftData.cargoType) draftData.cargoType = existingDraft.cargoType || "dry_cargo"; // Manter valor existente ou valor padrão
+      }
+      
       // Validate draft data
       try {
         insertDraftLicenseSchema.partial().parse(draftData);
@@ -678,7 +721,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: validationError.message });
       }
       
-      const updatedDraft = await storage.updateLicenseDraft(draftId, draftData);
+      // Garantir que os campos obrigatórios sejam enviados corretamente para o banco de dados
+      const sanitizedData = {
+        ...draftData,
+        width: draftData.width !== undefined ? Number(draftData.width) : existingDraft.width,
+        height: draftData.height !== undefined ? Number(draftData.height) : existingDraft.height,
+        cargoType: draftData.cargoType || existingDraft.cargoType,
+      };
+      
+      console.log("Dados sanitizados para atualização do rascunho:", sanitizedData);
+      
+      const updatedDraft = await storage.updateLicenseDraft(draftId, sanitizedData);
       
       res.json(updatedDraft);
     } catch (error) {
@@ -725,6 +778,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingDraft.userId !== userId || !existingDraft.isDraft) {
         return res.status(403).json({ message: 'Acesso negado' });
       }
+      
+      // Garantir que todos os campos obrigatórios não sejam nulos antes de submeter
+      const draftData = { ...existingDraft };
+      
+      if (draftData.type === "flatbed") {
+        // Para prancha: verifica requisitos específicos
+        console.log("Rascunho para submissão: É prancha");
+        if (!draftData.width) draftData.width = 260; // 2.60m padrão
+        if (!draftData.height) draftData.height = 440; // 4.40m padrão
+        if (!draftData.cargoType) draftData.cargoType = "indivisible_cargo"; // Carga indivisível padrão
+      } else if (draftData.type) {
+        // Para não-prancha: verifica requisitos gerais
+        console.log("Rascunho para submissão: Não é prancha");
+        if (!draftData.width) draftData.width = 260; // 2.60m padrão
+        if (!draftData.height) draftData.height = 440; // 4.40m padrão
+        if (!draftData.cargoType) draftData.cargoType = "dry_cargo"; // Carga seca padrão
+      }
+      
+      // Atualizar o rascunho com os dados sanitizados
+      await storage.updateLicenseDraft(draftId, {
+        width: draftData.width,
+        height: draftData.height,
+        cargoType: draftData.cargoType
+      });
+      
+      console.log("Rascunho sanitizado antes de submeter:", draftData);
       
       // Generate a real request number
       const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
