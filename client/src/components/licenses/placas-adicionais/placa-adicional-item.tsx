@@ -187,16 +187,17 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
         }`}
     >
       {/* Cabeçalho do card */}
-      <div className="flex justify-between items-center p-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between p-3">
+        {/* Primeira linha com status, placa e tipo */}
+        <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-0">
           {/* Badge de Status */}
           {isRegistered ? (
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 px-2 text-xs flex items-center gap-1 h-6">
+            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 px-2 text-xs flex items-center gap-1 h-6 whitespace-nowrap">
               <Check className="h-3 w-3" />
               Cadastrado
             </Badge>
           ) : (
-            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 px-2 text-xs flex items-center gap-1 h-6">
+            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 px-2 text-xs flex items-center gap-1 h-6 whitespace-nowrap">
               <AlertTriangle className="h-3 w-3" />
               Não Cadastrado
             </Badge>
@@ -213,8 +214,8 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
           </div>
         </div>
         
-        <div className="flex items-center gap-1">
-          {/* Botões de ação contextual */}
+        <div className="flex items-center gap-1 justify-end">
+          {/* Botões de ação contextual - mais compactos em mobile */}
           {isRegistered ? (
             <>
               <Button
@@ -222,10 +223,10 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowDetails(!showDetails)}
-                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
                 title={showDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
               >
-                <Info className="h-4 w-4" />
+                <Info className="h-3.5 w-3.5" />
               </Button>
 
               <Button
@@ -233,10 +234,10 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
                 variant="ghost"
                 size="sm"
                 onClick={handleEditVehicle}
-                className="h-8 w-8 p-0 text-gray-500 hover:text-green-600"
+                className="h-7 w-7 p-0 text-gray-500 hover:text-green-600"
                 title="Editar veículo"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-3.5 w-3.5" />
               </Button>
             </>
           ) : (
@@ -245,7 +246,7 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
               variant="outline"
               size="sm"
               onClick={handleEditVehicle}
-              className="h-8 px-2 py-1 text-xs bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+              className="h-7 px-2 py-0.5 text-xs bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
             >
               <Plus className="h-3 w-3 mr-1" />
               Cadastrar
@@ -259,9 +260,9 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
               >
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -295,10 +296,10 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
       {/* Área de detalhes - expandida quando showDetails é true */}
       {showDetails && isRegistered && vehicleDetails && (
         <div className="px-3 pb-3 pt-0 border-t border-gray-100">
-          <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-            <div>
-              <span className="text-gray-500 block">Tipo:</span>
-              <span className="font-medium">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-4 gap-y-2 text-xs mt-2">
+            <div className="overflow-hidden text-ellipsis">
+              <span className="text-gray-500 block text-[10px]">Tipo:</span>
+              <span className="font-medium truncate">
                 {vehicleDetails.type === 'tractor_unit' ? 'Unidade Tratora' :
                  vehicleDetails.type === 'semi_trailer' ? 'Semirreboque' :
                  vehicleDetails.type === 'trailer' ? 'Reboque' :
@@ -308,41 +309,41 @@ export function PlacaAdicionalItem({ plate, index, vehicles, onRemove, onEdit }:
               </span>
             </div>
             
-            <div>
-              <span className="text-gray-500 block">RENAVAM:</span>
-              <span className="font-medium">{vehicleDetails.renavam}</span>
+            <div className="overflow-hidden text-ellipsis">
+              <span className="text-gray-500 block text-[10px]">RENAVAM:</span>
+              <span className="font-medium truncate">{vehicleDetails.renavam}</span>
             </div>
             
-            <div>
-              <span className="text-gray-500 block">Marca/Modelo:</span>
-              <span className="font-medium">{vehicleDetails.brand} {vehicleDetails.model}</span>
+            <div className="overflow-hidden text-ellipsis">
+              <span className="text-gray-500 block text-[10px]">Marca/Modelo:</span>
+              <span className="font-medium truncate">{vehicleDetails.brand} {vehicleDetails.model}</span>
             </div>
             
-            <div>
-              <span className="text-gray-500 block">Fabricação:</span>
-              <span className="font-medium">{vehicleDetails.year}</span>
+            <div className="overflow-hidden text-ellipsis">
+              <span className="text-gray-500 block text-[10px]">Fabricação:</span>
+              <span className="font-medium truncate">{vehicleDetails.year}</span>
             </div>
             
-            <div>
-              <span className="text-gray-500 block">Eixos:</span>
-              <span className="font-medium">{vehicleDetails.axleCount}</span>
+            <div className="overflow-hidden text-ellipsis">
+              <span className="text-gray-500 block text-[10px]">Eixos:</span>
+              <span className="font-medium truncate">{vehicleDetails.axleCount}</span>
             </div>
             
-            <div>
-              <span className="text-gray-500 block">TARA:</span>
-              <span className="font-medium">{vehicleDetails.tare} kg</span>
+            <div className="overflow-hidden text-ellipsis">
+              <span className="text-gray-500 block text-[10px]">TARA:</span>
+              <span className="font-medium truncate">{vehicleDetails.tare} kg</span>
             </div>
           </div>
           
           {/* Seção de documentos */}
           {vehicleDetails.crlvUrl && (
             <div className="mt-3 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-600" />
+              <FileText className="h-4 w-4 flex-shrink-0 text-blue-600" />
               <a 
                 href={vehicleDetails.crlvUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-blue-600 hover:underline truncate"
               >
                 Ver documento do veículo (CRLV)
               </a>
