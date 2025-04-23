@@ -422,14 +422,60 @@ export class TransactionalStorage implements IStorage {
   }
   
   async updateLicenseDraft(id: number, draftData: Partial<LicenseRequest>): Promise<LicenseRequest> {
-    const updateData = {
-      ...draftData,
-      updatedAt: new Date()
-    };
+    // Obter o rascunho atual para decisões mais informadas sobre valores padrão
+    const currentDraft = await this.getLicenseRequestById(id);
+    if (!currentDraft) {
+      throw new Error("Rascunho não encontrado");
+    }
     
+    // Preparar os dados atualizados
+    const updateData = { ...draftData };
+    
+    // Se estamos alterando o tipo de licença, podemos precisar atualizar os valores padrão
+    const licenseType = draftData.type || currentDraft.type;
+    
+    // Somente converter se os campos estiverem presentes na atualização
+    if (draftData.width !== undefined) {
+      updateData.width = Number(draftData.width);
+    } else if (currentDraft.width === null || currentDraft.width === undefined) {
+      // Se o valor atual é null mas não estamos atualizando, definir valor padrão
+      updateData.width = licenseType === "flatbed" ? 320 : 260;
+    }
+    
+    if (draftData.height !== undefined) {
+      updateData.height = Number(draftData.height);
+    } else if (currentDraft.height === null || currentDraft.height === undefined) {
+      // Se o valor atual é null mas não estamos atualizando, definir valor padrão
+      updateData.height = licenseType === "flatbed" ? 495 : 440;
+    }
+    
+    if (draftData.cargoType !== undefined) {
+      updateData.cargoType = draftData.cargoType;
+    } else if (currentDraft.cargoType === null || currentDraft.cargoType === undefined || currentDraft.cargoType === "") {
+      // Se o valor atual é null mas não estamos atualizando, definir valor padrão
+      updateData.cargoType = licenseType === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+    }
+    
+    // Log para diagnóstico
+    console.log("UpdateLicenseDraft - dados originais:", {
+      width: draftData.width,
+      height: draftData.height,
+      cargoType: draftData.cargoType
+    });
+    
+    console.log("UpdateLicenseDraft - dados sanitizados:", {
+      width: updateData.width,
+      height: updateData.height,
+      cargoType: updateData.cargoType
+    });
+    
+    // Atualizar o registro
     const [updatedDraft] = await db
       .update(licenseRequests)
-      .set(updateData)
+      .set({
+        ...updateData,
+        updatedAt: new Date()
+      })
       .where(
         and(
           eq(licenseRequests.id, id),
@@ -452,6 +498,39 @@ export class TransactionalStorage implements IStorage {
       throw new Error("Rascunho de licença não encontrado");
     }
     
+    // Sanitizar campos de dimensões e tipo de carga com valores padrão baseados no tipo de licença
+    let width = draft.width;
+    let height = draft.height;
+    let cargoType = draft.cargoType;
+    
+    // Se a largura não estiver definida, usar valor padrão com base no tipo de licença
+    if (width === undefined || width === null) {
+      width = draft.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+    }
+    
+    // Se a altura não estiver definida, usar valor padrão com base no tipo de licença
+    if (height === undefined || height === null) {
+      height = draft.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+    }
+    
+    // Se o tipo de carga não estiver definido, usar valor padrão com base no tipo de licença
+    if (cargoType === undefined || cargoType === null || cargoType === "") {
+      cargoType = draft.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+    }
+    
+    // Log para diagnóstico
+    console.log("SubmitLicenseDraft - dados originais:", {
+      width: draft.width,
+      height: draft.height,
+      cargoType: draft.cargoType
+    });
+    
+    console.log("SubmitLicenseDraft - dados sanitizados:", {
+      width,
+      height,
+      cargoType
+    });
+    
     // Atualizar o rascunho para um pedido real
     const [licenseRequest] = await db
       .update(licenseRequests)
@@ -459,6 +538,9 @@ export class TransactionalStorage implements IStorage {
         isDraft: false,
         requestNumber,
         status: "pending_registration",
+        width: Number(width),
+        height: Number(height),
+        cargoType,
         updatedAt: new Date()
       })
       .where(eq(licenseRequests.id, id))
