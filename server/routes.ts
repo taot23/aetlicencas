@@ -886,6 +886,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           licenseData.length = 2000; // 20 metros em centímetros
         }
         
+        // Sanitizar campos de dimensões e tipo de carga
+        if (licenseData.width === undefined || licenseData.width === null) {
+          // Valores padrão com base no tipo de licença
+          licenseData.width = licenseData.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+        }
+        
+        if (licenseData.height === undefined || licenseData.height === null) {
+          // Valores padrão com base no tipo de licença
+          licenseData.height = licenseData.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+        }
+        
+        if (licenseData.cargoType === undefined || licenseData.cargoType === null || licenseData.cargoType === "") {
+          // Valores padrão com base no tipo de licença
+          licenseData.cargoType = licenseData.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+        }
+        
         console.log("Dados processados para envio:", {
           ...licenseData,
           requestNumber,
@@ -1112,6 +1128,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error: any) {
         console.error('Validation error:', error);
         return res.status(400).json({ message: error.message || "Erro de validação" });
+      }
+      
+      // Sanitizar campos de dimensões e tipo de carga
+      if (licenseData.width === undefined || licenseData.width === null) {
+        // Valores padrão com base no tipo de licença
+        licenseData.width = licenseData.type === "flatbed" ? 320 : 260; // 3.20m ou 2.60m
+      }
+      
+      if (licenseData.height === undefined || licenseData.height === null) {
+        // Valores padrão com base no tipo de licença
+        licenseData.height = licenseData.type === "flatbed" ? 495 : 440; // 4.95m ou 4.40m
+      }
+      
+      if (licenseData.cargoType === undefined || licenseData.cargoType === null || licenseData.cargoType === "") {
+        // Valores padrão com base no tipo de licença
+        licenseData.cargoType = licenseData.type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
       }
       
       // Garantir que os campos obrigatórios sejam enviados corretamente para o banco de dados

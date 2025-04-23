@@ -8,6 +8,14 @@ interface LicenseDetailsCardProps {
 }
 
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
+  // Garantir valores padrão para dimensões e tipo de carga
+  const licenseData = {
+    ...license,
+    width: license.width || getDefaultWidth(license.type),
+    height: license.height || getDefaultHeight(license.type),
+    cargoType: license.cargoType || getDefaultCargoType(license.type)
+  };
+
   // Log para debug
   console.log("LicenseDetailsCard - valores recebidos:", {
     length: license.length,
@@ -16,6 +24,29 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     cargoType: license.cargoType,
     mainVehiclePlate: license.mainVehiclePlate
   });
+  
+  console.log("LicenseDetailsCard - valores processados:", {
+    length: licenseData.length,
+    width: licenseData.width,
+    height: licenseData.height,
+    cargoType: licenseData.cargoType,
+    type: licenseData.type
+  });
+  
+  // Função para obter largura padrão baseada no tipo de licença
+  function getDefaultWidth(type: string): number {
+    return type === "flatbed" ? 320 : 260; // 3.20m para prancha, 2.60m para demais
+  }
+  
+  // Função para obter altura padrão baseada no tipo de licença
+  function getDefaultHeight(type: string): number {
+    return type === "flatbed" ? 495 : 440; // 4.95m para prancha, 4.40m para demais
+  }
+  
+  // Função para obter tipo de carga padrão baseado no tipo de licença
+  function getDefaultCargoType(type: string): string {
+    return type === "flatbed" ? "indivisible_cargo" : "dry_cargo";
+  }
   
   // Formatar valores para exibição
   const formatDimension = (value: number | null | undefined): string => {
@@ -65,42 +96,33 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       
       <div className="p-2 bg-white rounded-md shadow-sm">
         <h3 className="font-medium text-sm text-gray-500">Comprimento</h3>
-        <p className="text-base">{formatDimension(license.length)}</p>
+        <p className="text-base">{formatDimension(licenseData.length)}</p>
       </div>
       
-      <div className={`p-2 ${license.width === null || license.width === undefined ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
-        <h3 className={`font-medium text-sm ${license.width === null || license.width === undefined ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-          {(license.width === null || license.width === undefined) && <AlertCircle className="h-3.5 w-3.5" />}
-          Largura <span className={license.width === null || license.width === undefined ? "text-red-600" : ""}>(obrigatório)</span>
+      <div className="p-2 bg-white rounded-md shadow-sm">
+        <h3 className="font-medium text-sm text-gray-500">
+          Largura
         </h3>
         <p className="text-base">
-          {license.width !== null && license.width !== undefined ? 
-            formatDimension(license.width) : 
-            <span className="text-red-500">Campo obrigatório não preenchido</span>}
+          {formatDimension(licenseData.width)}
         </p>
       </div>
       
-      <div className={`p-2 ${license.height === null || license.height === undefined ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
-        <h3 className={`font-medium text-sm ${license.height === null || license.height === undefined ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-          {(license.height === null || license.height === undefined) && <AlertCircle className="h-3.5 w-3.5" />}
-          Altura <span className={license.height === null || license.height === undefined ? "text-red-600" : ""}>(obrigatório)</span>
+      <div className="p-2 bg-white rounded-md shadow-sm">
+        <h3 className="font-medium text-sm text-gray-500">
+          Altura
         </h3>
         <p className="text-base">
-          {license.height !== null && license.height !== undefined ? 
-            formatDimension(license.height) : 
-            <span className="text-red-500">Campo obrigatório não preenchido</span>}
+          {formatDimension(licenseData.height)}
         </p>
       </div>
       
-      <div className={`p-2 ${license.cargoType === null || license.cargoType === undefined || license.cargoType === "" ? "bg-red-50" : "bg-white"} rounded-md shadow-sm sm:col-span-2`}>
-        <h3 className={`font-medium text-sm ${license.cargoType === null || license.cargoType === undefined || license.cargoType === "" ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-          {(license.cargoType === null || license.cargoType === undefined || license.cargoType === "") && <AlertCircle className="h-3.5 w-3.5" />}
-          Tipo de Carga <span className={license.cargoType === null || license.cargoType === undefined || license.cargoType === "" ? "text-red-600" : ""}>(obrigatório)</span>
+      <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
+        <h3 className="font-medium text-sm text-gray-500">
+          Tipo de Carga
         </h3>
         <p className="text-base">
-          {license.cargoType ? 
-            getCargoTypeLabel(license.cargoType) : 
-            <span className="text-red-500">Campo obrigatório não preenchido</span>}
+          {getCargoTypeLabel(licenseData.cargoType)}
         </p>
       </div>
       
