@@ -306,7 +306,10 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
   .extend({
     transporterId: z.number().positive("Um transportador deve ser selecionado"),
     states: z.array(z.string()).min(1, "Selecione pelo menos um estado"),
-    cargoType: cargoTypeEnum.optional(),
+    cargoType: cargoTypeEnum.refine(val => !!val, {
+      message: "O tipo de carga é obrigatório",
+      path: ["cargoType"]
+    }),
     length: z.coerce.number()
       .positive("O comprimento deve ser positivo")
       .superRefine((val, ctx) => {
@@ -346,9 +349,12 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
         }
       }),
     width: z.coerce.number()
+      .positive("A largura deve ser um valor positivo")
+      .refine(val => val > 0, {
+        message: "A largura é obrigatória",
+        path: ["width"]
+      })
       .superRefine((val, ctx) => {
-        if (!val) return; // Se não for fornecido, ok
-        
         console.log("Validando largura:", val, "tipo:", typeof val);
         
         // Verificamos se estamos recebendo o valor em centímetros (>100) ou metros (<100)
@@ -378,12 +384,14 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
             });
           }
         }
-      })
-      .optional(),
+      }),
     height: z.coerce.number()
+      .positive("A altura deve ser um valor positivo")
+      .refine(val => val > 0, {
+        message: "A altura é obrigatória",
+        path: ["height"]
+      })
       .superRefine((val, ctx) => {
-        if (!val) return; // Se não for fornecido, ok
-        
         console.log("Validando altura:", val, "tipo:", typeof val);
         
         // Verificamos se estamos recebendo o valor em centímetros (>100) ou metros (<100)
@@ -413,8 +421,7 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
             });
           }
         }
-      })
-      .optional(),
+      }),
     additionalPlates: z.array(z.string()).optional().default([]),
     additionalPlatesDocuments: z.array(z.string()).optional().default([]),
   });
