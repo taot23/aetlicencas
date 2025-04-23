@@ -1070,8 +1070,6 @@ export default function AdminLicensesPage() {
               {/* Utilizando o componente LicenseDetailsCard para exibição dos detalhes */}
               <LicenseDetailsCard license={selectedLicense} />
               
-
-              
               <div className="p-3 bg-gray-50 rounded-md">
                 <h3 className="font-medium text-sm text-gray-500 mb-2">Estados Solicitados</h3>
                 <div className="flex flex-wrap gap-2">

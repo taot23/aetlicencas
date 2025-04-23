@@ -334,69 +334,30 @@ export default function TrackLicensePage() {
                 </div>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
-                  <p className="font-medium">{selectedLicense.requestNumber}</p>
-                </div>
-                {/* Status individualizado por estado */}
-                {(selectedLicense as any).specificState ? (
-                  <div>
-                    <h3 className="font-medium text-sm text-gray-500">Status: {(selectedLicense as any).specificState}</h3>
-                    <div className="flex items-center mt-1">
-                      <StatusBadge status={(selectedLicense as any).specificStateStatus || selectedLicense.status} />
-                      {/* Botão de download após status liberada */}
-                      {((selectedLicense as any).specificStateStatus === "approved" || selectedLicense.status === "approved") && (selectedLicense as any).specificStateFileUrl && (
-                        <Button variant="outline" size="sm" className="ml-2" asChild>
-                          <a href={(selectedLicense as any).specificStateFileUrl} target="_blank" rel="noopener noreferrer">
-                            <FileDown className="h-4 w-4 mr-1" />
-                            Download
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+              {/* Componente LicenseDetailsCard para exibição dos detalhes */}
+              <LicenseDetailsCard license={selectedLicense} />
+              
+              {/* Status específico por estado */}
+              {(selectedLicense as any).specificState && (
+                <div className="p-3 bg-gray-50 rounded-md">
+                  <h3 className="font-medium text-sm text-gray-500">Status: {(selectedLicense as any).specificState}</h3>
+                  <div className="flex items-center mt-1">
+                    <StatusBadge status={(selectedLicense as any).specificStateStatus || selectedLicense.status} />
+                    {/* Botão de download após status liberada */}
+                    {((selectedLicense as any).specificStateStatus === "approved" || selectedLicense.status === "approved") && (selectedLicense as any).specificStateFileUrl && (
+                      <Button variant="outline" size="sm" className="ml-2" asChild>
+                        <a href={(selectedLicense as any).specificStateFileUrl} target="_blank" rel="noopener noreferrer">
+                          <FileDown className="h-4 w-4 mr-1" />
+                          Download
+                        </a>
+                      </Button>
+                    )}
                   </div>
-                ) : (
-                  <div>
-                    <h3 className="font-medium text-sm text-gray-500">Status</h3>
-                    <div className="flex items-center mt-1">
-                      <StatusBadge status={selectedLicense.status} />
-                      {/* Botão de download após status liberada */}
-                      {selectedLicense.status === "approved" && selectedLicense.licenseFileUrl && (
-                        <Button variant="outline" size="sm" className="ml-2" asChild>
-                          <a href={selectedLicense.licenseFileUrl} target="_blank" rel="noopener noreferrer">
-                            <FileDown className="h-4 w-4 mr-1" />
-                            Download
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
-                  <p>
-                    {getLicenseTypeLabel(selectedLicense.type)}
-                  </p>
                 </div>
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
-                  <p>{selectedLicense.createdAt && format(new Date(selectedLicense.createdAt), "dd/MM/yyyy")}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Veículo Principal</h3>
-                  <p>{selectedLicense.mainVehiclePlate}</p>
-                </div>
-                <TransporterInfo transporterId={selectedLicense.transporterId} />
-                <div>
-                  <h3 className="font-medium text-sm text-gray-500">Veículos Adicionais</h3>
-                  <p>
-                    {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0
-                      ? selectedLicense.additionalPlates.join(", ")
-                      : "Nenhum veículo adicional"}
-                  </p>
-                </div>
-              </div>
+              )}
+              
+              {/* Informações do Transportador */}
+              <TransporterInfo transporterId={selectedLicense.transporterId} />
               
               {selectedLicense.comments && (
                 <div>
