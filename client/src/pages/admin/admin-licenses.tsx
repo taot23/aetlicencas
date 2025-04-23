@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { ProgressFlow, StateProgressFlow } from "@/components/licenses/progress-flow";
+import { LicenseDetailsCard } from "@/components/licenses/license-details-card";
 import {
   Table,
   TableBody,
@@ -1066,135 +1067,10 @@ export default function AdminLicensesPage() {
                 </div>
               )}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-md">
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
-                  <p className="font-medium text-base">{selectedLicense.requestNumber}</p>
-                </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Status</h3>
-                  <div className="flex items-center mt-1">
-                    <StatusBadge status={selectedLicense.status} />
-                  </div>
-                </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
-                  <p className="text-base">
-                    {getLicenseTypeLabel(selectedLicense.type)}
-                  </p>
-                </div>
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
-                  <p className="text-base">{formatDate(selectedLicense.createdAt)}</p>
-                </div>
-                
-                {/* Informações de dimensões */}
-                <div className="p-2 bg-white rounded-md shadow-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Comprimento</h3>
-                  <p className="text-base">
-                    {selectedLicense.length ? 
-                      (Number(selectedLicense.length) > 100 ? 
-                        (Number(selectedLicense.length) / 100).toFixed(2) 
-                        : Number(selectedLicense.length).toFixed(2)) 
-                      : "-"} {selectedLicense.length ? "m" : ""}
-                  </p>
-                </div>
-                <div className={`p-2 ${!selectedLicense.width ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
-                  <h3 className={`font-medium text-sm ${!selectedLicense.width ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-                    {!selectedLicense.width && <AlertCircle className="h-3.5 w-3.5" />}
-                    Largura <span className={!selectedLicense.width ? "text-red-600" : ""}>(obrigatório)</span>
-                  </h3>
-                  <p className="text-base">
-                    {selectedLicense.width ? 
-                      (Number(selectedLicense.width) > 100 ? 
-                        (Number(selectedLicense.width) / 100).toFixed(2) 
-                        : Number(selectedLicense.width).toFixed(2)) + " m"
-                      : <span className="text-red-500">Campo obrigatório não preenchido</span>}
-                  </p>
-                </div>
-                <div className={`p-2 ${!selectedLicense.height ? "bg-red-50" : "bg-white"} rounded-md shadow-sm`}>
-                  <h3 className={`font-medium text-sm ${!selectedLicense.height ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-                    {!selectedLicense.height && <AlertCircle className="h-3.5 w-3.5" />}
-                    Altura <span className={!selectedLicense.height ? "text-red-600" : ""}>(obrigatório)</span>
-                  </h3>
-                  <p className="text-base">
-                    {selectedLicense.height ? 
-                      (Number(selectedLicense.height) > 100 ? 
-                        (Number(selectedLicense.height) / 100).toFixed(2) 
-                        : Number(selectedLicense.height).toFixed(2)) + " m"
-                      : <span className="text-red-500">Campo obrigatório não preenchido</span>}
-                  </p>
-                </div>
-                <div className={`p-2 ${!selectedLicense.cargoType ? "bg-red-50" : "bg-white"} rounded-md shadow-sm sm:col-span-2`}>
-                  <h3 className={`font-medium text-sm ${!selectedLicense.cargoType ? "text-red-500 flex items-center gap-1" : "text-gray-500"}`}>
-                    {!selectedLicense.cargoType && <AlertCircle className="h-3.5 w-3.5" />}
-                    Tipo de Carga <span className={!selectedLicense.cargoType ? "text-red-600" : ""}>(obrigatório)</span>
-                  </h3>
-                  <p className="text-base">
-                    {selectedLicense.cargoType ? 
-                      getCargoTypeLabel(selectedLicense.cargoType) : 
-                      <span className="text-red-500">Campo obrigatório não preenchido</span>}
-                  </p>
-                </div>
-              </div>
+              {/* Utilizando o componente LicenseDetailsCard para exibição dos detalhes */}
+              <LicenseDetailsCard license={selectedLicense} />
               
-              {/* Nova seção de Composição de Veículos - Versão otimizada e compacta */}
-              <div className="p-2.5 bg-gray-50 rounded-md border border-gray-200">
-                <div className="flex justify-between items-center mb-1.5">
-                  <h4 className="font-medium text-sm">Composição de Veículos</h4>
-                </div>
-                
-                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1.5">
-                  {/* Veículo principal (cavalo/truck) */}
-                  <div className="rounded border border-blue-100 shadow-none overflow-hidden bg-white">
-                    <div className="flex justify-between items-center py-1.5 px-2">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-xs text-gray-800">{selectedLicense.mainVehiclePlate || "TRK1234"}</span>
-                        <span className="text-[10px] text-gray-500">Unidade Principal</span>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className="bg-blue-50 text-blue-800 border-blue-100 px-1.5 text-[10px] flex items-center gap-0.5 h-5"
-                      >
-                        Principal
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  {/* Placas Adicionais */}
-                  {selectedLicense.additionalPlates && selectedLicense.additionalPlates.length > 0 ? (
-                    selectedLicense.additionalPlates.map((plate, index) => (
-                      <div 
-                        key={`veic-${index}`}
-                        className="rounded border border-gray-100 shadow-none overflow-hidden bg-white"
-                      >
-                        <div className="flex justify-between items-center py-1.5 px-2">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-xs text-gray-800">{plate}</span>
-                            <span className="text-[10px] text-gray-500">Veículo Adicional</span>
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className="bg-gray-50 text-gray-600 border-gray-100 px-1.5 text-[10px] flex items-center gap-0.5 h-5"
-                          >
-                            Adicional
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white col-span-2">
-                      <div className="flex justify-center items-center py-2 px-3">
-                        <span className="text-xs text-gray-500">Nenhum veículo adicional</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-2 text-right border-t border-gray-100 pt-1.5">
-                  <div className="text-xs font-medium text-gray-700">Total: {(selectedLicense.additionalPlates?.length || 0) + 1} veículos</div>
-                </div>
-              </div>
+
               
               <div className="p-3 bg-gray-50 rounded-md">
                 <h3 className="font-medium text-sm text-gray-500 mb-2">Estados Solicitados</h3>
