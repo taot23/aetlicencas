@@ -129,7 +129,7 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
   const trucks = vehicles?.filter(v => v.type === "truck") || [];
   const semiTrailers = vehicles?.filter(v => v.type === "semi_trailer") || [];
   const trailers = vehicles?.filter(v => v.type === "trailer") || [];
-  const dollies = vehicles?.filter(v => v.type === "dolly") || [];
+  const dollys = vehicles?.filter(v => v.type === "dolly") || [];
   const flatbeds = vehicles?.filter(v => v.type === "flatbed") || [];
 
   // Define a schema that can be validated partially (for drafts)
