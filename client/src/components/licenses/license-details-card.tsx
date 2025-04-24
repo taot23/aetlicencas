@@ -43,6 +43,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     bodyType: ''
   });
   
+  // Atualizar o formulário de edição quando um veículo é selecionado - removido para evitar duplicação
+  
   // Toast para feedback
   const { toast } = useToast();
   
@@ -157,21 +159,31 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   
   // Popular os campos do formulário de edição quando o modal for aberto
   useEffect(() => {
-    if (isEditVehicleModalOpen && selectedVehicleId && vehicles[selectedVehicleId]) {
-      const vehicle = vehicles[selectedVehicleId];
+    console.log('Modal State:', isEditVehicleModalOpen, 'selectedVehicleId:', selectedVehicleId);
+    console.log('Available vehicles:', vehicles);
+    
+    if (isEditVehicleModalOpen && selectedVehicleId) {
+      console.log('Trying to load vehicle data for ID:', selectedVehicleId);
       
-      // Atualizar o estado do formulário com os dados do veículo
-      setEditForm({
-        renavam: vehicle.renavam || '',
-        brand: vehicle.brand || '',
-        model: vehicle.model || '',
-        year: String(vehicle.year || 2020),
-        axleCount: String(vehicle.axleCount || 1),
-        tare: String(vehicle.tare || 1000),
-        bodyType: vehicle.bodyType || ''
-      });
-      
-      console.log('Vehicle data loaded to form:', vehicle);
+      if (vehicles[selectedVehicleId]) {
+        const vehicle = vehicles[selectedVehicleId];
+        console.log('Vehicle data found:', vehicle);
+        
+        // Atualizar o estado do formulário com os dados do veículo
+        setEditForm({
+          renavam: vehicle.renavam || '',
+          brand: vehicle.brand || '',
+          model: vehicle.model || '',
+          year: String(vehicle.year || 2020),
+          axleCount: String(vehicle.axleCount || 1),
+          tare: String(vehicle.tare || 1000),
+          bodyType: vehicle.bodyType || ''
+        });
+        
+        console.log('Form state updated with vehicle data');
+      } else {
+        console.log('Vehicle not found in vehicles object');
+      }
     }
   }, [isEditVehicleModalOpen, selectedVehicleId, vehicles]);
   
