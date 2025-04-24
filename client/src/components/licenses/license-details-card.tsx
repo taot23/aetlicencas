@@ -315,7 +315,19 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       )}
       
-      {/* A seção de Estados Solicitados foi movida para o nível da página track-license-page.tsx */}
+      {/* Estados Solicitados */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Estados Solicitados</h3>
+        <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+          <div className="flex flex-wrap gap-2">
+            {license.states.map((state, idx) => (
+              <Badge key={idx} variant="outline" className="px-3 py-1 text-sm">
+                {state}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
       
       {/* Dados do Conjunto */}
       <div className="space-y-2">

@@ -1064,16 +1064,7 @@ export default function AdminLicensesPage() {
               {/* Utilizando o componente LicenseDetailsCard para exibição dos detalhes */}
               <LicenseDetailsCard license={selectedLicense} />
               
-              <div className="p-3 bg-gray-50 rounded-md">
-                <h3 className="font-medium text-sm text-gray-500 mb-2">Estados Solicitados</h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedLicense.states.map((state, idx) => (
-                    <Badge key={idx} variant="outline" className="px-3 py-1 text-sm bg-white">
-                      {state}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              {/* A seção de Estados Solicitados foi movida para o componente LicenseDetailsCard */}
 
               {/* Status por estado */}
               <div>
