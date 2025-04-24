@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText } from 'lucide-react';
+import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X } from 'lucide-react';
 import { LicenseRequest, Transporter, Vehicle } from '@shared/schema';
 import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface LicenseDetailsCardProps {
   license: LicenseRequest;
@@ -20,8 +22,11 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     cargoType: license.cargoType || getDefaultCargoType(license.type)
   };
   
-  // Estado para armazenar dados dos veículos
+  // Estados para armazenar dados dos veículos e controlar modais
   const [vehicles, setVehicles] = useState<{[key: string]: Vehicle}>({});
+  const [selectedPlate, setSelectedPlate] = useState<string | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   // Buscar dados do transportador
   const { data: transporter } = useQuery<Transporter>({
@@ -627,6 +632,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     <button 
                       className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
                       title="Ver detalhes"
+                      onClick={() => {
+                        setSelectedPlate(plate);
+                        setIsViewModalOpen(true);
+                      }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -635,6 +644,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     <button 
                       className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                       title="Editar"
+                      onClick={() => {
+                        setSelectedPlate(plate);
+                        setIsEditModalOpen(true);
+                      }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -663,6 +676,110 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           </div>
         </div>
       )}
+
+      {/* Modal para visualizar detalhes da placa adicional */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M8 16.25a.75.75 0 01.75-.75h2.5a.75.75 0 010 1.5h-2.5a.75.75 0 01-.75-.75z" />
+                  <path fillRule="evenodd" d="M4 4a3 3 0 013-3h6a3 3 0 013 3v12a3 3 0 01-3 3H7a3 3 0 01-3-3V4zm4-1.5v.75c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75V2.5h1A1.5 1.5 0 0114.5 4v12a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 16V4A1.5 1.5 0 017 2.5h1z" clipRule="evenodd" />
+                </svg>
+              </span>
+              Detalhes do Veículo - {selectedPlate}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+              <div>
+                <div className="text-xs text-gray-500">Placa:</div>
+                <div className="font-medium">{selectedPlate}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Status:</div>
+                <div className="text-green-600 flex items-center text-sm">
+                  <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>
+                  Cadastrado
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">RENAVAM:</div>
+                <div className="font-medium">12345678901</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Tipo de Veículo:</div>
+                <div className="font-medium">Semirreboque</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Marca/Modelo:</div>
+                <div className="font-medium">RANDON / SR BA</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Ano:</div>
+                <div className="font-medium">2021</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Eixos:</div>
+                <div className="font-medium">3</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">TARA:</div>
+                <div className="font-medium">7.500 kg</div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsViewModalOpen(false)}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Fechar
+            </Button>
+            <Button type="button" className="gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+              Baixar CRLV
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para editar placa adicional */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </span>
+              Editar Veículo - {selectedPlate}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <div className="text-center py-6">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Edição de veículo</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Para editar este veículo, você será redirecionado para a página de veículos.
+              </p>
+              <div className="mt-6">
+                <Button className="w-full">
+                  Ir para gerenciamento de veículos
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
