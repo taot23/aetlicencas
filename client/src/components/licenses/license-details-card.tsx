@@ -165,6 +165,22 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       )}
       
+      {/* Estados Solicitados */}
+      {license.states && license.states.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Estados Solicitados</h3>
+          <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+            <div className="flex flex-wrap gap-2">
+              {license.states.map((state, index) => (
+                <Badge key={index} variant="outline" className="bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100">
+                  {state}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Dados do Conjunto */}
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Dados do Conjunto</h3>
