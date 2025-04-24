@@ -605,10 +605,58 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Placas Adicionais</h3>
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {license.additionalPlates.map((plate, index) => (
-                <div key={index} className="bg-gray-50 p-2 rounded-md text-center">
-                  <div className="font-medium">{plate}</div>
+                <div key={index} className="border border-gray-200 p-2 rounded-md bg-gray-50 flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-shrink-0 w-5 h-5 text-green-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 16.25a.75.75 0 01.75-.75h2.5a.75.75 0 010 1.5h-2.5a.75.75 0 01-.75-.75z" />
+                        <path fillRule="evenodd" d="M4 4a3 3 0 013-3h6a3 3 0 013 3v12a3 3 0 01-3 3H7a3 3 0 01-3-3V4zm4-1.5v.75c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75V2.5h1A1.5 1.5 0 0114.5 4v12a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 16V4A1.5 1.5 0 017 2.5h1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="font-medium">{plate}</div>
+                    <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Cadastrado
+                    </span>
+                  </div>
+                  <div className="flex space-x-1">
+                    <button 
+                      className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                      title="Ver detalhes"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                      title="Editar"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                      title="Mais opções"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                      title="Baixar CRLV"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
