@@ -14,6 +14,7 @@ import { LicenseRequest } from "@shared/schema";
 import { LicenseList } from "@/components/licenses/license-list";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { ProgressFlow, StateProgressFlow } from "@/components/licenses/progress-flow";
 import { format } from "date-fns";
