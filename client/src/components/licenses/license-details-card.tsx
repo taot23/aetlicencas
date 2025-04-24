@@ -1,7 +1,10 @@
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Truck, ChevronsRight, Info, ArrowRight } from 'lucide-react';
 import { LicenseRequest } from '@shared/schema';
-import { getLicenseTypeLabel, getCargoTypeLabel } from "@/lib/utils";
+import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface LicenseDetailsCardProps {
   license: LicenseRequest;
@@ -15,23 +18,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     height: license.height || getDefaultHeight(license.type),
     cargoType: license.cargoType || getDefaultCargoType(license.type)
   };
-
-  // Log para debug
-  console.log("LicenseDetailsCard - valores recebidos:", {
-    length: license.length,
-    width: license.width,
-    height: license.height,
-    cargoType: license.cargoType,
-    mainVehiclePlate: license.mainVehiclePlate
-  });
-  
-  console.log("LicenseDetailsCard - valores processados:", {
-    length: licenseData.length,
-    width: licenseData.width,
-    height: licenseData.height,
-    cargoType: licenseData.cargoType,
-    type: licenseData.type
-  });
   
   // Função para obter largura padrão baseada no tipo de licença
   function getDefaultWidth(type: string): number {
@@ -51,7 +37,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   // Formatar valores para exibição
   const formatDimension = (value: number | null | undefined): string => {
     if (value === null || value === undefined) {
-      return '';
+      return '-';
     }
     
     // Verificar se o valor está em centímetros (>100) ou metros (<100)
@@ -61,187 +47,229 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     // Formatar com 2 casas decimais
     return valueInMeters.toFixed(2) + " m";
   };
+  
+  // Função para obter a cor do status
+  const getStatusColor = (status: string): string => {
+    const statusColors: Record<string, string> = {
+      pending_registration: "bg-gray-100 text-gray-800",
+      registration_in_progress: "bg-blue-100 text-blue-800",
+      rejected: "bg-red-100 text-red-800",
+      under_review: "bg-amber-100 text-amber-800",
+      pending_approval: "bg-purple-100 text-purple-800",
+      approved: "bg-green-100 text-green-800",
+      canceled: "bg-slate-100 text-slate-800"
+    };
+    
+    return statusColors[status] || "bg-gray-100 text-gray-800";
+  };
+  
+  // Função para obter o label do status
+  const getStatusLabel = (status: string): string => {
+    const statusLabels: Record<string, string> = {
+      pending_registration: "Pedido em Cadastramento",
+      registration_in_progress: "Cadastro em Andamento", 
+      rejected: "Reprovado",
+      under_review: "Análise do Órgão",
+      pending_approval: "Pendente Liberação",
+      approved: "Liberada",
+      canceled: "Cancelado"
+    };
+    
+    return statusLabels[status] || status;
+  };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">Nº da Solicitação</h3>
-        <p className="text-base">{license.requestNumber}</p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">Status</h3>
-        <p className="text-base">
-          {license.status === "pending_registration" && "Pedido em Cadastramento"}
-          {license.status === "registration_in_progress" && "Cadastro em Andamento"}
-          {license.status === "rejected" && "Reprovado"}
-          {license.status === "under_review" && "Análise do Órgão"}
-          {license.status === "pending_approval" && "Pendente Liberação"}
-          {license.status === "approved" && "Liberada"}
-          {license.status === "canceled" && "Cancelado"}
-        </p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">Tipo de Licença</h3>
-        <p className="text-base">{getLicenseTypeLabel(license.type)}</p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">Data de Solicitação</h3>
-        <p className="text-base">
-          {license.createdAt && new Date(license.createdAt).toLocaleDateString('pt-BR')}
-        </p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">Comprimento</h3>
-        <p className="text-base">{formatDimension(licenseData.length)}</p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">
-          Largura
-        </h3>
-        <p className="text-base">
-          {formatDimension(licenseData.width)}
-        </p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm">
-        <h3 className="font-medium text-sm text-gray-500">
-          Altura
-        </h3>
-        <p className="text-base">
-          {formatDimension(licenseData.height)}
-        </p>
-      </div>
-      
-      <div className="p-2 bg-white rounded-md shadow-sm sm:col-span-2">
-        <h3 className="font-medium text-sm text-gray-500">
-          Tipo de Carga
-        </h3>
-        <p className="text-base">
-          {getCargoTypeLabel(licenseData.cargoType)}
-        </p>
-      </div>
-      
-      {/* Composição de Veículos */}
-      <div className="p-2.5 bg-gray-50 rounded-md border border-gray-200 sm:col-span-2">
-        <div className="flex justify-between items-center mb-1.5">
-          <h4 className="font-medium text-sm">Composição de Veículos</h4>
-        </div>
-        
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1.5">
-          {/* Veículo principal (cavalo/truck) */}
-          <div className="rounded border border-blue-100 shadow-none overflow-hidden bg-white">
-            <div className="flex justify-between items-center py-1.5 px-2">
-              <div className="flex flex-col">
-                <span className="font-medium text-xs text-gray-800">{license.mainVehiclePlate}</span>
-                <span className="text-[10px] text-gray-500">Unidade Principal</span>
+    <div className="grid gap-4 mt-4">
+      {/* Cabeçalho com informações principais */}
+      <Card className="border-0 shadow-sm overflow-hidden">
+        <div className="bg-blue-500 h-1.5 w-full"></div>
+        <CardHeader className="pb-2">
+          <div className="flex flex-wrap gap-2 items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Solicitação #{license.requestNumber}</CardTitle>
+                <Badge className={`${getStatusColor(license.status)}`}>
+                  {getStatusLabel(license.status)}
+                </Badge>
               </div>
-              <div className="px-1.5 py-0.5 text-[10px] bg-blue-50 text-blue-800 border border-blue-100 rounded-sm">
-                Principal
+              <CardDescription>
+                Solicitada em {license.createdAt && new Date(license.createdAt).toLocaleDateString('pt-BR')}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          {/* Detalhes do Conjunto */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-base mb-3 flex items-center text-blue-600">
+              <Info className="h-4 w-4 mr-1.5" /> 
+              Informações do Conjunto
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 mb-1">Tipo</h4>
+                  <p className="font-medium">{getLicenseTypeLabel(license.type)}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 mb-1">Comprimento</h4>
+                  <p className="font-medium text-lg">{formatDimension(licenseData.length)}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 mb-1">Largura</h4>
+                  <p className="font-medium text-lg">{formatDimension(licenseData.width)}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 mb-1">Altura</h4>
+                  <p className="font-medium text-lg">{formatDimension(licenseData.height)}</p>
+                </div>
+              </div>
+              <Separator className="my-3" />
+              <div>
+                <h4 className="text-xs font-medium text-gray-500 mb-1">Tipo de Carga</h4>
+                <p className="font-medium">{getCargoTypeLabel(licenseData.cargoType)}</p>
               </div>
             </div>
           </div>
           
-          {/* Exibir veículos da linha de frente */}
-          {license.firstTrailerId && (
-            <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white">
-              <div className="flex justify-between items-center py-1.5 px-2">
-                <div className="flex flex-col">
-                  <span className="font-medium text-xs text-gray-800">1ª Carreta</span>
-                  <span className="text-[10px] text-gray-500">
-                    ID: {license.firstTrailerId}
-                  </span>
+          {/* Composição de Veículos - Linha de Frente */}
+          <div className="mb-4">
+            <h3 className="font-semibold text-base mb-3 flex items-center text-blue-600">
+              <Truck className="h-4 w-4 mr-1.5" /> 
+              Linha de Frente
+            </h3>
+            <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {/* Unidade Principal */}
+                <div className="bg-white rounded-md shadow-sm border border-blue-200 p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium text-blue-800">{license.mainVehiclePlate}</h4>
+                      <span className="text-xs text-gray-500">Unidade Principal</span>
+                    </div>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      Principal
+                    </Badge>
+                  </div>
                 </div>
-                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
-                  Semi-reboque
+                
+                {/* Primeira Carreta */}
+                {license.firstTrailerId && (
+                  <div className="bg-white rounded-md shadow-sm border border-blue-200 p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium text-blue-800">1ª Carreta</h4>
+                        <span className="text-xs text-gray-500">ID: {license.firstTrailerId}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Semi-reboque
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Dolly */}
+                {license.dollyId && (
+                  <div className="bg-white rounded-md shadow-sm border border-blue-200 p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium text-blue-800">Dolly</h4>
+                        <span className="text-xs text-gray-500">ID: {license.dollyId}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Dolly
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Segunda Carreta */}
+                {license.secondTrailerId && (
+                  <div className="bg-white rounded-md shadow-sm border border-blue-200 p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium text-blue-800">2ª Carreta</h4>
+                        <span className="text-xs text-gray-500">ID: {license.secondTrailerId}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Reboque
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Prancha */}
+                {license.flatbedId && (
+                  <div className="bg-white rounded-md shadow-sm border border-blue-200 p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium text-blue-800">Prancha</h4>
+                        <span className="text-xs text-gray-500">ID: {license.flatbedId}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Prancha
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Placas Adicionais */}
+          {license.additionalPlates && license.additionalPlates.length > 0 && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-base mb-3 flex items-center text-blue-600">
+                <ChevronsRight className="h-4 w-4 mr-1.5" /> 
+                Placas Adicionais ({license.additionalPlates.length})
+              </h3>
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                  {license.additionalPlates.map((plate, index) => (
+                    <div key={index} className="bg-white rounded border border-gray-200 shadow-sm p-2 text-center">
+                      <span className="font-medium text-sm">{plate}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           )}
           
-          {license.dollyId && (
-            <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white">
-              <div className="flex justify-between items-center py-1.5 px-2">
-                <div className="flex flex-col">
-                  <span className="font-medium text-xs text-gray-800">Dolly</span>
-                  <span className="text-[10px] text-gray-500">
-                    ID: {license.dollyId}
-                  </span>
-                </div>
-                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
-                  Dolly
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {license.secondTrailerId && (
-            <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white">
-              <div className="flex justify-between items-center py-1.5 px-2">
-                <div className="flex flex-col">
-                  <span className="font-medium text-xs text-gray-800">2ª Carreta</span>
-                  <span className="text-[10px] text-gray-500">
-                    ID: {license.secondTrailerId}
-                  </span>
-                </div>
-                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
-                  Reboque
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {license.flatbedId && (
-            <div className="rounded border border-gray-100 shadow-none overflow-hidden bg-white">
-              <div className="flex justify-between items-center py-1.5 px-2">
-                <div className="flex flex-col">
-                  <span className="font-medium text-xs text-gray-800">Prancha</span>
-                  <span className="text-[10px] text-gray-500">
-                    ID: {license.flatbedId}
-                  </span>
-                </div>
-                <div className="px-1.5 py-0.5 text-[10px] bg-gray-50 text-gray-600 border border-gray-100 rounded-sm">
-                  Prancha
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Aviso se não houver veículos adicionais */}
-          {!license.firstTrailerId && !license.dollyId && !license.secondTrailerId && !license.flatbedId && (
-            <div className="col-span-full text-center py-2 text-sm text-gray-500">
-              Nenhum veículo adicional
-            </div>
-          )}
-        </div>
-        
-        {/* Exibir placas adicionais */}
-        {license.additionalPlates && license.additionalPlates.length > 0 && (
-          <div className="mt-3 border-t pt-2">
-            <h4 className="font-medium text-xs text-gray-700 mb-1.5">Placas Adicionais ({license.additionalPlates.length})</h4>
-            <div className="flex flex-wrap gap-1.5">
-              {license.additionalPlates.map((plate, index) => (
-                <span key={index} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                  {plate}
+          {/* Resumo da Composição */}
+          <div className="bg-blue-50 rounded-md border border-blue-100 p-3 mt-4">
+            <h3 className="font-medium text-sm text-blue-800 mb-1">Resumo da Composição</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="text-sm flex flex-wrap gap-x-4">
+                <span>
+                  <strong>{1 + 
+                    (license.firstTrailerId ? 1 : 0) + 
+                    (license.dollyId ? 1 : 0) + 
+                    (license.secondTrailerId ? 1 : 0) + 
+                    (license.flatbedId ? 1 : 0)}
+                  </strong> veículos na linha de frente
                 </span>
-              ))}
+                <span>
+                  <strong>{license.additionalPlates?.length || 0}</strong> placas adicionais
+                </span>
+                <span>
+                  <strong>{
+                    (1 + 
+                    (license.firstTrailerId ? 1 : 0) + 
+                    (license.dollyId ? 1 : 0) + 
+                    (license.secondTrailerId ? 1 : 0) + 
+                    (license.flatbedId ? 1 : 0)) +
+                    (license.additionalPlates?.length || 0)
+                  }</strong> veículos no total
+                </span>
+              </div>
+              <Badge variant="outline" className="bg-white">
+                {getLicenseTypeLabel(license.type)}
+              </Badge>
             </div>
           </div>
-        )}
-
-        <div className="mt-2 text-right text-xs text-gray-500">
-          Total: {1 + 
-            (license.firstTrailerId ? 1 : 0) + 
-            (license.dollyId ? 1 : 0) + 
-            (license.secondTrailerId ? 1 : 0) + 
-            (license.flatbedId ? 1 : 0)} veículos na composição + 
-          {license.additionalPlates?.length || 0} placas adicionais
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
