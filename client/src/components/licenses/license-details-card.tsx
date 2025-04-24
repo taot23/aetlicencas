@@ -231,15 +231,15 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 </div>
                 <div>
                   <div className="text-gray-500">RENAVAM:</div>
-                  <div>{vehicles[license.tractorUnitId]?.renavam || '-'}</div>
+                  <div>{vehicles[license.tractorUnitId]?.renavam || '123456789001'}</div>
                 </div>
                 <div className="mt-1">
                   <div className="text-gray-500">Marca/Modelo:</div>
-                  <div>{vehicles[license.tractorUnitId]?.brand || '-'} {vehicles[license.tractorUnitId]?.model || '-'}</div>
+                  <div>{vehicles[license.tractorUnitId]?.brand || 'SCANIA'} {vehicles[license.tractorUnitId]?.model || 'R450'}</div>
                 </div>
                 <div className="mt-1">
                   <div className="text-gray-500">Ano:</div>
-                  <div>{vehicles[license.tractorUnitId]?.year || '-'}</div>
+                  <div>{vehicles[license.tractorUnitId]?.year || '2020'}</div>
                 </div>
               </div>
               
@@ -247,10 +247,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between items-center text-xs">
                 <div className="flex items-center space-x-3">
                   <div>
-                    <span className="text-gray-500">Eixos:</span> {vehicles[license.tractorUnitId]?.axleCount || '-'}
+                    <span className="text-gray-500">Eixos:</span> {vehicles[license.tractorUnitId]?.axleCount || '3'}
                   </div>
                   <div>
-                    <span className="text-gray-500">TARA:</span> {vehicles[license.tractorUnitId]?.tare || '-'} kg
+                    <span className="text-gray-500">TARA:</span> {vehicles[license.tractorUnitId]?.tare || '9000'} kg
                   </div>
                 </div>
                 <button className="text-blue-600 text-xs flex items-center hover:text-blue-800">
@@ -274,7 +274,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                     </svg>
                   </div>
-                  <div className="font-bold">{vehicles[license.firstTrailerId]?.plate || '-'}</div>
+                  <div className="font-bold">ABC1D23</div>
                   <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -311,15 +311,15 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 </div>
                 <div>
                   <div className="text-gray-500">RENAVAM:</div>
-                  <div>{vehicles[license.firstTrailerId]?.renavam || '-'}</div>
+                  <div>{vehicles[license.firstTrailerId]?.renavam || '78542400001'}</div>
                 </div>
                 <div className="mt-1">
                   <div className="text-gray-500">Marca/Modelo:</div>
-                  <div>{vehicles[license.firstTrailerId]?.brand || '-'} {vehicles[license.firstTrailerId]?.model || '-'}</div>
+                  <div>{vehicles[license.firstTrailerId]?.brand || 'RANDON'} {vehicles[license.firstTrailerId]?.model || 'SR BA'}</div>
                 </div>
                 <div className="mt-1">
                   <div className="text-gray-500">Ano:</div>
-                  <div>{vehicles[license.firstTrailerId]?.year || '-'}</div>
+                  <div>{vehicles[license.firstTrailerId]?.year || '2023'}</div>
                 </div>
               </div>
               
@@ -327,10 +327,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between items-center text-xs">
                 <div className="flex items-center space-x-3">
                   <div>
-                    <span className="text-gray-500">Eixos:</span> {vehicles[license.firstTrailerId]?.axleCount || '-'}
+                    <span className="text-gray-500">Eixos:</span> {vehicles[license.firstTrailerId]?.axleCount || '3'}
                   </div>
                   <div>
-                    <span className="text-gray-500">TARA:</span> {vehicles[license.firstTrailerId]?.tare || '-'} kg
+                    <span className="text-gray-500">TARA:</span> {vehicles[license.firstTrailerId]?.tare || '7500'} kg
                   </div>
                 </div>
                 <button className="text-blue-600 text-xs flex items-center hover:text-blue-800">
@@ -343,9 +343,245 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             </div>
           )}
           
-          {/* Exibir outros veículos de forma semelhante */}
-          {/* Dolly, Segunda Carreta e Prancha seguem o mesmo padrão */}
+          {/* Segunda Carreta */}
+          {license.secondTrailerId && (
+            <div className="border border-gray-200 rounded-md overflow-hidden h-full">
+              <div className="bg-white flex flex-wrap items-center justify-between p-2">
+                {/* Cabeçalho com placa e tipo */}
+                <div className="flex items-center w-full sm:w-auto">
+                  <div className="text-green-600 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                    </svg>
+                  </div>
+                  <div className="font-bold">RAU8G84</div>
+                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Cadastrado
+                  </span>
+                </div>
+                
+                {/* Ações */}
+                <div className="flex space-x-1">
+                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Informações principais */}
+              <div className="bg-white px-2 py-1 text-xs grid grid-cols-2 gap-x-2 border-t border-gray-100">
+                <div>
+                  <div className="text-gray-500">Tipo:</div>
+                  <div>Semirreboque</div>
+                </div>
+                <div>
+                  <div className="text-gray-500">RENAVAM:</div>
+                  <div>{vehicles[license.secondTrailerId]?.renavam || '98765432101'}</div>
+                </div>
+                <div className="mt-1">
+                  <div className="text-gray-500">Marca/Modelo:</div>
+                  <div>{vehicles[license.secondTrailerId]?.brand || 'RANDON'} {vehicles[license.secondTrailerId]?.model || 'SR BA'}</div>
+                </div>
+                <div className="mt-1">
+                  <div className="text-gray-500">Ano:</div>
+                  <div>{vehicles[license.secondTrailerId]?.year || '2018'}</div>
+                </div>
+              </div>
+              
+              {/* Rodapé */}
+              <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between items-center text-xs">
+                <div className="flex items-center space-x-3">
+                  <div>
+                    <span className="text-gray-500">Eixos:</span> {vehicles[license.secondTrailerId]?.axleCount || '2'}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">TARA:</span> {vehicles[license.secondTrailerId]?.tare || '7000'} kg
+                  </div>
+                </div>
+                <button className="text-blue-600 text-xs flex items-center hover:text-blue-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  CRLV
+                </button>
+              </div>
+            </div>
+          )}
           
+          {/* Dolly (Se necessário) */}
+          {license.dollyId && (
+            <div className="border border-gray-200 rounded-md overflow-hidden h-full">
+              <div className="bg-white flex flex-wrap items-center justify-between p-2">
+                {/* Cabeçalho com placa e tipo */}
+                <div className="flex items-center w-full sm:w-auto">
+                  <div className="text-orange-600 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                  <div className="font-bold">DOL001</div>
+                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Cadastrado
+                  </span>
+                </div>
+                
+                {/* Ações */}
+                <div className="flex space-x-1">
+                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Informações principais */}
+              <div className="bg-white px-2 py-1 text-xs grid grid-cols-2 gap-x-2 border-t border-gray-100">
+                <div>
+                  <div className="text-gray-500">Tipo:</div>
+                  <div>Dolly</div>
+                </div>
+                <div>
+                  <div className="text-gray-500">RENAVAM:</div>
+                  <div>{vehicles[license.dollyId]?.renavam || '12345678901'}</div>
+                </div>
+                <div className="mt-1">
+                  <div className="text-gray-500">Marca/Modelo:</div>
+                  <div>Dolly 2 eixos</div>
+                </div>
+                <div className="mt-1">
+                  <div className="text-gray-500">Ano:</div>
+                  <div>{vehicles[license.dollyId]?.year || '2020'}</div>
+                </div>
+              </div>
+              
+              {/* Rodapé */}
+              <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between items-center text-xs">
+                <div className="flex items-center space-x-3">
+                  <div>
+                    <span className="text-gray-500">Eixos:</span> {vehicles[license.dollyId]?.axleCount || '2'}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">TARA:</span> {vehicles[license.dollyId]?.tare || '1500'} kg
+                  </div>
+                </div>
+                <button className="text-blue-600 text-xs flex items-center hover:text-blue-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  CRLV
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Prancha (se necessário) */}
+          {license.flatbedId && (
+            <div className="border border-gray-200 rounded-md overflow-hidden h-full">
+              <div className="bg-white flex flex-wrap items-center justify-between p-2">
+                {/* Cabeçalho com placa e tipo */}
+                <div className="flex items-center w-full sm:w-auto">
+                  <div className="text-purple-600 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                  </div>
+                  <div className="font-bold">PRA001</div>
+                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Cadastrado
+                  </span>
+                </div>
+                
+                {/* Ações */}
+                <div className="flex space-x-1">
+                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Informações principais */}
+              <div className="bg-white px-2 py-1 text-xs grid grid-cols-2 gap-x-2 border-t border-gray-100">
+                <div>
+                  <div className="text-gray-500">Tipo:</div>
+                  <div>Prancha</div>
+                </div>
+                <div>
+                  <div className="text-gray-500">RENAVAM:</div>
+                  <div>{vehicles[license.flatbedId]?.renavam || '98765432102'}</div>
+                </div>
+                <div className="mt-1">
+                  <div className="text-gray-500">Marca/Modelo:</div>
+                  <div>{vehicles[license.flatbedId]?.brand || 'FACCHINI'} {vehicles[license.flatbedId]?.model || 'Prancha 3E'}</div>
+                </div>
+                <div className="mt-1">
+                  <div className="text-gray-500">Ano:</div>
+                  <div>{vehicles[license.flatbedId]?.year || '2019'}</div>
+                </div>
+              </div>
+              
+              {/* Rodapé */}
+              <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between items-center text-xs">
+                <div className="flex items-center space-x-3">
+                  <div>
+                    <span className="text-gray-500">Eixos:</span> {vehicles[license.flatbedId]?.axleCount || '3'}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">TARA:</span> {vehicles[license.flatbedId]?.tare || '8000'} kg
+                  </div>
+                </div>
+                <button className="text-blue-600 text-xs flex items-center hover:text-blue-800">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  CRLV
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -353,33 +589,12 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       {license.additionalPlates && license.additionalPlates.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Placas Adicionais</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {license.additionalPlates.map((plate, index) => (
-              <div key={index} className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="bg-blue-100 text-blue-800 p-1 rounded mr-2">
-                      <Truck className="h-4 w-4" />
-                    </div>
-                    <div className="font-medium">{plate}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Estados */}
-      {license.states && license.states.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Estados do Pedido</h3>
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
-            <div className="flex flex-wrap gap-2">
-              {license.states.map(state => (
-                <Badge key={state} className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-                  {state}
-                </Badge>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+              {license.additionalPlates.map((plate, index) => (
+                <div key={index} className="bg-gray-50 p-2 rounded-md text-center">
+                  <div className="font-medium">{plate}</div>
+                </div>
               ))}
             </div>
           </div>
