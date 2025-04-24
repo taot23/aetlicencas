@@ -38,42 +38,57 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     enabled: !!license.transporterId
   });
   
-  // Buscar veículos relacionados
+  // Buscar veículos individualmente usando TanStack Query
+  const fetchVehicle = async (id: number) => {
+    if (!id) return null;
+    const res = await fetch(`/api/vehicles/${id}`);
+    if (!res.ok) throw new Error('Falha ao carregar veículo');
+    return res.json();
+  };
+
+  // Consulta para cada veículo
+  const { data: tractorUnit } = useQuery({
+    queryKey: ['/api/vehicles', license.tractorUnitId],
+    queryFn: () => fetchVehicle(license.tractorUnitId as number),
+    enabled: !!license.tractorUnitId
+  });
+
+  const { data: firstTrailer } = useQuery({
+    queryKey: ['/api/vehicles', license.firstTrailerId],
+    queryFn: () => fetchVehicle(license.firstTrailerId as number),
+    enabled: !!license.firstTrailerId
+  });
+
+  const { data: dolly } = useQuery({
+    queryKey: ['/api/vehicles', license.dollyId],
+    queryFn: () => fetchVehicle(license.dollyId as number),
+    enabled: !!license.dollyId
+  });
+
+  const { data: secondTrailer } = useQuery({
+    queryKey: ['/api/vehicles', license.secondTrailerId],
+    queryFn: () => fetchVehicle(license.secondTrailerId as number),
+    enabled: !!license.secondTrailerId
+  });
+
+  const { data: flatbed } = useQuery({
+    queryKey: ['/api/vehicles', license.flatbedId],
+    queryFn: () => fetchVehicle(license.flatbedId as number),
+    enabled: !!license.flatbedId
+  });
+
+  // Atualizar o objeto de veículos quando os dados estiverem disponíveis
   useEffect(() => {
-    // Array de IDs de veículos para buscar
-    const vehicleIds = [
-      license.tractorUnitId,
-      license.firstTrailerId,
-      license.dollyId,
-      license.secondTrailerId,
-      license.flatbedId
-    ].filter(id => id !== null && id !== undefined);
+    const vehicleData: {[key: string]: Vehicle} = {};
     
-    // Se não houver veículos para buscar, não fazemos nada
-    if (vehicleIds.length === 0) return;
+    if (tractorUnit && license.tractorUnitId) vehicleData[license.tractorUnitId] = tractorUnit;
+    if (firstTrailer && license.firstTrailerId) vehicleData[license.firstTrailerId] = firstTrailer;
+    if (dolly && license.dollyId) vehicleData[license.dollyId] = dolly;
+    if (secondTrailer && license.secondTrailerId) vehicleData[license.secondTrailerId] = secondTrailer;
+    if (flatbed && license.flatbedId) vehicleData[license.flatbedId] = flatbed;
     
-    // Função para buscar veículos
-    const fetchVehicles = async () => {
-      try {
-        // Buscar dados de cada veículo
-        const vehicleData: {[key: string]: Vehicle} = {};
-        
-        for (const id of vehicleIds) {
-          const res = await fetch(`/api/vehicles/${id}`);
-          if (res.ok) {
-            const vehicle = await res.json();
-            vehicleData[id as number] = vehicle;
-          }
-        }
-        
-        setVehicles(vehicleData);
-      } catch (error) {
-        console.error('Erro ao buscar dados dos veículos:', error);
-      }
-    };
-    
-    fetchVehicles();
-  }, [license.tractorUnitId, license.firstTrailerId, license.dollyId, license.secondTrailerId, license.flatbedId]);
+    setVehicles(vehicleData);
+  }, [tractorUnit, firstTrailer, dolly, secondTrailer, flatbed, license.tractorUnitId, license.firstTrailerId, license.dollyId, license.secondTrailerId, license.flatbedId]);
   
   // Função para obter largura padrão baseada no tipo de licença
   function getDefaultWidth(type: string): number {
@@ -274,7 +289,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                     </svg>
                   </div>
-                  <div className="font-bold">ABC1D23</div>
+                  <div className="font-bold">{vehicles[license.firstTrailerId]?.plate || 'ABC1D23'}</div>
                   <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -354,7 +369,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                     </svg>
                   </div>
-                  <div className="font-bold">RAU8G84</div>
+                  <div className="font-bold">{vehicles[license.secondTrailerId]?.plate || 'RAU8G84'}</div>
                   <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -434,7 +449,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                   </div>
-                  <div className="font-bold">DOL001</div>
+                  <div className="font-bold">{vehicles[license.dollyId]?.plate || 'DOL001'}</div>
                   <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -514,7 +529,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
                   </div>
-                  <div className="font-bold">PRA001</div>
+                  <div className="font-bold">{vehicles[license.flatbedId]?.plate || 'PRA001'}</div>
                   <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
