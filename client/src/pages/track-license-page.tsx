@@ -359,6 +359,22 @@ export default function TrackLicensePage() {
               {/* Informações do Transportador */}
               <TransporterInfo transporterId={selectedLicense.transporterId} />
               
+              {/* Estados Solicitados */}
+              {selectedLicense.states && selectedLicense.states.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <h3 className="text-lg font-semibold">Estados Solicitados</h3>
+                  <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedLicense.states.map((state, index) => (
+                        <Badge key={index} variant="outline" className="bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100">
+                          {state}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {selectedLicense.comments && (
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Comentários</h3>
