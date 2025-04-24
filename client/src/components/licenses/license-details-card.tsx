@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText } from 'lucide-react';
+import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, Edit, ChevronDown, ChevronUp } from 'lucide-react';
 import { LicenseRequest, Transporter, Vehicle } from '@shared/schema';
 import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,16 @@ interface LicenseDetailsCardProps {
 }
 
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
+  // Estado para controlar quais veículos têm detalhes visíveis
+  const [expandedVehicles, setExpandedVehicles] = useState<Record<string, boolean>>({});
+  
+  // Função para alternar a visibilidade dos detalhes de um veículo
+  const toggleVehicleDetails = (vehicleId: number) => {
+    setExpandedVehicles(prev => ({
+      ...prev,
+      [vehicleId]: !prev[vehicleId]
+    }));
+  };
   // Garantir valores padrão para dimensões e tipo de carga
   const licenseData = {
     ...license,
