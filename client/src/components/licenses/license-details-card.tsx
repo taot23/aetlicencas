@@ -159,9 +159,11 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   
   // Consulta para o veículo selecionado para edição
   const { data: selectedVehicle, isLoading: isLoadingSelectedVehicle } = useQuery({
-    queryKey: ['/api/vehicles/selected', selectedVehicleId],
+    queryKey: ['/api/vehicles', selectedVehicleId],
     queryFn: () => fetchVehicle(selectedVehicleId as number),
     enabled: !!selectedVehicleId && isEditVehicleModalOpen,
+    staleTime: 0, // Sempre buscar dados atualizados quando o modal abrir
+    refetchOnWindowFocus: false,
   });
 
   // Popular os campos do formulário de edição quando os dados do veículo estiverem disponíveis
