@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X } from 'lucide-react';
 import { LicenseRequest, Transporter, Vehicle } from '@shared/schema';
 import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface LicenseDetailsCardProps {
   license: LicenseRequest;
@@ -26,9 +28,64 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   const [vehicles, setVehicles] = useState<{[key: string]: Vehicle}>({});
   const [selectedPlate, setSelectedPlate] = useState<string | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
+  const [editedVehicle, setEditedVehicle] = useState<Partial<Vehicle>>({});
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditVehicleModalOpen, setIsEditVehicleModalOpen] = useState(false);
+  
+  // Toast para feedback
+  const { toast } = useToast();
+  
+  // Referências para os campos do formulário
+  const renavamRef = useRef<HTMLInputElement>(null);
+  const brandRef = useRef<HTMLInputElement>(null);
+  const modelRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
+  const axleCountRef = useRef<HTMLInputElement>(null);
+  const tareRef = useRef<HTMLInputElement>(null);
+  const bodyTypeRef = useRef<HTMLSelectElement>(null);
+  
+  // Mutation para atualizar o veículo
+  const updateVehicleMutation = useMutation({
+    mutationFn: async (data: Partial<Vehicle> & { id: number }) => {
+      const response = await apiRequest('PATCH', `/api/vehicles/${data.id}`, data);
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar veículo');
+      }
+      return response.json();
+    },
+    onSuccess: (updatedVehicle) => {
+      // Atualizar o veículo localmente
+      if (selectedVehicleId) {
+        setVehicles(prev => ({
+          ...prev,
+          [selectedVehicleId]: {
+            ...prev[selectedVehicleId],
+            ...updatedVehicle
+          }
+        }));
+      }
+      
+      // Invalidar a consulta para forçar uma atualização
+      queryClient.invalidateQueries({ queryKey: ['/api/vehicles', selectedVehicleId] });
+      
+      // Fechar o modal
+      setIsEditVehicleModalOpen(false);
+      
+      // Feedback ao usuário
+      toast({
+        title: "Veículo atualizado",
+        description: "As informações do veículo foram atualizadas com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar veículo",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
   
   // Buscar dados do transportador
   const { data: transporter } = useQuery<Transporter>({
@@ -753,7 +810,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].renavam}
+                    defaultValue={vehicles[selectedVehicleId].renavam || ''}
+                    ref={renavamRef}
                   />
                 </div>
                 
@@ -762,7 +820,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].brand}
+                    defaultValue={vehicles[selectedVehicleId].brand || ''}
+                    ref={brandRef}
                   />
                 </div>
                 
@@ -771,7 +830,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].model}
+                    defaultValue={vehicles[selectedVehicleId].model || ''}
+                    ref={modelRef}
                   />
                 </div>
                 
@@ -780,8 +840,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="number" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].year}
+                    defaultValue={vehicles[selectedVehicleId].year || 2020}
                     min="1950"
+                    ref={yearRef}
                   />
                 </div>
                 
@@ -790,8 +851,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="number" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].axleCount}
+                    defaultValue={vehicles[selectedVehicleId].axleCount || 1}
                     min="1"
+                    ref={axleCountRef}
                   />
                 </div>
                 
@@ -800,8 +862,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="number" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].tare}
+                    defaultValue={vehicles[selectedVehicleId].tare || 1000}
                     min="1"
+                    ref={tareRef}
                   />
                 </div>
                 
@@ -811,6 +874,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     <select 
                       className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       defaultValue={vehicles[selectedVehicleId].bodyType || ''}
+                      ref={bodyTypeRef}
                     >
                       <option value="">Selecione</option>
                       <option value="open">ABERTA</option>
@@ -836,11 +900,46 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <Button 
               type="button"
               className="gap-1"
+              onClick={() => {
+                if (!selectedVehicleId) return;
+                
+                // Coletar dados do formulário
+                const updatedVehicle = {
+                  id: selectedVehicleId,
+                  renavam: renavamRef.current?.value || '',
+                  brand: brandRef.current?.value || '',
+                  model: modelRef.current?.value || '',
+                  year: Number(yearRef.current?.value) || 2020,
+                  axleCount: Number(axleCountRef.current?.value) || 1,
+                  tare: Number(tareRef.current?.value) || 1000
+                };
+                
+                // Adicionar tipo de carroceria se aplicável
+                if (['truck', 'semitrailer', 'trailer'].includes(vehicles[selectedVehicleId].type) && bodyTypeRef.current) {
+                  (updatedVehicle as any).bodyType = bodyTypeRef.current.value;
+                }
+                
+                // Enviar para o servidor
+                updateVehicleMutation.mutate(updatedVehicle);
+              }}
+              disabled={updateVehicleMutation.isPending}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Salvar Alterações
+              {updateVehicleMutation.isPending ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Salvando...
+                </div>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Salvar Alterações
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
