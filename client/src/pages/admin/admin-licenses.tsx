@@ -1059,13 +1059,7 @@ export default function AdminLicensesPage() {
                 <ProgressFlow currentStatus={selectedLicense.status} size="md" />
               </div>
               
-              {/* Informações do Transportador */}
-              {selectedLicense.transporterId && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-                  <h4 className="font-medium text-sm mb-2">Transportador:</h4>
-                  <TransporterInfo transporterId={selectedLicense.transporterId} />
-                </div>
-              )}
+              {/* Removido seção do transportador para evitar duplicidade, pois já está no LicenseDetailsCard */}
               
               {/* Utilizando o componente LicenseDetailsCard para exibição dos detalhes */}
               <LicenseDetailsCard license={selectedLicense} />
