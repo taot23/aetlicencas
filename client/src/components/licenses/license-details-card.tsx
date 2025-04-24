@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X } from 'lucide-react';
 import { LicenseRequest, Transporter, Vehicle } from '@shared/schema';
 import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
@@ -161,55 +161,75 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isLoadingSelectedVehicle, setIsLoadingSelectedVehicle] = useState(false);
 
-  // Buscar dados do veículo diretamente quando o modal for aberto
-  useEffect(() => {
-    console.log('Modal State:', isEditVehicleModalOpen, 'selectedVehicleId:', selectedVehicleId);
-    
-    async function loadVehicleData() {
-      if (selectedVehicleId && isEditVehicleModalOpen) {
-        try {
-          setIsLoadingSelectedVehicle(true);
-          console.log('Fetching vehicle data for ID:', selectedVehicleId);
-          
-          const response = await fetch(`/api/vehicles/${selectedVehicleId}`);
-          if (!response.ok) {
-            throw new Error('Falha ao carregar dados do veículo');
-          }
-          
-          const vehicleData = await response.json();
-          console.log('Vehicle data loaded:', vehicleData);
-          setSelectedVehicle(vehicleData);
-          
-          // Atualizar o formulário com os dados recebidos
-          setEditForm({
-            renavam: vehicleData.renavam || '',
-            brand: vehicleData.brand || '',
-            model: vehicleData.model || '',
-            year: String(vehicleData.year || 2020),
-            axleCount: String(vehicleData.axleCount || 1),
-            tare: String(vehicleData.tare || 1000),
-            bodyType: vehicleData.bodyType || ''
-          });
-          
-          console.log('Form state updated with vehicle data');
-        } catch (error) {
-          console.error('Error loading vehicle data:', error);
-          toast({
-            title: "Erro ao carregar veículo",
-            description: "Não foi possível carregar os dados do veículo.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoadingSelectedVehicle(false);
-        }
-      } else if (!isEditVehicleModalOpen) {
-        // Limpar dados quando o modal fechar
-        setSelectedVehicle(null);
+  // Função auxiliar para buscar dados do veículo
+  async function fetchVehicleDetails(vehicleId: number) {
+    console.log('FETCH: Starting fetch for vehicle ID:', vehicleId);
+    try {
+      setIsLoadingSelectedVehicle(true);
+      
+      const url = `/api/vehicles/${vehicleId}`;
+      console.log('FETCH: Request URL:', url);
+      
+      const response = await fetch(url);
+      console.log('FETCH: Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`Falha ao carregar dados do veículo: ${response.status}`);
       }
+      
+      const data = await response.json();
+      console.log('FETCH: Vehicle data loaded successfully:', data);
+      
+      return data;
+    } catch (error) {
+      console.error('FETCH: Error loading vehicle data:', error);
+      toast({
+        title: "Erro ao carregar veículo",
+        description: `Não foi possível carregar os dados do veículo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsLoadingSelectedVehicle(false);
     }
+  }
+
+  // Função para abrir o modal e carregar os dados
+  async function openEditModal(vehicleId: number) {
+    console.log('MODAL: Opening edit modal for vehicle ID:', vehicleId);
+    // Primeiro definimos o ID e abrimos o modal
+    setSelectedVehicleId(vehicleId);
+    setIsEditVehicleModalOpen(true);
     
-    loadVehicleData();
-  }, [isEditVehicleModalOpen, selectedVehicleId, toast]);
+    // Depois buscamos os dados do veículo diretamente
+    const vehicleData = await fetchVehicleDetails(vehicleId);
+    
+    if (vehicleData) {
+      console.log('MODAL: Setting vehicle data:', vehicleData);
+      setSelectedVehicle(vehicleData);
+      
+      // Atualizar o formulário com os dados recebidos
+      setEditForm({
+        renavam: vehicleData.renavam || '',
+        brand: vehicleData.brand || '',
+        model: vehicleData.model || '',
+        year: String(vehicleData.year || 2020),
+        axleCount: String(vehicleData.axleCount || 1),
+        tare: String(vehicleData.tare || 1000),
+        bodyType: vehicleData.bodyType || ''
+      });
+      
+      console.log('MODAL: Form state updated with vehicle data');
+    }
+  }
+
+  // Resetar dados quando o modal fechar
+  useEffect(() => {
+    if (!isEditVehicleModalOpen) {
+      console.log('MODAL: Closing modal, resetting vehicle data');
+      setSelectedVehicle(null);
+    }
+  }, [isEditVehicleModalOpen]);
   
   // Função para obter largura padrão baseada no tipo de licença
   function getDefaultWidth(type: string): number {
@@ -338,13 +358,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <button 
                     className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                     title="Editar Veículo"
-                    onClick={() => {
-                      // Definir o ID do veículo selecionado
-                      setSelectedVehicleId(license.tractorUnitId);
-                      
-                      // Deixar o modal mostrar primeiro, para que os refs sejam montados
-                      setIsEditVehicleModalOpen(true);
-                    }}
+                    onClick={() => openEditModal(license.tractorUnitId)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -410,13 +424,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <button 
                     className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                     title="Editar Veículo"
-                    onClick={() => {
-                      // Definir o ID do veículo selecionado
-                      setSelectedVehicleId(license.firstTrailerId);
-                      
-                      // Abrir o modal de edição
-                      setIsEditVehicleModalOpen(true);
-                    }}
+                    onClick={() => license.firstTrailerId && openEditModal(license.firstTrailerId)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -482,10 +490,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <button 
                     className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                     title="Editar Veículo"
-                    onClick={() => {
-                      setSelectedVehicleId(license.secondTrailerId);
-                      setIsEditVehicleModalOpen(true);
-                    }}
+                    onClick={() => license.secondTrailerId && openEditModal(license.secondTrailerId)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -551,10 +556,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <button 
                     className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                     title="Editar Veículo"
-                    onClick={() => {
-                      setSelectedVehicleId(license.dollyId);
-                      setIsEditVehicleModalOpen(true);
-                    }}
+                    onClick={() => license.dollyId && openEditModal(license.dollyId)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
