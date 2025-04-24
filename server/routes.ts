@@ -681,8 +681,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // License draft endpoints
   app.get('/api/licenses/drafts', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
-      const drafts = await storage.getLicenseDraftsByUserId(userId);
+      const user = req.user!;
+      let drafts;
+      
+      // Se for usuário administrativo, buscar todos os rascunhos
+      if (isAdminUser(user)) {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todos os rascunhos.`);
+        drafts = await storage.getLicenseDraftsByUserId(0); // 0 = todos os rascunhos
+      } else {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas seus rascunhos.`);
+        drafts = await storage.getLicenseDraftsByUserId(user.id);
+      }
+      
       res.json(drafts);
     } catch (error) {
       console.error('Error fetching license drafts:', error);
@@ -763,16 +773,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/licenses/drafts/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user!;
       const draftId = parseInt(req.params.id);
       
-      // Check if draft exists and belongs to the user
+      // Check if draft exists
       const existingDraft = await storage.getLicenseRequestById(draftId);
       if (!existingDraft) {
         return res.status(404).json({ message: 'Rascunho não encontrado' });
       }
       
-      if (existingDraft.userId !== userId) {
+      // Verificar acesso - usuários admin podem editar qualquer rascunho
+      if (existingDraft.userId !== user.id && !isAdminUser(user)) {
         return res.status(403).json({ message: 'Acesso negado' });
       }
       
@@ -824,16 +835,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/licenses/drafts/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user!;
       const draftId = parseInt(req.params.id);
       
-      // Check if draft exists and belongs to the user
+      // Check if draft exists
       const existingDraft = await storage.getLicenseRequestById(draftId);
       if (!existingDraft) {
         return res.status(404).json({ message: 'Rascunho não encontrado' });
       }
       
-      if (existingDraft.userId !== userId || !existingDraft.isDraft) {
+      // Verificar se é um rascunho
+      if (!existingDraft.isDraft) {
+        return res.status(403).json({ message: 'Este item não é um rascunho' });
+      }
+      
+      // Verificar acesso - usuários admin podem excluir qualquer rascunho
+      if (existingDraft.userId !== user.id && !isAdminUser(user)) {
         return res.status(403).json({ message: 'Acesso negado' });
       }
       
@@ -848,16 +865,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/licenses/drafts/:id/submit', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user!;
       const draftId = parseInt(req.params.id);
       
-      // Check if draft exists and belongs to the user
+      // Check if draft exists
       const existingDraft = await storage.getLicenseRequestById(draftId);
       if (!existingDraft) {
         return res.status(404).json({ message: 'Rascunho não encontrado' });
       }
       
-      if (existingDraft.userId !== userId || !existingDraft.isDraft) {
+      // Verificar se é um rascunho
+      if (!existingDraft.isDraft) {
+        return res.status(403).json({ message: 'Este item não é um rascunho ou já foi submetido' });
+      }
+      
+      // Verificar acesso - usuários admin podem submeter qualquer rascunho
+      if (existingDraft.userId !== user.id && !isAdminUser(user)) {
         return res.status(403).json({ message: 'Acesso negado' });
       }
       
@@ -903,7 +926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Novo endpoint específico para submissão de formulário de licença
   app.post('/api/licenses/submit', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user!;
       console.log("Recebendo dados do formulário:", req.body);
       
       const licenseData = { ...req.body };
@@ -918,7 +941,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: 'Rascunho não encontrado' });
         }
         
-        if (existingDraft.userId !== userId || !existingDraft.isDraft) {
+        // Verificar se é um rascunho
+        if (!existingDraft.isDraft) {
+          return res.status(403).json({ message: 'Este item não é um rascunho ou já foi submetido' });
+        }
+        
+        // Verificar acesso - usuários admin podem submeter qualquer rascunho
+        if (existingDraft.userId !== user.id && !isAdminUser(user)) {
           return res.status(403).json({ message: 'Acesso negado' });
         }
         
@@ -991,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Cria a licença
-        const licenseRequest = await storage.createLicenseRequest(userId, {
+        const licenseRequest = await storage.createLicenseRequest(user.id, {
           ...licenseData,
           requestNumber,
           isDraft: false,
@@ -1159,7 +1188,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received submit request with data:', JSON.stringify(req.body, null, 2));
       
-      const userId = req.user!.id;
+      const user = req.user!;
+      const userId = user.id;
       const licenseData = { ...req.body };
       
       console.log("Tipo de licença:", licenseData.type);
