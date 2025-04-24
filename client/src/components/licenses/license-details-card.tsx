@@ -723,12 +723,13 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     </div>
                     <div className="flex space-x-1">
                       <button 
-                        className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                        className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
                         title="Ver detalhes"
                         onClick={() => {
                           setSelectedPlate(plate);
                           setIsViewModalOpen(true);
                         }}
+                        style={{ minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -738,9 +739,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       {vehicleId ? (
                         // Se o veículo está cadastrado, mostrar botão de edição que chama o modal
                         <button 
-                          className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                          className="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50"
                           title="Editar Veículo"
                           onClick={() => vehicleId && openEditModal(vehicleId)}
+                          style={{ minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -749,9 +751,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       ) : (
                         // Se o veículo NÃO está cadastrado, mostrar botão de edição desabilitado
                         <button 
-                          className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50 opacity-50"
+                          className="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50 opacity-50"
                           title="Placa não cadastrada no sistema"
                           disabled
+                          style={{ minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -762,9 +765,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       {vehicle?.crlvUrl ? (
                         // Se o veículo tem CRLV, mostrar botão de download
                         <button 
-                          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                          className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50"
                           title="Download CRLV"
                           onClick={() => vehicle.crlvUrl && window.open(vehicle.crlvUrl, '_blank')}
+                          style={{ minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -773,9 +777,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                       ) : (
                         // Se o veículo NÃO tem CRLV, mostrar botão de download desabilitado
                         <button 
-                          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 opacity-50"
+                          className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 opacity-50"
                           title="CRLV não disponível"
                           disabled
+                          style={{ minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
