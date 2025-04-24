@@ -177,10 +177,24 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         throw new Error(`Falha ao carregar dados do veículo: ${response.status}`);
       }
       
-      const data = await response.json();
-      console.log('FETCH: Vehicle data loaded successfully:', data);
+      // Vamos verificar o tipo de conteúdo antes de tentar fazer o parse como JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Resposta inesperada do servidor: ${contentType}`);
+      }
       
-      return data;
+      // Primeiro recuperamos o texto
+      const text = await response.text();
+      
+      // Verificar se é JSON válido
+      try {
+        const data = JSON.parse(text);
+        console.log('FETCH: Vehicle data loaded successfully:', data);
+        return data;
+      } catch (parseError) {
+        console.error('FETCH: JSON parse error:', parseError, 'Response text:', text);
+        throw new Error(`Erro ao analisar resposta: ${text.substring(0, 100)}...`);
+      }
     } catch (error) {
       console.error('FETCH: Error loading vehicle data:', error);
       toast({
