@@ -28,22 +28,23 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   const [vehicles, setVehicles] = useState<{[key: string]: Vehicle}>({});
   const [selectedPlate, setSelectedPlate] = useState<string | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
-  const [editedVehicle, setEditedVehicle] = useState<Partial<Vehicle>>({});
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditVehicleModalOpen, setIsEditVehicleModalOpen] = useState(false);
   
+  // Estado para o formulário de edição
+  const [editForm, setEditForm] = useState({
+    renavam: '',
+    brand: '',
+    model: '',
+    year: '2020',
+    axleCount: '1',
+    tare: '1000',
+    bodyType: ''
+  });
+  
   // Toast para feedback
   const { toast } = useToast();
-  
-  // Referências para os campos do formulário
-  const renavamRef = useRef<HTMLInputElement>(null);
-  const brandRef = useRef<HTMLInputElement>(null);
-  const modelRef = useRef<HTMLInputElement>(null);
-  const yearRef = useRef<HTMLInputElement>(null);
-  const axleCountRef = useRef<HTMLInputElement>(null);
-  const tareRef = useRef<HTMLInputElement>(null);
-  const bodyTypeRef = useRef<HTMLSelectElement>(null);
   
   // Mutation para atualizar o veículo
   const updateVehicleMutation = useMutation({
@@ -159,18 +160,18 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     if (isEditVehicleModalOpen && selectedVehicleId && vehicles[selectedVehicleId]) {
       const vehicle = vehicles[selectedVehicleId];
       
-      // Definir os valores nos campos
-      if (renavamRef.current) renavamRef.current.value = vehicle.renavam || '';
-      if (brandRef.current) brandRef.current.value = vehicle.brand || '';
-      if (modelRef.current) modelRef.current.value = vehicle.model || '';
-      if (yearRef.current) yearRef.current.value = String(vehicle.year || 2020);
-      if (axleCountRef.current) axleCountRef.current.value = String(vehicle.axleCount || 1);
-      if (tareRef.current) tareRef.current.value = String(vehicle.tare || 1000);
+      // Atualizar o estado do formulário com os dados do veículo
+      setEditForm({
+        renavam: vehicle.renavam || '',
+        brand: vehicle.brand || '',
+        model: vehicle.model || '',
+        year: String(vehicle.year || 2020),
+        axleCount: String(vehicle.axleCount || 1),
+        tare: String(vehicle.tare || 1000),
+        bodyType: vehicle.bodyType || ''
+      });
       
-      // Definir o tipo de carroceria se aplicável
-      if (['truck', 'semitrailer', 'trailer'].includes(vehicle.type) && bodyTypeRef.current) {
-        bodyTypeRef.current.value = vehicle.bodyType || '';
-      }
+      console.log('Vehicle data loaded to form:', vehicle);
     }
   }, [isEditVehicleModalOpen, selectedVehicleId, vehicles]);
   
@@ -826,7 +827,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].plate}
+                    value={vehicles[selectedVehicleId].plate || ''}
                     disabled
                   />
                 </div>
@@ -836,8 +837,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].renavam || ''}
-                    ref={renavamRef}
+                    value={editForm.renavam}
+                    onChange={(e) => setEditForm({...editForm, renavam: e.target.value})}
                   />
                 </div>
                 
@@ -846,8 +847,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].brand || ''}
-                    ref={brandRef}
+                    value={editForm.brand}
+                    onChange={(e) => setEditForm({...editForm, brand: e.target.value})}
                   />
                 </div>
                 
@@ -856,8 +857,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].model || ''}
-                    ref={modelRef}
+                    value={editForm.model}
+                    onChange={(e) => setEditForm({...editForm, model: e.target.value})}
                   />
                 </div>
                 
@@ -866,9 +867,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="number" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].year || 2020}
+                    value={editForm.year}
+                    onChange={(e) => setEditForm({...editForm, year: e.target.value})}
                     min="1950"
-                    ref={yearRef}
                   />
                 </div>
                 
@@ -877,9 +878,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="number" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].axleCount || 1}
+                    value={editForm.axleCount}
+                    onChange={(e) => setEditForm({...editForm, axleCount: e.target.value})}
                     min="1"
-                    ref={axleCountRef}
                   />
                 </div>
                 
@@ -888,9 +889,9 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="number" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    defaultValue={vehicles[selectedVehicleId].tare || 1000}
+                    value={editForm.tare}
+                    onChange={(e) => setEditForm({...editForm, tare: e.target.value})}
                     min="1"
-                    ref={tareRef}
                   />
                 </div>
                 
@@ -899,8 +900,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     <label className="text-sm font-medium text-gray-700">Tipo de Carroceria</label>
                     <select 
                       className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      defaultValue={vehicles[selectedVehicleId].bodyType || ''}
-                      ref={bodyTypeRef}
+                      value={editForm.bodyType}
+                      onChange={(e) => setEditForm({...editForm, bodyType: e.target.value})}
                     >
                       <option value="">Selecione</option>
                       <option value="open">ABERTA</option>
@@ -932,17 +933,17 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 // Coletar dados do formulário
                 const updatedVehicle = {
                   id: selectedVehicleId,
-                  renavam: renavamRef.current?.value || '',
-                  brand: brandRef.current?.value || '',
-                  model: modelRef.current?.value || '',
-                  year: Number(yearRef.current?.value) || 2020,
-                  axleCount: Number(axleCountRef.current?.value) || 1,
-                  tare: Number(tareRef.current?.value) || 1000
+                  renavam: editForm.renavam,
+                  brand: editForm.brand,
+                  model: editForm.model,
+                  year: Number(editForm.year) || 2020,
+                  axleCount: Number(editForm.axleCount) || 1,
+                  tare: Number(editForm.tare) || 1000
                 };
                 
                 // Adicionar tipo de carroceria se aplicável
-                if (['truck', 'semitrailer', 'trailer'].includes(vehicles[selectedVehicleId].type) && bodyTypeRef.current) {
-                  (updatedVehicle as any).bodyType = bodyTypeRef.current.value;
+                if (['truck', 'semitrailer', 'trailer'].includes(vehicles[selectedVehicleId].type)) {
+                  (updatedVehicle as any).bodyType = editForm.bodyType;
                 }
                 
                 // Enviar para o servidor
