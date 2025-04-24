@@ -661,13 +661,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 <div className="text-xs text-gray-500">Placa:</div>
                 <div className="font-medium">{selectedPlate}</div>
               </div>
-              <div>
-                <div className="text-xs text-gray-500">Status:</div>
-                <div className="text-green-600 flex items-center text-sm">
-                  <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>
-                  Cadastrado
-                </div>
-              </div>
+
               <div>
                 <div className="text-xs text-gray-500">RENAVAM:</div>
                 <div className="font-medium">12345678901</div>
