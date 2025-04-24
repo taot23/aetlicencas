@@ -157,35 +157,35 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     setVehicles(vehicleData);
   }, [tractorUnit, firstTrailer, dolly, secondTrailer, flatbed, license.tractorUnitId, license.firstTrailerId, license.dollyId, license.secondTrailerId, license.flatbedId]);
   
-  // Popular os campos do formulário de edição quando o modal for aberto
+  // Consulta para o veículo selecionado para edição
+  const { data: selectedVehicle, isLoading: isLoadingSelectedVehicle } = useQuery({
+    queryKey: ['/api/vehicles/selected', selectedVehicleId],
+    queryFn: () => fetchVehicle(selectedVehicleId as number),
+    enabled: !!selectedVehicleId && isEditVehicleModalOpen,
+  });
+
+  // Popular os campos do formulário de edição quando os dados do veículo estiverem disponíveis
   useEffect(() => {
     console.log('Modal State:', isEditVehicleModalOpen, 'selectedVehicleId:', selectedVehicleId);
-    console.log('Available vehicles:', vehicles);
+    console.log('Selected vehicle data:', selectedVehicle);
     
-    if (isEditVehicleModalOpen && selectedVehicleId) {
-      console.log('Trying to load vehicle data for ID:', selectedVehicleId);
+    if (selectedVehicle && isEditVehicleModalOpen) {
+      console.log('Vehicle data found for editing:', selectedVehicle);
       
-      if (vehicles[selectedVehicleId]) {
-        const vehicle = vehicles[selectedVehicleId];
-        console.log('Vehicle data found:', vehicle);
-        
-        // Atualizar o estado do formulário com os dados do veículo
-        setEditForm({
-          renavam: vehicle.renavam || '',
-          brand: vehicle.brand || '',
-          model: vehicle.model || '',
-          year: String(vehicle.year || 2020),
-          axleCount: String(vehicle.axleCount || 1),
-          tare: String(vehicle.tare || 1000),
-          bodyType: vehicle.bodyType || ''
-        });
-        
-        console.log('Form state updated with vehicle data');
-      } else {
-        console.log('Vehicle not found in vehicles object');
-      }
+      // Atualizar o estado do formulário com os dados do veículo
+      setEditForm({
+        renavam: selectedVehicle.renavam || '',
+        brand: selectedVehicle.brand || '',
+        model: selectedVehicle.model || '',
+        year: String(selectedVehicle.year || 2020),
+        axleCount: String(selectedVehicle.axleCount || 1),
+        tare: String(selectedVehicle.tare || 1000),
+        bodyType: selectedVehicle.bodyType || ''
+      });
+      
+      console.log('Form state updated with vehicle data');
     }
-  }, [isEditVehicleModalOpen, selectedVehicleId, vehicles]);
+  }, [selectedVehicle, isEditVehicleModalOpen]);
   
   // Função para obter largura padrão baseada no tipo de licença
   function getDefaultWidth(type: string): number {
@@ -824,14 +824,14 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </span>
-              Editar Veículo - {selectedVehicleId && vehicles[selectedVehicleId]?.plate}
+              Editar Veículo - {selectedVehicle?.plate}
             </DialogTitle>
             <DialogDescription>
               Edite as informações do veículo diretamente neste formulário.
             </DialogDescription>
           </DialogHeader>
           
-          {selectedVehicleId && vehicles[selectedVehicleId] && (
+          {selectedVehicle && (
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -839,7 +839,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   <input 
                     type="text" 
                     className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                    value={vehicles[selectedVehicleId].plate || ''}
+                    value={selectedVehicle.plate || ''}
                     disabled
                   />
                 </div>
@@ -907,7 +907,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   />
                 </div>
                 
-                {['truck', 'semitrailer', 'trailer'].includes(vehicles[selectedVehicleId].type) && (
+                {selectedVehicle && ['truck', 'semitrailer', 'trailer'].includes(selectedVehicle.type) && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">Tipo de Carroceria</label>
                     <select 
@@ -954,7 +954,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                 };
                 
                 // Adicionar tipo de carroceria se aplicável
-                if (['truck', 'semitrailer', 'trailer'].includes(vehicles[selectedVehicleId].type)) {
+                if (selectedVehicle && ['truck', 'semitrailer', 'trailer'].includes(selectedVehicle.type)) {
                   (updatedVehicle as any).bodyType = editForm.bodyType;
                 }
                 
