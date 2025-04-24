@@ -441,6 +441,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Buscar veículo por ID
+  app.get('/api/vehicles/:id([0-9]+)', async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.id);
+      
+      const vehicle = await storage.getVehicleById(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: 'Veículo não encontrado' });
+      }
+      
+      // Definir explicitamente o content-type
+      res.setHeader('Content-Type', 'application/json');
+      res.json(vehicle);
+    } catch (error) {
+      console.error('Error fetching vehicle by ID:', error);
+      res.status(500).json({ message: 'Erro ao buscar veículo pelo ID' });
+    }
+  });
+
   // Buscar veículo por placa
   app.get('/api/vehicles/by-plate/:plate', requireAuth, async (req, res) => {
     try {
