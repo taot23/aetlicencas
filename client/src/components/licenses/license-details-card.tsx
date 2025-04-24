@@ -154,6 +154,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               <div className="text-gray-600 text-sm">Tipo de Conjunto:</div>
               <div className="font-medium">{getLicenseTypeLabel(license.type)}</div>
             </div>
+            <div>
+              <div className="text-gray-600 text-sm">Tipo de Carga:</div>
+              <div className="font-medium">{getCargoTypeLabel(licenseData.cargoType)}</div>
+            </div>
           </div>
           
           {/* Dimensões em cards */}
