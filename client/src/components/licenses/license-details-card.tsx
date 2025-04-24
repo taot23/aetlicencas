@@ -25,8 +25,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   // Estados para armazenar dados dos veículos e controlar modais
   const [vehicles, setVehicles] = useState<{[key: string]: Vehicle}>({});
   const [selectedPlate, setSelectedPlate] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditVehicleModalOpen, setIsEditVehicleModalOpen] = useState(false);
   
   // Buscar dados do transportador
   const { data: transporter } = useQuery<Transporter>({
@@ -210,13 +212,27 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
-                <div className="flex items-center w-full">
-                  <div className="text-blue-600 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2zm4-3V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                    </svg>
+                <div className="flex items-center w-full justify-between">
+                  <div className="flex items-center">
+                    <div className="text-blue-600 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2zm4-3V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+                      </svg>
+                    </div>
+                    <div className="font-bold">{license.mainVehiclePlate}</div>
                   </div>
-                  <div className="font-bold">{license.mainVehiclePlate}</div>
+                  <button 
+                    className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                    title="Editar Veículo"
+                    onClick={() => {
+                      setSelectedVehicleId(license.tractorUnitId);
+                      setIsEditVehicleModalOpen(true);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               
@@ -265,13 +281,27 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
-                <div className="flex items-center w-full">
-                  <div className="text-green-600 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                    </svg>
+                <div className="flex items-center w-full justify-between">
+                  <div className="flex items-center">
+                    <div className="text-green-600 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                      </svg>
+                    </div>
+                    <div className="font-bold">{vehicles[license.firstTrailerId]?.plate || 'ABC1D23'}</div>
                   </div>
-                  <div className="font-bold">{vehicles[license.firstTrailerId]?.plate || 'ABC1D23'}</div>
+                  <button 
+                    className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                    title="Editar Veículo"
+                    onClick={() => {
+                      setSelectedVehicleId(license.firstTrailerId);
+                      setIsEditVehicleModalOpen(true);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               
@@ -320,13 +350,27 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
-                <div className="flex items-center w-full">
-                  <div className="text-green-600 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                    </svg>
+                <div className="flex items-center w-full justify-between">
+                  <div className="flex items-center">
+                    <div className="text-green-600 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                      </svg>
+                    </div>
+                    <div className="font-bold">{vehicles[license.secondTrailerId]?.plate || 'RAU8G84'}</div>
                   </div>
-                  <div className="font-bold">{vehicles[license.secondTrailerId]?.plate || 'RAU8G84'}</div>
+                  <button 
+                    className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                    title="Editar Veículo"
+                    onClick={() => {
+                      setSelectedVehicleId(license.secondTrailerId);
+                      setIsEditVehicleModalOpen(true);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               
@@ -375,13 +419,27 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
-                <div className="flex items-center w-full">
-                  <div className="text-orange-600 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
+                <div className="flex items-center w-full justify-between">
+                  <div className="flex items-center">
+                    <div className="text-orange-600 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </div>
+                    <div className="font-bold">{vehicles[license.dollyId]?.plate || 'DOL001'}</div>
                   </div>
-                  <div className="font-bold">{vehicles[license.dollyId]?.plate || 'DOL001'}</div>
+                  <button 
+                    className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                    title="Editar Veículo"
+                    onClick={() => {
+                      setSelectedVehicleId(license.dollyId);
+                      setIsEditVehicleModalOpen(true);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               
@@ -430,13 +488,27 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
-                <div className="flex items-center w-full">
-                  <div className="text-purple-600 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
+                <div className="flex items-center w-full justify-between">
+                  <div className="flex items-center">
+                    <div className="text-purple-600 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                      </svg>
+                    </div>
+                    <div className="font-bold">{vehicles[license.flatbedId]?.plate || 'PRA001'}</div>
                   </div>
-                  <div className="font-bold">{vehicles[license.flatbedId]?.plate || 'PRA001'}</div>
+                  <button 
+                    className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
+                    title="Editar Veículo"
+                    onClick={() => {
+                      setSelectedVehicleId(license.flatbedId);
+                      setIsEditVehicleModalOpen(true);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               
@@ -643,6 +715,134 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Modal para editar veículo do conjunto */}
+      <Dialog open={isEditVehicleModalOpen} onOpenChange={setIsEditVehicleModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </span>
+              Editar Veículo - {selectedVehicleId && vehicles[selectedVehicleId]?.plate}
+            </DialogTitle>
+            <DialogDescription>
+              Edite as informações do veículo diretamente neste formulário.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedVehicleId && vehicles[selectedVehicleId] && (
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Placa</label>
+                  <input 
+                    type="text" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].plate}
+                    disabled
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">RENAVAM</label>
+                  <input 
+                    type="text" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].renavam}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Marca</label>
+                  <input 
+                    type="text" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].brand}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Modelo</label>
+                  <input 
+                    type="text" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].model}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Ano</label>
+                  <input 
+                    type="number" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].year}
+                    min="1950"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Quantidade de Eixos</label>
+                  <input 
+                    type="number" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].axleCount}
+                    min="1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">TARA (kg)</label>
+                  <input 
+                    type="number" 
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                    defaultValue={vehicles[selectedVehicleId].tare}
+                    min="1"
+                  />
+                </div>
+                
+                {['truck', 'semitrailer', 'trailer'].includes(vehicles[selectedVehicleId].type) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Tipo de Carroceria</label>
+                    <select 
+                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      defaultValue={vehicles[selectedVehicleId].bodyType || ''}
+                    >
+                      <option value="">Selecione</option>
+                      <option value="open">ABERTA</option>
+                      <option value="dump">BASCULANTE</option>
+                      <option value="container">PORTA-CONTEINER</option>
+                      <option value="closed">FECHADA</option>
+                      <option value="tank">TANQUE</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="justify-between">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsEditVehicleModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button"
+              className="gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
