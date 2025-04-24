@@ -430,32 +430,13 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
-                <div className="flex items-center w-full sm:w-auto">
+                <div className="flex items-center w-full">
                   <div className="text-purple-600 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
                   </div>
                   <div className="font-bold">{vehicles[license.flatbedId]?.plate || 'PRA001'}</div>
-                </div>
-                
-                {/* Ações */}
-                <div className="flex space-x-1">
-                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                  <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                  <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </button>
                 </div>
               </div>
               
