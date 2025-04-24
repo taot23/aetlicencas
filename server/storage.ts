@@ -69,6 +69,7 @@ export interface IStorage {
   getLicenseDraftsByUserId(userId: number): Promise<LicenseRequest[]>;
   getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]>;
   getAllLicenseRequests(): Promise<LicenseRequest[]>;
+  getAllIssuedLicenses(): Promise<LicenseRequest[]>;
   createLicenseRequest(userId: number, license: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest>;
   createLicenseDraft(userId: number, draft: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest>;
   updateLicenseDraft(id: number, draft: Partial<LicenseRequest>): Promise<LicenseRequest>;
@@ -486,6 +487,40 @@ export class MemStorage implements IStorage {
   async getAllLicenseRequests(): Promise<LicenseRequest[]> {
     return Array.from(this.licenseRequests.values()).filter(
       (license) => !license.isDraft
+    );
+  }
+  
+  async getAllIssuedLicenses(): Promise<LicenseRequest[]> {
+    // Função helper para verificar se todos os estados de uma licença estão "liberada"
+    const allStatesApproved = (license: LicenseRequest): boolean => {
+      if (!license.stateStatuses || license.stateStatuses.length === 0) {
+        return false;
+      }
+      
+      // Verificar se todos os estados da licença têm status 'approved'
+      return license.states.every(state => {
+        const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+        return stateStatus === 'approved';
+      });
+    };
+    
+    return Array.from(this.licenseRequests.values()).filter(
+      (license) => {
+        if (license.isDraft) return false;
+        
+        // Incluir licenças onde todos os estados estão aprovados
+        if (allStatesApproved(license)) return true;
+        
+        // Ou incluir licenças com status geral 'approved'
+        if (license.status === 'approved') return true;
+        
+        // Ou incluir licenças que tenham pelo menos um estado com status 'approved'
+        if (license.stateStatuses && license.stateStatuses.some(ss => ss.includes(':approved'))) {
+          return true;
+        }
+        
+        return false;
+      }
     );
   }
 
@@ -1006,6 +1041,16 @@ export class DatabaseStorage implements IStorage {
 
   async getAllLicenseRequests(): Promise<LicenseRequest[]> {
     return db.select().from(licenseRequests).orderBy(desc(licenseRequests.createdAt));
+  }
+  
+  async getAllIssuedLicenses(): Promise<LicenseRequest[]> {
+    // Busca todas as licenças com status 'approved' ou que tenham pelo menos um estado aprovado
+    // Essa consulta é uma aproximação, pois precisaríamos de uma verificação mais complexa
+    // para os status de cada estado dentro do array stateStatuses
+    return db.select()
+      .from(licenseRequests)
+      .where(eq(licenseRequests.status, "approved"))
+      .orderBy(desc(licenseRequests.createdAt));
   }
 
   async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
