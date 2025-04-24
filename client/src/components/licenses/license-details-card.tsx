@@ -144,6 +144,59 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     enabled: !!license.flatbedId
   });
 
+  // Buscar veículo por placa
+  async function fetchVehicleByPlate(plate: string): Promise<Vehicle | null> {
+    try {
+      const response = await fetch(`/api/vehicles/by-plate/${encodeURIComponent(plate)}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Placa não encontrada é um resultado esperado
+          return null;
+        }
+        throw new Error(`Erro ao buscar veículo: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Erro ao buscar veículo pela placa ${plate}:`, error);
+      return null;
+    }
+  }
+
+  // Carregar veículos adicionais
+  useEffect(() => {
+    // Função para carregar veículos adicionais
+    async function loadAdditionalVehicles() {
+      if (!license.additionalPlates || license.additionalPlates.length === 0) return;
+      
+      // Criar uma cópia do estado atual
+      const updatedVehicles = {...vehicles};
+      let hasNewVehicles = false;
+
+      // Para cada placa adicional, verificar se já está carregada
+      for (const plate of license.additionalPlates) {
+        // Verificar se já temos este veículo pelo número da placa
+        const vehicleExists = Object.values(updatedVehicles).some(v => v.plate === plate);
+        
+        if (!vehicleExists) {
+          // Buscar o veículo pela placa
+          const vehicleData = await fetchVehicleByPlate(plate);
+          if (vehicleData) {
+            updatedVehicles[vehicleData.id] = vehicleData;
+            hasNewVehicles = true;
+          }
+        }
+      }
+      
+      // Atualizar o estado apenas se encontramos novos veículos
+      if (hasNewVehicles) {
+        setVehicles(updatedVehicles);
+      }
+    }
+    
+    // Executar a função de carregamento
+    loadAdditionalVehicles();
+  }, [license.additionalPlates]);
+
   // Atualizar o objeto de veículos quando os dados estiverem disponíveis
   useEffect(() => {
     const vehicleData: {[key: string]: Vehicle} = {};
@@ -154,7 +207,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     if (secondTrailer && license.secondTrailerId) vehicleData[license.secondTrailerId] = secondTrailer;
     if (flatbed && license.flatbedId) vehicleData[license.flatbedId] = flatbed;
     
-    setVehicles(vehicleData);
+    setVehicles(prevVehicles => ({
+      ...prevVehicles,
+      ...vehicleData
+    }));
   }, [tractorUnit, firstTrailer, dolly, secondTrailer, flatbed, license.tractorUnitId, license.firstTrailerId, license.dollyId, license.secondTrailerId, license.flatbedId]);
   
   // Armazenar o veículo selecionado
