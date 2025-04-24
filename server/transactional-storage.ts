@@ -337,6 +337,14 @@ export class TransactionalStorage implements IStorage {
       .orderBy(desc(licenseRequests.createdAt));
   }
   
+  async getAllIssuedLicenses(): Promise<LicenseRequest[]> {
+    return await db
+      .select()
+      .from(licenseRequests)
+      .where(eq(licenseRequests.status, "approved"))
+      .orderBy(desc(licenseRequests.createdAt));
+  }
+  
   async getLicenseRequestsByTransporterId(transporterId: number): Promise<LicenseRequest[]> {
     return await db
       .select()
@@ -550,6 +558,16 @@ export class TransactionalStorage implements IStorage {
   }
   
   async getLicenseDraftsByUserId(userId: number): Promise<LicenseRequest[]> {
+    // userId = 0 indica que queremos todos os rascunhos (acesso administrativo)
+    if (userId === 0) {
+      return await db
+        .select()
+        .from(licenseRequests)
+        .where(eq(licenseRequests.isDraft, true))
+        .orderBy(desc(licenseRequests.createdAt));
+    }
+    
+    // Caso contrário, retornamos apenas os rascunhos do usuário especificado
     return await db
       .select()
       .from(licenseRequests)
@@ -563,6 +581,28 @@ export class TransactionalStorage implements IStorage {
   }
   
   async getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]> {
+    // userId = 0 indica que queremos todas as licenças emitidas (acesso administrativo)
+    if (userId === 0) {
+      return await db
+        .select()
+        .from(licenseRequests)
+        .where(
+          and(
+            eq(licenseRequests.isDraft, false),
+            or(
+              eq(licenseRequests.status, "approved"),
+              // Incluir licenças que tenham pelo menos um estado com status 'approved'
+              sql`EXISTS (
+                SELECT 1 FROM unnest(${licenseRequests.stateStatuses}) as state_status
+                WHERE state_status LIKE '%:approved'
+              )`
+            )
+          )
+        )
+        .orderBy(desc(licenseRequests.createdAt));
+    }
+    
+    // Caso contrário, retornamos apenas as licenças emitidas do usuário especificado
     return await db
       .select()
       .from(licenseRequests)

@@ -1333,7 +1333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Se for usuário administrativo, buscar todas as licenças emitidas
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
-        issuedLicenses = await storage.getAllIssuedLicenses();
+        issuedLicenses = await storage.getIssuedLicensesByUserId(0); // 0 = all users
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
         issuedLicenses = await storage.getIssuedLicensesByUserId(user.id);
