@@ -157,37 +157,59 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     setVehicles(vehicleData);
   }, [tractorUnit, firstTrailer, dolly, secondTrailer, flatbed, license.tractorUnitId, license.firstTrailerId, license.dollyId, license.secondTrailerId, license.flatbedId]);
   
-  // Consulta para o veículo selecionado para edição
-  const { data: selectedVehicle, isLoading: isLoadingSelectedVehicle } = useQuery({
-    queryKey: ['/api/vehicles', selectedVehicleId],
-    queryFn: () => fetchVehicle(selectedVehicleId as number),
-    enabled: !!selectedVehicleId && isEditVehicleModalOpen,
-    staleTime: 0, // Sempre buscar dados atualizados quando o modal abrir
-    refetchOnWindowFocus: false,
-  });
+  // Armazenar o veículo selecionado
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [isLoadingSelectedVehicle, setIsLoadingSelectedVehicle] = useState(false);
 
-  // Popular os campos do formulário de edição quando os dados do veículo estiverem disponíveis
+  // Buscar dados do veículo diretamente quando o modal for aberto
   useEffect(() => {
     console.log('Modal State:', isEditVehicleModalOpen, 'selectedVehicleId:', selectedVehicleId);
-    console.log('Selected vehicle data:', selectedVehicle);
     
-    if (selectedVehicle && isEditVehicleModalOpen) {
-      console.log('Vehicle data found for editing:', selectedVehicle);
-      
-      // Atualizar o estado do formulário com os dados do veículo
-      setEditForm({
-        renavam: selectedVehicle.renavam || '',
-        brand: selectedVehicle.brand || '',
-        model: selectedVehicle.model || '',
-        year: String(selectedVehicle.year || 2020),
-        axleCount: String(selectedVehicle.axleCount || 1),
-        tare: String(selectedVehicle.tare || 1000),
-        bodyType: selectedVehicle.bodyType || ''
-      });
-      
-      console.log('Form state updated with vehicle data');
+    async function loadVehicleData() {
+      if (selectedVehicleId && isEditVehicleModalOpen) {
+        try {
+          setIsLoadingSelectedVehicle(true);
+          console.log('Fetching vehicle data for ID:', selectedVehicleId);
+          
+          const response = await fetch(`/api/vehicles/${selectedVehicleId}`);
+          if (!response.ok) {
+            throw new Error('Falha ao carregar dados do veículo');
+          }
+          
+          const vehicleData = await response.json();
+          console.log('Vehicle data loaded:', vehicleData);
+          setSelectedVehicle(vehicleData);
+          
+          // Atualizar o formulário com os dados recebidos
+          setEditForm({
+            renavam: vehicleData.renavam || '',
+            brand: vehicleData.brand || '',
+            model: vehicleData.model || '',
+            year: String(vehicleData.year || 2020),
+            axleCount: String(vehicleData.axleCount || 1),
+            tare: String(vehicleData.tare || 1000),
+            bodyType: vehicleData.bodyType || ''
+          });
+          
+          console.log('Form state updated with vehicle data');
+        } catch (error) {
+          console.error('Error loading vehicle data:', error);
+          toast({
+            title: "Erro ao carregar veículo",
+            description: "Não foi possível carregar os dados do veículo.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoadingSelectedVehicle(false);
+        }
+      } else if (!isEditVehicleModalOpen) {
+        // Limpar dados quando o modal fechar
+        setSelectedVehicle(null);
+      }
     }
-  }, [selectedVehicle, isEditVehicleModalOpen]);
+    
+    loadVehicleData();
+  }, [isEditVehicleModalOpen, selectedVehicleId, toast]);
   
   // Função para obter largura padrão baseada no tipo de licença
   function getDefaultWidth(type: string): number {
