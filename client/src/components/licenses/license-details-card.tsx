@@ -215,12 +215,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     </svg>
                   </div>
                   <div className="font-bold">{license.mainVehiclePlate}</div>
-                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Cadastrado
-                  </span>
                 </div>
                 
                 {/* Ações */}
@@ -295,12 +289,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     </svg>
                   </div>
                   <div className="font-bold">{vehicles[license.firstTrailerId]?.plate || 'ABC1D23'}</div>
-                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Cadastrado
-                  </span>
                 </div>
                 
                 {/* Ações */}
@@ -375,12 +363,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     </svg>
                   </div>
                   <div className="font-bold">{vehicles[license.secondTrailerId]?.plate || 'RAU8G84'}</div>
-                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Cadastrado
-                  </span>
                 </div>
                 
                 {/* Ações */}
@@ -455,12 +437,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     </svg>
                   </div>
                   <div className="font-bold">{vehicles[license.dollyId]?.plate || 'DOL001'}</div>
-                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Cadastrado
-                  </span>
                 </div>
                 
                 {/* Ações */}
@@ -535,12 +511,6 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     </svg>
                   </div>
                   <div className="font-bold">{vehicles[license.flatbedId]?.plate || 'PRA001'}</div>
-                  <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Cadastrado
-                  </span>
                 </div>
                 
                 {/* Ações */}
@@ -613,20 +583,14 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {license.additionalPlates.map((plate, index) => (
                 <div key={index} className="border border-gray-200 p-2 rounded-md bg-gray-50 flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-shrink-0 w-5 h-5 text-green-600">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-5 h-5 text-green-600 mr-2">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M8 16.25a.75.75 0 01.75-.75h2.5a.75.75 0 010 1.5h-2.5a.75.75 0 01-.75-.75z" />
                         <path fillRule="evenodd" d="M4 4a3 3 0 013-3h6a3 3 0 013 3v12a3 3 0 01-3 3H7a3 3 0 01-3-3V4zm4-1.5v.75c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75V2.5h1A1.5 1.5 0 0114.5 4v12a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 16V4A1.5 1.5 0 017 2.5h1z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div className="font-medium">{plate}</div>
-                    <span className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Cadastrado
-                    </span>
                   </div>
                   <div className="flex space-x-1">
                     <button 
