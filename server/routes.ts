@@ -429,11 +429,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Função auxiliar para verificar se um usuário tem papel administrativo
+  function isAdminUser(user: Express.User): boolean {
+    return ['admin', 'supervisor', 'operational', 'manager'].includes(user.role);
+  }
+  
   // Vehicles CRUD endpoints
   app.get('/api/vehicles', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
-      const vehicles = await storage.getVehiclesByUserId(userId);
+      const user = req.user!;
+      let vehicles;
+      
+      // Se for usuário com papel administrativo, buscar todos os veículos
+      if (isAdminUser(user)) {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todos os veículos.`);
+        vehicles = await storage.getAllVehicles();
+      } else {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas seus veículos.`);
+        vehicles = await storage.getVehiclesByUserId(user.id);
+      }
+      
       res.json(vehicles);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -994,8 +1009,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // License request endpoints
   app.get('/api/licenses', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
-      const licenses = await storage.getLicenseRequestsByUserId(userId);
+      const user = req.user!;
+      let licenses;
+      
+      // Se for usuário administrativo, buscar todas as licenças
+      if (isAdminUser(user)) {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças.`);
+        licenses = await storage.getAllLicenseRequests();
+      } else {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
+        licenses = await storage.getLicenseRequestsByUserId(user.id);
+      }
+      
       res.json(licenses);
     } catch (error) {
       console.error('Error fetching license requests:', error);
@@ -1272,8 +1297,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
-      const issuedLicenses = await storage.getIssuedLicensesByUserId(userId);
+      const user = req.user!;
+      let issuedLicenses;
+      
+      // Se for usuário administrativo, buscar todas as licenças emitidas
+      if (isAdminUser(user)) {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
+        issuedLicenses = await storage.getAllIssuedLicenses();
+      } else {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
+        issuedLicenses = await storage.getIssuedLicensesByUserId(user.id);
+      }
+      
       res.json(issuedLicenses);
     } catch (error) {
       console.error('Error fetching issued licenses:', error);
