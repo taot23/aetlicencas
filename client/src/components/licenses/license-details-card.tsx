@@ -144,13 +144,14 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     enabled: !!license.flatbedId
   });
 
-  // Buscar veículo por placa
+  // Buscar veículo por placa (usando a rota pública)
   async function fetchVehicleByPlate(plate: string): Promise<Vehicle | null> {
     try {
-      const response = await fetch(`/api/vehicles/by-plate/${encodeURIComponent(plate)}`);
+      const response = await fetch(`/api/public/vehicles/by-plate/${encodeURIComponent(plate)}`);
       if (!response.ok) {
         if (response.status === 404) {
           // Placa não encontrada é um resultado esperado
+          console.log(`Placa não encontrada: ${plate}`);
           return null;
         }
         throw new Error(`Erro ao buscar veículo: ${response.statusText}`);
