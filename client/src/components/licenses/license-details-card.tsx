@@ -154,6 +154,26 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     setVehicles(vehicleData);
   }, [tractorUnit, firstTrailer, dolly, secondTrailer, flatbed, license.tractorUnitId, license.firstTrailerId, license.dollyId, license.secondTrailerId, license.flatbedId]);
   
+  // Popular os campos do formulário de edição quando o modal for aberto
+  useEffect(() => {
+    if (isEditVehicleModalOpen && selectedVehicleId && vehicles[selectedVehicleId]) {
+      const vehicle = vehicles[selectedVehicleId];
+      
+      // Definir os valores nos campos
+      if (renavamRef.current) renavamRef.current.value = vehicle.renavam || '';
+      if (brandRef.current) brandRef.current.value = vehicle.brand || '';
+      if (modelRef.current) modelRef.current.value = vehicle.model || '';
+      if (yearRef.current) yearRef.current.value = String(vehicle.year || 2020);
+      if (axleCountRef.current) axleCountRef.current.value = String(vehicle.axleCount || 1);
+      if (tareRef.current) tareRef.current.value = String(vehicle.tare || 1000);
+      
+      // Definir o tipo de carroceria se aplicável
+      if (['truck', 'semitrailer', 'trailer'].includes(vehicle.type) && bodyTypeRef.current) {
+        bodyTypeRef.current.value = vehicle.bodyType || '';
+      }
+    }
+  }, [isEditVehicleModalOpen, selectedVehicleId, vehicles]);
+  
   // Função para obter largura padrão baseada no tipo de licença
   function getDefaultWidth(type: string): number {
     return type === "flatbed" ? 320 : 260; // 3.20m para prancha, 2.60m para demais
@@ -282,7 +302,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                     title="Editar Veículo"
                     onClick={() => {
+                      // Definir o ID do veículo selecionado
                       setSelectedVehicleId(license.tractorUnitId);
+                      
+                      // Deixar o modal mostrar primeiro, para que os refs sejam montados
                       setIsEditVehicleModalOpen(true);
                     }}
                   >
@@ -351,7 +374,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                     className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
                     title="Editar Veículo"
                     onClick={() => {
+                      // Definir o ID do veículo selecionado
                       setSelectedVehicleId(license.firstTrailerId);
+                      
+                      // Abrir o modal de edição
                       setIsEditVehicleModalOpen(true);
                     }}
                   >
