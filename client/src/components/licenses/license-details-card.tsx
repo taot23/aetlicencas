@@ -147,16 +147,25 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   // Buscar veículo por placa (usando a rota pública)
   async function fetchVehicleByPlate(plate: string): Promise<Vehicle | null> {
     try {
-      const response = await fetch(`/api/public/vehicles/by-plate/${encodeURIComponent(plate)}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          // Placa não encontrada é um resultado esperado
-          console.log(`Placa não encontrada: ${plate}`);
-          return null;
-        }
-        throw new Error(`Erro ao buscar veículo: ${response.statusText}`);
+      console.log(`Buscando veículo com placa: ${plate}`);
+      const response = await fetch(`/api/public/vehicle-by-plate/${encodeURIComponent(plate)}`);
+      
+      // Verificar resposta em texto para debug
+      const responseText = await response.text();
+      console.log(`Resposta para ${plate}:`, responseText);
+      
+      // Tentar converter para JSON
+      let data = null;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`Erro ao analisar resposta para ${plate}:`, parseError);
+        console.log(`Resposta não-JSON recebida:`, responseText.substring(0, 100));
+        return null;
       }
-      return await response.json();
+      
+      // Se conseguimos, é um veículo válido
+      return data;
     } catch (error) {
       console.error(`Erro ao buscar veículo pela placa ${plate}:`, error);
       return null;

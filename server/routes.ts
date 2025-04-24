@@ -484,20 +484,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint público para buscar veículo por placa (para uso em licenças)
-  app.get('/api/public/vehicles/by-plate/:plate', async (req, res) => {
+  app.get('/api/public/vehicle-by-plate/:plate', async (req, res) => {
     try {
       const plate = req.params.plate.toUpperCase();
       
+      console.log(`Buscando veículo com a placa: ${plate}`);
+      
       // Buscar todos os veículos
       const allVehicles = await storage.getAllVehicles();
+      console.log(`Total de veículos encontrados: ${allVehicles.length}`);
+      
+      // Buscar todas as placas disponíveis para debug
+      const availablePlates = allVehicles.map(v => v.plate);
+      console.log('Placas disponíveis:', availablePlates.join(', '));
       
       // Encontrar o veículo com a placa correspondente
       const vehicle = allVehicles.find(v => v.plate.toUpperCase() === plate);
       
       if (!vehicle) {
+        console.log(`Veículo não encontrado com a placa ${plate}`);
         return res.status(404).json({ message: 'Veículo não encontrado' });
       }
       
+      console.log(`Veículo encontrado:`, vehicle);
       res.json(vehicle);
     } catch (error) {
       console.error('Error fetching vehicle by plate (public):', error);
