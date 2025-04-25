@@ -34,8 +34,11 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   console.log("LicenseDetailsCard - license original:", {
     id: license.id, 
     stateStatuses: license.stateStatuses,
+    state_statuses: license.state_statuses,
     hasArray: Array.isArray(license.stateStatuses),
-    stateStatusesLength: Array.isArray(license.stateStatuses) ? license.stateStatuses.length : 0
+    hasStateStatusesArray: Array.isArray(license.state_statuses),
+    stateStatusesLength: Array.isArray(license.stateStatuses) ? license.stateStatuses.length : 0,
+    state_statusesLength: Array.isArray(license.state_statuses) ? license.state_statuses.length : 0
   });
   
   // Estado para armazenar os status por estado (será atualizado pelo WebSocket)
@@ -43,7 +46,13 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     // Processamento mais robusto dos status de estado
     console.log("Inicializando stateStatuses para licença", license.id);
     
-    // Verificar se temos stateStatuses como array e não está vazio
+    // Primeiro verificamos na estrutura de "state_statuses" (formato do BD)
+    if (license.state_statuses && Array.isArray(license.state_statuses) && license.state_statuses.length > 0) {
+      console.log("license.state_statuses é um array com", license.state_statuses.length, "elementos");
+      return license.state_statuses;
+    }
+    
+    // Depois verificamos na estrutura normal (stateStatuses) 
     if (Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
       console.log("license.stateStatuses é um array com", license.stateStatuses.length, "elementos");
       
@@ -75,8 +84,16 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     return [];
   });
   
-  // Função para atualizar status de estado
+  // Função para atualizar status de estado - agora considera ambos os formatos
   const refreshStateStatuses = useCallback(() => {
+    // Primeiro verificamos na estrutura de "state_statuses" (formato do BD)
+    if (license.state_statuses && Array.isArray(license.state_statuses) && license.state_statuses.length > 0) {
+      console.log("Atualizando a partir de state_statuses:", license.state_statuses);
+      setStateStatuses(license.state_statuses);
+      return;
+    }
+    
+    // Depois verificamos na estrutura normal
     if (Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
       const validEntries = license.stateStatuses.filter(entry => 
         typeof entry === 'string' && entry.length > 0 && entry.includes(':')
@@ -85,12 +102,12 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       console.log("Atualizando stateStatuses com dados do servidor:", validEntries);
       setStateStatuses(validEntries);
     }
-  }, [license.stateStatuses]);
+  }, [license.stateStatuses, license.state_statuses]);
   
-  // Efeito para atualizar sempre que license.stateStatuses mudar
+  // Efeito para atualizar sempre que license.stateStatuses ou license.state_statuses mudar
   useEffect(() => {
     refreshStateStatuses();
-  }, [license.stateStatuses, refreshStateStatuses]);
+  }, [license.stateStatuses, license.state_statuses, refreshStateStatuses]);
   
   console.log("LicenseDetailsCard inicializado com:", {
     licenseId: license.id,
@@ -542,15 +559,41 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               // Determinar o status para este estado com lógica aprimorada
               let stateStatus = 'pending_registration';
               
-              // Tentar verificar primeiro os stateStatuses da própria licença
-              if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
+              // Primeiro verificar no campo state_statuses (formato do banco de dados)
+              if (license.state_statuses && Array.isArray(license.state_statuses) && license.state_statuses.length > 0) {
+                // Filtrar apenas entradas válidas
+                const validEntries = license.state_statuses.filter(
+                  entry => typeof entry === 'string' && entry.length > 0
+                );
+                
+                // Imprimir para diagnóstico
+                console.log(`Verificando status para o estado ${state} em state_statuses:`, validEntries);
+                
+                // Buscar a entrada específica para este estado
+                for (const entry of validEntries) {
+                  // Verificar se a entrada começa com o estado seguido por dois pontos
+                  const matches = entry.startsWith(`${state}:`);
+                  
+                  if (matches) {
+                    // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
+                    const parts = entry.split(':');
+                    if (parts.length >= 2) {
+                      stateStatus = parts[1];
+                      console.log(`Status definido de state_statuses para ${state}: ${stateStatus}`);
+                    }
+                    break; // Encontrou, não precisa continuar procurando
+                  }
+                }
+              }
+              // Depois verificar nos stateStatuses da própria licença
+              else if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
                 // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
                 const validEntries = license.stateStatuses.filter(
                   entry => typeof entry === 'string' && entry.length > 0
                 );
                 
                 // Imprimir para diagnóstico
-                console.log(`Verificando status para o estado ${state} na licença, stateStatuses:`, validEntries);
+                console.log(`Verificando status para o estado ${state} em stateStatuses:`, validEntries);
                 
                 // Buscar a entrada específica para este estado
                 for (const entry of validEntries) {

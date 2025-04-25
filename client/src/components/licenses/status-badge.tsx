@@ -62,6 +62,23 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
           setRecentUpdate(true);
           console.log(`Status atualizado (mensagem direta) para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
         } 
+        // Verificar state_statuses (formato do banco de dados)
+        else if (lastMessage.data.state_statuses && Array.isArray(lastMessage.data.state_statuses)) {
+          // Procurar pelo status deste estado específico
+          const stateStatusEntry = lastMessage.data.state_statuses.find(
+            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
+          );
+          
+          if (stateStatusEntry) {
+            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
+            const [_, newStatus] = stateStatusEntry.split(':');
+            if (newStatus) {
+              setStatus(newStatus);
+              setRecentUpdate(true);
+              console.log(`Status atualizado (array state_statuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
+            }
+          }
+        }
         // Ou se temos um array completo de stateStatuses na mensagem
         else if (lastMessage.data.stateStatuses && Array.isArray(lastMessage.data.stateStatuses)) {
           // Procurar pelo status deste estado específico
@@ -76,6 +93,24 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
               setStatus(newStatus);
               setRecentUpdate(true);
               console.log(`Status atualizado (array stateStatuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
+            }
+          }
+        }
+        // Ou se a mensagem contém a licença completa
+        // Verificar primeiro se tem state_statuses
+        else if (lastMessage.data.license?.state_statuses && Array.isArray(lastMessage.data.license.state_statuses)) {
+          // Procurar pelo status deste estado específico na licença
+          const stateStatusEntry = lastMessage.data.license.state_statuses.find(
+            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
+          );
+          
+          if (stateStatusEntry) {
+            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
+            const [_, newStatus] = stateStatusEntry.split(':');
+            if (newStatus) {
+              setStatus(newStatus);
+              setRecentUpdate(true);
+              console.log(`Status atualizado (licença completa state_statuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
             }
           }
         }
