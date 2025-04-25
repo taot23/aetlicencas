@@ -21,7 +21,15 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTitle, 
+  DialogHeader, 
+  DialogDescription,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 import { FileDown, ExternalLink, AlertCircle, CheckCircle2, Clock, RefreshCcw } from "lucide-react";
 import { Status, StatusBadge } from "@/components/licenses/status-badge";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
@@ -41,6 +49,8 @@ export default function IssuedLicensesPage() {
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const [sortColumn, setSortColumn] = useState<string | null>("emissionDate");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>('desc');
+  const [renewDialogOpen, setRenewDialogOpen] = useState(false);
+  const [licenseToRenew, setLicenseToRenew] = useState<{licenseId: number, state: string} | null>(null);
   const itemsPerPage = 10;
 
   const { data: issuedLicenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
@@ -262,7 +272,7 @@ export default function IssuedLicensesPage() {
   };
   
   // Navegação para redirecionar após renovação
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   // Mutação para renovar licença
@@ -283,7 +293,7 @@ export default function IssuedLicensesPage() {
       });
       
       // Navegar para a página de edição do rascunho
-      navigate("/request-license?draft=" + data.draft.id);
+      setLocation(`/request-license?draft=${data.draft.id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -582,6 +592,23 @@ export default function IssuedLicensesPage() {
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
+                          
+                          {/* Botão para renovar licença */}
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="flex items-center justify-center"
+                            title="Renovar licença para este estado"
+                            onClick={() => {
+                              setLicenseToRenew({
+                                licenseId: license.licenseId,
+                                state: license.state
+                              });
+                              setRenewDialogOpen(true);
+                            }}
+                          >
+                            <RefreshCcw className="h-4 w-4 text-blue-600" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -670,6 +697,24 @@ export default function IssuedLicensesPage() {
                           }}
                         >
                           <ExternalLink className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* Botão de renovação - versão mobile */}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-8 w-8 p-0 flex items-center justify-center"
+                          aria-label="Renovar licença"
+                          title="Renovar licença para este estado"
+                          onClick={() => {
+                            setLicenseToRenew({
+                              licenseId: license.licenseId,
+                              state: license.state
+                            });
+                            setRenewDialogOpen(true);
+                          }}
+                        >
+                          <RefreshCcw className="h-4 w-4 text-blue-600" />
                         </Button>
                       </div>
                     </div>
@@ -781,6 +826,82 @@ export default function IssuedLicensesPage() {
         )}
       </div>
 
+      {/* Diálogo de renovação de licença */}
+      <Dialog 
+        open={renewDialogOpen} 
+        onOpenChange={(open) => {
+          setRenewDialogOpen(open);
+          if (!open) setLicenseToRenew(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renovar Licença</DialogTitle>
+            <DialogDescription>
+              Confirme a renovação da licença para criar um novo rascunho.
+            </DialogDescription>
+          </DialogHeader>
+          {licenseToRenew && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-md">
+                <p className="text-sm text-blue-800 mb-2 font-medium">Informações da renovação:</p>
+                <div className="text-sm">
+                  <div className="flex items-center mb-1">
+                    <span className="font-medium mr-2">Estado:</span>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                      {licenseToRenew.state}
+                    </Badge>
+                  </div>
+                  <p><span className="font-medium">ID da Licença:</span> {licenseToRenew.licenseId}</p>
+                  <p className="text-xs text-blue-600 mt-2">
+                    A licença será renovada como um rascunho que você poderá editar antes de enviar.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-amber-50 p-3 rounded-md">
+                <p className="text-sm text-amber-800">
+                  <AlertCircle className="h-4 w-4 inline-block mr-1" />
+                  Isso criará uma cópia da licença original apenas para o estado selecionado.
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
+            <DialogClose asChild>
+              <Button variant="outline" className="sm:w-auto">
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button 
+              className="sm:w-auto" 
+              disabled={renewLicenseMutation.isPending || !licenseToRenew}
+              onClick={() => {
+                if (licenseToRenew) {
+                  renewLicenseMutation.mutate({
+                    licenseId: licenseToRenew.licenseId,
+                    state: licenseToRenew.state
+                  });
+                  setRenewDialogOpen(false);
+                }
+              }}
+            >
+              {renewLicenseMutation.isPending ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                  Renovar Licença
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de detalhes da licença */}
       {selectedLicense && (
         <Dialog open={!!selectedLicense} onOpenChange={(open) => !open && setSelectedLicense(null)}>
           <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
