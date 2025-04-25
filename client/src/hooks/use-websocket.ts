@@ -86,5 +86,15 @@ export function useWebSocket() {
     };
   }, [invalidateQueryData]);
   
-  return { isConnected, lastMessage };
+  // Função para enviar mensagens através do WebSocket
+  const sendMessage = useCallback((message: WebSocketMessage) => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(message));
+      return true;
+    }
+    console.warn('WebSocket não está conectado, não foi possível enviar mensagem');
+    return false;
+  }, []);
+
+  return { isConnected, lastMessage, sendMessage };
 }

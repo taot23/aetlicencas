@@ -19,9 +19,17 @@ interface StatusBadgeProps {
   state?: string;      // Estado opcional para atualização em tempo real
   className?: string;
   showIcon?: boolean;
+  size?: 'sm' | 'md' | 'lg'; // Tamanho do badge: pequeno, médio (padrão) ou grande
 }
 
-export function StatusBadge({ status: initialStatus, licenseId, state, className, showIcon = true }: StatusBadgeProps) {
+export function StatusBadge({ 
+  status: initialStatus, 
+  licenseId, 
+  state, 
+  className, 
+  showIcon = true,
+  size = 'md'
+}: StatusBadgeProps) {
   const [status, setStatus] = useState(initialStatus);
   const [recentUpdate, setRecentUpdate] = useState(false);
   const { lastMessage } = useWebSocketContext();
@@ -135,11 +143,25 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
     }
   };
 
+  // Definir classes com base no tamanho
+  const getSizeClasses = () => {
+    switch(size) {
+      case 'sm':
+        return "px-2 py-0.5 text-xs";
+      case 'lg':
+        return "px-3 py-1 text-sm";
+      case 'md':
+      default:
+        return "px-2.5 py-0.5 text-xs";
+    }
+  };
+  
   return (
     <div className="inline-flex items-center">
       <span
         className={cn(
-          "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+          "inline-flex items-center rounded-full font-medium",
+          getSizeClasses(),
           getStatusStyles(),
           recentUpdate ? "ring-2 ring-offset-1 ring-blue-400 transition-all duration-300" : "",
           className

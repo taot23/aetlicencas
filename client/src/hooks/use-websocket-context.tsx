@@ -6,6 +6,7 @@ import { useToast } from './use-toast';
 interface WebSocketContextType {
   isConnected: boolean;
   lastMessage: WebSocketMessage | null;
+  sendMessage: (message: WebSocketMessage) => boolean;
 }
 
 // Criar contexto
@@ -14,7 +15,7 @@ const WebSocketContext = createContext<WebSocketContextType | null>(null);
 // Provider
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const { isConnected, lastMessage } = useWebSocket();
+  const { isConnected, lastMessage, sendMessage } = useWebSocket();
   
   // Exibir toast para atualizações de status (opcional, para debug)
   if (lastMessage?.type === 'STATUS_UPDATE' && lastMessage.data) {
@@ -31,7 +32,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   }
   
   return (
-    <WebSocketContext.Provider value={{ isConnected, lastMessage }}>
+    <WebSocketContext.Provider value={{ isConnected, lastMessage, sendMessage }}>
       {children}
     </WebSocketContext.Provider>
   );

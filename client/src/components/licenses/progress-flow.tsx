@@ -10,14 +10,24 @@ interface ProgressFlowStep {
 }
 
 interface ProgressFlowProps {
-  currentStatus: string;
+  currentStatus?: string;
+  status?: string; // Alias para currentStatus, para compatibilidade
   className?: string;
   size?: "xs" | "sm" | "md" | "lg";
   licenseId?: number;
   state?: string;
 }
 
-export function ProgressFlow({ currentStatus: initialStatus, className, size = "md", licenseId, state }: ProgressFlowProps) {
+export function ProgressFlow({ 
+  currentStatus: propCurrentStatus, 
+  status: propStatus, 
+  className, 
+  size = "md", 
+  licenseId, 
+  state 
+}: ProgressFlowProps) {
+  // Pegar o status inicial a partir de currentStatus ou status
+  const initialStatus = propCurrentStatus || propStatus || "pending_registration";
   // Estado local para o status, inicializado com o valor passado como prop
   const [status, setStatus] = useState(initialStatus);
   const { lastMessage } = useWebSocketContext();
