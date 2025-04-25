@@ -534,7 +534,10 @@ export function LicenseList({
                     {license.requestNumber || (license as any).request_number || "N/A"}
                   </TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
-                  <TableCell>{license.mainVehiclePlate}</TableCell>
+                  <TableCell>
+                    {/* Renderizar a placa do veículo principal - pode vir como mainVehiclePlate ou main_vehicle_plate */}
+                    {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}
+                  </TableCell>
                   <TableCell>
                     {(license as any).specificState || license.states.join(", ")}
                   </TableCell>
