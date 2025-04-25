@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { LicenseRequest, LicenseStatus } from "@shared/schema";
+import { LicenseStatus } from "@shared/schema";
 import { 
   Clock, 
   Loader2, 
@@ -22,57 +22,9 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status: initialStatus, licenseId, state, className, showIcon = true }: StatusBadgeProps) {
-  // Normalizar o status inicial para garantir compatibilidade com o formato do banco
-  const normalizedInitialStatus = (() => {
-    // Se o formato já é um status válido, use-o diretamente
-    if (['pending_registration', 'registration_in_progress', 'rejected', 
-         'under_review', 'pending_approval', 'approved', 'canceled'].includes(initialStatus)) {
-      return initialStatus;
-    }
-    
-    // Verificar se é um formato "ESTADO:STATUS" e extrair o status
-    if (typeof initialStatus === 'string' && initialStatus.includes(':')) {
-      const parts = initialStatus.split(':');
-      if (parts.length >= 2) {
-        console.log(`StatusBadge: extraindo status do formato ${initialStatus} -> ${parts[1]}`);
-        return parts[1];
-      }
-    }
-    
-    // Fallback para o valor original
-    return initialStatus;
-  })();
-  
-  const [status, setStatus] = useState(normalizedInitialStatus);
+  const [status, setStatus] = useState(initialStatus);
   const [recentUpdate, setRecentUpdate] = useState(false);
   const { lastMessage } = useWebSocketContext();
-  
-  // Log quando o componente é renderizado para diagnóstico
-  console.log(`StatusBadge renderizado para ${state || 'geral'}, status inicial: ${initialStatus}, normalizado para: ${normalizedInitialStatus}, id: ${licenseId}`);
-  
-  // Atualizar o status sempre que o initialStatus mudar (por exemplo, quando a licença é recarregada do banco)
-  useEffect(() => {
-    // Normalizar novamente quando o initialStatus mudar
-    const normalizedStatus = (() => {
-      if (['pending_registration', 'registration_in_progress', 'rejected', 
-           'under_review', 'pending_approval', 'approved', 'canceled'].includes(initialStatus)) {
-        return initialStatus;
-      }
-      
-      if (typeof initialStatus === 'string' && initialStatus.includes(':')) {
-        const parts = initialStatus.split(':');
-        if (parts.length >= 2) {
-          console.log(`StatusBadge: initialStatus alterado, extraindo de ${initialStatus} -> ${parts[1]}`);
-          return parts[1];
-        }
-      }
-      
-      return initialStatus;
-    })();
-    
-    console.log(`StatusBadge: initialStatus alterado para ${initialStatus}, normalizado para ${normalizedStatus}`);
-    setStatus(normalizedStatus);
-  }, [initialStatus]);
   
   // Efeito para resetar o indicador de atualização recente após 3 segundos
   useEffect(() => {
@@ -90,89 +42,14 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
       licenseId && 
       lastMessage.data.licenseId === licenseId
     ) {
-      // Diagnóstico para entender a estrutura da mensagem
-      console.log(`StatusBadge: Mensagem recebida para licença ${licenseId}${state ? ', estado ' + state : ''}:`, lastMessage.data);
-      
-      // Se estamos exibindo o status para um estado específico
-      if (state) {
-        // Verificar se a mensagem é diretamente para este estado
-        if (lastMessage.data.state === state) {
-          setStatus(lastMessage.data.status);
-          setRecentUpdate(true);
-          console.log(`Status atualizado (mensagem direta) para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
-        } 
-        // Verificar state_statuses (formato do banco de dados)
-        else if (lastMessage.data.state_statuses && Array.isArray(lastMessage.data.state_statuses)) {
-          // Procurar pelo status deste estado específico
-          const stateStatusEntry = lastMessage.data.state_statuses.find(
-            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
-          );
-          
-          if (stateStatusEntry) {
-            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-            const [_, newStatus] = stateStatusEntry.split(':');
-            if (newStatus) {
-              setStatus(newStatus);
-              setRecentUpdate(true);
-              console.log(`Status atualizado (array state_statuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
-            }
-          }
-        }
-        // Ou se temos um array completo de stateStatuses na mensagem
-        else if (lastMessage.data.stateStatuses && Array.isArray(lastMessage.data.stateStatuses)) {
-          // Procurar pelo status deste estado específico
-          const stateStatusEntry = lastMessage.data.stateStatuses.find(
-            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
-          );
-          
-          if (stateStatusEntry) {
-            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-            const [_, newStatus] = stateStatusEntry.split(':');
-            if (newStatus) {
-              setStatus(newStatus);
-              setRecentUpdate(true);
-              console.log(`Status atualizado (array stateStatuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
-            }
-          }
-        }
-        // Ou se a mensagem contém a licença completa
-        // Verificar primeiro se tem state_statuses
-        else if (lastMessage.data.license?.state_statuses && Array.isArray(lastMessage.data.license.state_statuses)) {
-          // Procurar pelo status deste estado específico na licença
-          const stateStatusEntry = lastMessage.data.license.state_statuses.find(
-            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
-          );
-          
-          if (stateStatusEntry) {
-            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-            const [_, newStatus] = stateStatusEntry.split(':');
-            if (newStatus) {
-              setStatus(newStatus);
-              setRecentUpdate(true);
-              console.log(`Status atualizado (licença completa state_statuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
-            }
-          }
-        }
-        // Ou se a mensagem contém a licença completa com stateStatuses
-        else if (lastMessage.data.license?.stateStatuses && Array.isArray(lastMessage.data.license.stateStatuses)) {
-          // Procurar pelo status deste estado específico na licença
-          const stateStatusEntry = lastMessage.data.license.stateStatuses.find(
-            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
-          );
-          
-          if (stateStatusEntry) {
-            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-            const [_, newStatus] = stateStatusEntry.split(':');
-            if (newStatus) {
-              setStatus(newStatus);
-              setRecentUpdate(true);
-              console.log(`Status atualizado (licença completa) para licença ${licenseId}, estado ${state}: ${newStatus}`);
-            }
-          }
-        }
+      // Se estamos exibindo o status para um estado específico, verificar se a mensagem é para este estado
+      if (state && lastMessage.data.state === state) {
+        setStatus(lastMessage.data.status);
+        setRecentUpdate(true);
+        console.log(`Status atualizado para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
       }
       // Se estamos mostrando o status geral da licença (sem estado específico)
-      else if (!state && lastMessage.data.license?.status) {
+      else if (!state) {
         setStatus(lastMessage.data.license.status);
         setRecentUpdate(true);
         console.log(`Status geral atualizado para licença ${licenseId}: ${lastMessage.data.license.status}`);

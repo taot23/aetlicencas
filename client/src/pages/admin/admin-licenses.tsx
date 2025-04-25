@@ -155,62 +155,21 @@ export default function AdminLicensesPage() {
       selectedLicense && 
       lastMessage.data.licenseId === selectedLicense.id
     ) {
-      console.log("Recebendo atualização de status via WebSocket:", lastMessage.data);
-      
-      // Se recebemos a licença completa, usar todos os dados dela
-      if (lastMessage.data.license && lastMessage.data.license.stateStatuses) {
-        setSelectedLicense(prevLicense => {
-          if (!prevLicense) return null;
-          return {
-            ...prevLicense,
-            ...lastMessage.data.license,
-          };
-        });
-        
-        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} atualizada com dados completos`);
-      }
-      // Se recebemos o array de estados completo
-      else if (lastMessage.data.stateStatuses && Array.isArray(lastMessage.data.stateStatuses)) {
-        console.log("Recebendo array completo de stateStatuses:", lastMessage.data.stateStatuses);
-        
-        // Criar uma cópia atualizada da licença selecionada com a lista completa
-        setSelectedLicense(prevLicense => {
-          if (!prevLicense) return null;
-          return {
-            ...prevLicense,
-            stateStatuses: lastMessage.data.stateStatuses,
-            // Se também recebemos uma atualização para o status geral da licença
-            ...(lastMessage.data.license?.status && { status: lastMessage.data.license.status })
-          };
-        });
-        
-        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} -> estados atualizados com array completo`);
-      }
-      // Se o evento é apenas para um estado específico (caso de fallback)
-      else if (lastMessage.data.state) {
+      // Se o evento é para um estado específico
+      if (lastMessage.data.state) {
         // Atualização de status de um estado específico
-        // Garantir que temos um array de status existente para trabalhar
-        const currentStateStatuses = selectedLicense.stateStatuses || [];
-        
-        // Criar um Map para manipulação fácil dos status de estado
-        const stateStatusMap = new Map();
-        
-        // Preencher o mapa com os status existentes
-        for (const entry of currentStateStatuses) {
-          if (typeof entry === 'string' && entry.includes(':')) {
-            const [state] = entry.split(':');
-            stateStatusMap.set(state, entry);
-          }
-        }
-        
-        // Atualizar ou adicionar o novo status
-        stateStatusMap.set(
-          lastMessage.data.state, 
-          `${lastMessage.data.state}:${lastMessage.data.status}`
+        const updatedStateStatuses = [...(selectedLicense.stateStatuses || [])];
+        const stateStatusIndex = updatedStateStatuses.findIndex(
+          entry => entry.startsWith(`${lastMessage.data.state}:`)
         );
         
-        // Converter de volta para array
-        const updatedStateStatuses = Array.from(stateStatusMap.values());
+        // Se o estado já existe nos status, atualizar
+        if (stateStatusIndex >= 0) {
+          updatedStateStatuses[stateStatusIndex] = `${lastMessage.data.state}:${lastMessage.data.status}`;
+        } else {
+          // Se não existe, adicionar
+          updatedStateStatuses.push(`${lastMessage.data.state}:${lastMessage.data.status}`);
+        }
         
         // Criar uma cópia atualizada da licença selecionada
         setSelectedLicense(prevLicense => {
@@ -224,6 +183,19 @@ export default function AdminLicensesPage() {
         });
         
         console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} estado ${lastMessage.data.state} => ${lastMessage.data.status}`);
+      } 
+      // Se o evento é para a licença inteira (sem estado específico)
+      else if (lastMessage.data.license) {
+        setSelectedLicense(prevLicense => {
+          if (!prevLicense) return null;
+          return {
+            ...prevLicense,
+            status: lastMessage.data.license.status,
+            ...(lastMessage.data.license.stateStatuses && { stateStatuses: lastMessage.data.license.stateStatuses })
+          };
+        });
+        
+        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} => ${lastMessage.data.license.status}`);
       }
     }
   }, [lastMessage, selectedLicense]);
@@ -246,22 +218,7 @@ export default function AdminLicensesPage() {
   // Buscar todas as licenças
   const { data: licenses = [], isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: [apiEndpoint],
-    queryFn: async (context) => {
-      // Usar o queryFn padrão
-      const defaultFn = getQueryFn({ on401: "throw" });
-      const result = await defaultFn(context);
-      
-      // Log para depuração da resposta
-      console.log("Resposta de licenças recebida do servidor:", result);
-      if (result && result.length > 0) {
-        console.log("Exemplo de stateStatuses na resposta:", 
-          result[0].stateStatuses,
-          "para licença:", result[0].id
-        );
-      }
-      
-      return result;
-    },
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   // Mutação para atualização de status geral foi removida - agora só usamos atualização por estado
@@ -456,23 +413,15 @@ export default function AdminLicensesPage() {
     setSelectedState(state);
     
     // Determinar o status atual deste estado
-    let currentStateStatus = "pending_registration";
-    
-    console.log(`Verificando status para o estado ${state} na licença, stateStatuses:`, license.stateStatuses);
+    let currentStateStatus = "pending";
     
     // Parse dos stateStatuses (que são armazenados como "ESTADO:STATUS")
-    if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
-      // Filtrar apenas entradas válidas
-      const validEntries = license.stateStatuses.filter(entry => 
-        typeof entry === 'string' && entry.includes(':')
-      );
-      
-      const stateStatusEntry = validEntries.find(entry => entry.startsWith(`${state}:`));
+    if (license.stateStatuses && license.stateStatuses.length > 0) {
+      const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
       if (stateStatusEntry) {
         const [_, status] = stateStatusEntry.split(':');
         if (status) {
           currentStateStatus = status;
-          console.log(`Status definido da licença original para ${state}: ${status}`);
         }
       }
     }
@@ -661,7 +610,7 @@ export default function AdminLicensesPage() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="md:col-span-3">
                   <div className="flex flex-col space-y-1.5">
                     <Label htmlFor="transporter-filter">Transportador</Label>
                     <Select value={transporterFilter} onValueChange={setTransporterFilter}>
@@ -670,23 +619,11 @@ export default function AdminLicensesPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos os transportadores</SelectItem>
-                        {/* Obter transportadores únicos do array de licenças */}
-                        {Array.from(
-                          new Set(
-                            licenses
-                              .filter(license => license.transporterId != null)
-                              .map(license => license.transporterId?.toString())
-                          )
-                        ).map(transporterId => {
-                          const transporter = licenses.find(
-                            license => license.transporterId?.toString() === transporterId
-                          );
-                          return (
-                            <SelectItem key={transporterId} value={transporterId || ""}>
-                              {transporter?.transporterName || `Transportador #${transporterId}`}
-                            </SelectItem>
-                          );
-                        })}
+                        {/* Aqui seria ideal ter uma lista de transportadores para selecionar */}
+                        {/* Como é um exemplo, adicionamos alguns valores genéricos */}
+                        <SelectItem value="1">Transportadora ABC Ltda</SelectItem>
+                        <SelectItem value="2">Transportes XYZ S.A.</SelectItem>
+                        <SelectItem value="3">Logística Express Ltda</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -764,7 +701,6 @@ export default function AdminLicensesPage() {
                               )}
                             </div>
                           </TableHead>
-                          <TableHead>Transportador</TableHead>
                           <TableHead>Estados</TableHead>
                           <TableHead
                             className="cursor-pointer hover:bg-gray-50"
@@ -812,73 +748,29 @@ export default function AdminLicensesPage() {
                       <TableBody>
                         {filteredLicenses.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center py-6">
+                            <TableCell colSpan={7} className="text-center py-6">
                               Nenhuma licença encontrada
                             </TableCell>
                           </TableRow>
                         ) : (
                           filteredLicenses.map((license) => (
                             <TableRow key={license.id}>
-                              <TableCell className="font-medium">
-                                {license.requestNumber || (license as any).request_number || "N/A"}
-                              </TableCell>
+                              <TableCell className="font-medium">{license.requestNumber}</TableCell>
                               <TableCell>
                                 {getLicenseTypeLabel(license.type)}
                               </TableCell>
-                              <TableCell>
-                                {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}
-                              </TableCell>
-                              <TableCell>
-                                {license.transporterName || (license as any).transporter_name || "N/A"}
-                              </TableCell>
+                              <TableCell>{license.mainVehiclePlate}</TableCell>
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
                                   {license.states.map((state, idx) => {
                                     // Encontrar o status atual deste estado
                                     let stateStatus = "pending";
-                                    
-                                    // Verificar se temos state_statuses (formato do banco)
-                                    if ((license as any).state_statuses && Array.isArray((license as any).state_statuses) && (license as any).state_statuses.length > 0) {
-                                      console.log(`Verificando estado ${state} em state_statuses:`, (license as any).state_statuses);
-                                      // Usar este formato
-                                      let stateStatusArray = (license as any).state_statuses;
-                                      
-                                      // Procurar pelo estado atual nas entradas de status
-                                      const stateStatusEntry = stateStatusArray.find(entry => {
-                                        if (typeof entry === 'string') {
-                                          return entry.startsWith(`${state}:`);
-                                        }
-                                        return false;
-                                      });
-                                      
-                                      if (stateStatusEntry && typeof stateStatusEntry === 'string') {
-                                        console.log(`Status de ${state} encontrado em state_statuses:`, stateStatusEntry);
-                                        // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-                                        const parts = stateStatusEntry.split(':');
-                                        if (parts.length >= 2) {
-                                          stateStatus = parts[1];
-                                          console.log(`Estado ${state} tem status ${stateStatus} de state_statuses`);
-                                        }
-                                      }
-                                    } 
-                                    // Verificar formato stateStatuses 
-                                    else if (license.stateStatuses && license.stateStatuses.length > 0) {
-                                      console.log(`Verificando estado ${state} em stateStatuses:`, license.stateStatuses);
-                                      // Verificar diferentes formatos do array stateStatuses
-                                      let stateStatusArray = license.stateStatuses;
-                                      
-                                      // Procurar pelo estado atual nas entradas de status
-                                      const stateStatusEntry = stateStatusArray.find(entry => {
-                                        if (typeof entry === 'string') {
-                                          return entry.startsWith(`${state}:`);
-                                        }
-                                        return false;
-                                      });
-                                      
-                                      if (stateStatusEntry && typeof stateStatusEntry === 'string') {
-                                        const parts = stateStatusEntry.split(':');
-                                        if (parts.length >= 2) {
-                                          stateStatus = parts[1];
+                                    if (license.stateStatuses && license.stateStatuses.length > 0) {
+                                      const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                                      if (stateStatusEntry) {
+                                        const [_, status] = stateStatusEntry.split(':');
+                                        if (status) {
+                                          stateStatus = status;
                                         }
                                       }
                                     }
@@ -895,8 +787,6 @@ export default function AdminLicensesPage() {
                                       badgeClass = "bg-blue-50 border-blue-200 text-blue-800";
                                     }
                                     
-                                    console.log(`Estado ${state}, status: ${stateStatus}, classe: ${badgeClass}`);
-                                    
                                     return (
                                       <Badge key={idx} variant="outline" className={`text-xs ${badgeClass}`}>
                                         {state}
@@ -910,7 +800,7 @@ export default function AdminLicensesPage() {
                                   <StatusBadge status={license.status} />
                                 </div>
                               </TableCell>
-                              <TableCell>{formatDate(license.createdAt || (license as any).created_at)}</TableCell>
+                              <TableCell>{formatDate(license.createdAt)}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
                                   <Button
@@ -953,57 +843,20 @@ export default function AdminLicensesPage() {
                               </div>
                               
                               <div className="mt-2">
-                                <p className="text-sm"><span className="font-medium">Veículo:</span> {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}</p>
-                                <p className="text-sm"><span className="font-medium">Transportador:</span> {license.transporterName || (license as any).transporter_name || "N/A"}</p>
-                                <p className="text-sm"><span className="font-medium">Data:</span> {formatDate(license.createdAt || (license as any).created_at)}</p>
+                                <p className="text-sm"><span className="font-medium">Veículo:</span> {license.mainVehiclePlate}</p>
+                                <p className="text-sm"><span className="font-medium">Data:</span> {formatDate(license.createdAt)}</p>
                                 <div className="mt-1">
                                   <span className="text-sm font-medium">Estados:</span>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {license.states.map((state, idx) => {
                                       // Encontrar o status atual deste estado
-                                      let stateStatus = "pending_registration"; // Valor padrão mais específico
-                                      
-                                      // Verificar se temos state_statuses (formato do banco)
-                                      if ((license as any).state_statuses && Array.isArray((license as any).state_statuses) && (license as any).state_statuses.length > 0) {
-                                        console.log(`[Mobile] Verificando estado ${state} em state_statuses:`, (license as any).state_statuses);
-                                        // Usar este formato
-                                        let stateStatusArray = (license as any).state_statuses;
-                                        
-                                        // Procurar pelo estado atual nas entradas de status
-                                        const stateStatusEntry = stateStatusArray.find(entry => {
-                                          if (typeof entry === 'string') {
-                                            return entry.startsWith(`${state}:`);
-                                          }
-                                          return false;
-                                        });
-                                        
-                                        if (stateStatusEntry && typeof stateStatusEntry === 'string') {
-                                          console.log(`[Mobile] Status de ${state} encontrado em state_statuses:`, stateStatusEntry);
-                                          // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-                                          const parts = stateStatusEntry.split(':');
-                                          if (parts.length >= 2) {
-                                            stateStatus = parts[1];
-                                            console.log(`[Mobile] Estado ${state} tem status ${stateStatus} de state_statuses`);
-                                          }
-                                        }
-                                      } 
-                                      // Verificar formato stateStatuses 
-                                      else if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
-                                        console.log(`[Mobile] Verificando estado ${state} em stateStatuses:`, license.stateStatuses);
-                                        // Filtrar apenas entradas válidas que são strings
-                                        const validEntries = license.stateStatuses.filter(entry => 
-                                          typeof entry === 'string' && entry.length > 0
-                                        );
-                                        
-                                        // Procurar pela entrada deste estado específico
-                                        const stateStatusEntry = validEntries.find(entry => entry.startsWith(`${state}:`));
-                                        
+                                      let stateStatus = "pending";
+                                      if (license.stateStatuses && license.stateStatuses.length > 0) {
+                                        const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
                                         if (stateStatusEntry) {
-                                          // Extrair o status do formato "ESTADO:STATUS[:DATA]"
-                                          const parts = stateStatusEntry.split(':');
-                                          if (parts.length >= 2) {
-                                            stateStatus = parts[1];
-                                            console.log(`[Mobile] Estado ${state} tem status ${stateStatus} de stateStatuses`);
+                                          const [_, status] = stateStatusEntry.split(':');
+                                          if (status) {
+                                            stateStatus = status;
                                           }
                                         }
                                       }
@@ -1413,66 +1266,16 @@ export default function AdminLicensesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {selectedLicense.states.map((state) => {
                     // Encontrar o status atual deste estado
-                    let stateStatus = "pending_registration";
-                    
-                    // Verificar se temos state_statuses (formato do banco)
-                    if ((selectedLicense as any).state_statuses && Array.isArray((selectedLicense as any).state_statuses) && (selectedLicense as any).state_statuses.length > 0) {
-                      console.log(`Verificando status para o estado ${state} em state_statuses:`, (selectedLicense as any).state_statuses);
-                      
-                      // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
-                      const validEntries = (selectedLicense as any).state_statuses.filter(
-                        (entry: any) => typeof entry === 'string' && entry.length > 0
-                      );
-                      
-                      // Buscar a entrada específica para este estado
-                      const stateStatusEntry = validEntries.find((entry: string) => {
-                        const matches = entry.startsWith(`${state}:`);
-                        console.log(`Verificando entry '${entry}' para estado ${state} em state_statuses, matches: ${matches}`);
-                        return matches;
-                      });
-                      
-                      // Se encontramos uma entrada válida para este estado
+                    let stateStatus = "pending";
+                    if (selectedLicense.stateStatuses && selectedLicense.stateStatuses.length > 0) {
+                      const stateStatusEntry = selectedLicense.stateStatuses.find(entry => entry.startsWith(`${state}:`));
                       if (stateStatusEntry) {
-                        console.log(`Encontrou entry para ${state} em state_statuses:`, stateStatusEntry);
-                        
-                        // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
-                        const parts = stateStatusEntry.split(':');
-                        if (parts.length >= 2) {
-                          stateStatus = parts[1];
-                          console.log(`Status definido de state_statuses para ${state}: ${stateStatus}`);
+                        const [_, status] = stateStatusEntry.split(':');
+                        if (status) {
+                          stateStatus = status;
                         }
                       }
                     }
-                    // Verificar se temos stateStatuses e é um array (formato frontend)
-                    else if (selectedLicense.stateStatuses && Array.isArray(selectedLicense.stateStatuses) && selectedLicense.stateStatuses.length > 0) {
-                      console.log(`Verificando status para o estado ${state} em stateStatuses:`, selectedLicense.stateStatuses);
-                      
-                      // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
-                      const validEntries = selectedLicense.stateStatuses.filter(
-                        entry => typeof entry === 'string' && entry.length > 0
-                      );
-                      
-                      // Buscar a entrada específica para este estado
-                      const stateStatusEntry = validEntries.find(entry => {
-                        const matches = entry.startsWith(`${state}:`);
-                        console.log(`Verificando entry '${entry}' para estado ${state} em stateStatuses, matches: ${matches}`);
-                        return matches;
-                      });
-                      
-                      // Se encontramos uma entrada válida para este estado
-                      if (stateStatusEntry) {
-                        console.log(`Encontrou entry para ${state} em stateStatuses:`, stateStatusEntry);
-                        
-                        // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
-                        const parts = stateStatusEntry.split(':');
-                        if (parts.length >= 2) {
-                          stateStatus = parts[1];
-                          console.log(`Status definido de stateStatuses para ${state}: ${stateStatus}`);
-                        }
-                      }
-                    }
-                    
-                    console.log(`Status final para ${state}: ${stateStatus}`);
                     
                     // Definir cores baseadas no status
                     let borderColor = "border-gray-200";
@@ -1542,7 +1345,6 @@ export default function AdminLicensesPage() {
                               className="py-1"
                               licenseId={selectedLicense.id}
                               state={state}
-                              key={`${state}-${stateStatus}`} // Adiciona key para forçar re-render quando status mudar
                             />
                           </div>
                         )}

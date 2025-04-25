@@ -13,111 +13,15 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Função para obter a URL do arquivo da licença de qualquer estrutura
-const getLicenseFileUrl = (license: any): string | null => {
-  // Tenta todas as possíveis propriedades onde a URL pode estar
-  return license.licenseFileUrl || 
-         license.license_file_url || 
-         (license as any).license_file_url || 
-         (license.stateFiles && license.stateFiles.length > 0 ? license.stateFiles[0].split(':')[1] : null);
-};
-
 interface LicenseDetailsCardProps {
-  license: LicenseRequest & {
-    state_statuses?: string[]; // Formato do banco de dados
-    transporterName?: string;
-    transporterDocument?: string;
-  };
+  license: LicenseRequest;
 }
 
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   // Estado para armazenar o status atual (será atualizado pelo WebSocket)
   const [currentStatus, setCurrentStatus] = useState(license.status);
-  
-  // Logging para diagnóstico dos status de estado recebidos
-  console.log("LicenseDetailsCard - license original:", {
-    id: license.id, 
-    stateStatuses: license.stateStatuses,
-    state_statuses: license.state_statuses,
-    hasArray: Array.isArray(license.stateStatuses),
-    hasStateStatusesArray: Array.isArray(license.state_statuses),
-    stateStatusesLength: Array.isArray(license.stateStatuses) ? license.stateStatuses.length : 0,
-    state_statusesLength: Array.isArray(license.state_statuses) ? license.state_statuses.length : 0
-  });
-  
   // Estado para armazenar os status por estado (será atualizado pelo WebSocket)
-  const [stateStatuses, setStateStatuses] = useState<string[]>(() => {
-    // Processamento mais robusto dos status de estado
-    console.log("Inicializando stateStatuses para licença", license.id);
-    
-    // Primeiro verificamos na estrutura de "state_statuses" (formato do BD)
-    if (license.state_statuses && Array.isArray(license.state_statuses) && license.state_statuses.length > 0) {
-      console.log("license.state_statuses é um array com", license.state_statuses.length, "elementos");
-      return license.state_statuses;
-    }
-    
-    // Depois verificamos na estrutura normal (stateStatuses) 
-    if (Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
-      console.log("license.stateStatuses é um array com", license.stateStatuses.length, "elementos");
-      
-      // Filtragem mais rigorosa das entradas
-      const validEntries = license.stateStatuses.filter(entry => {
-        // Verificar se a entrada é uma string, não está vazia e contém ':'
-        const isValid = typeof entry === 'string' && entry.length > 0 && entry.includes(':');
-        if (!isValid && entry) {
-          console.log("Entrada inválida encontrada:", entry, "tipo:", typeof entry);
-        }
-        return isValid;
-      });
-      
-      console.log("Após filtragem, temos", validEntries.length, "entradas válidas:", validEntries);
-      return validEntries;
-    }
-    
-    // Se não tivermos stateStatuses ou for um array vazio, gerar status padrão
-    console.log("Gerando status padrão para todos os estados da licença");
-    
-    // Criar status padrão para cada estado
-    if (license.states && Array.isArray(license.states) && license.states.length > 0) {
-      const defaultStatuses = license.states.map(state => `${state}:pending_registration`);
-      console.log("Status padrão gerados:", defaultStatuses);
-      return defaultStatuses;
-    }
-    
-    console.log("Não foi possível gerar status padrão. Usando array vazio.");
-    return [];
-  });
-  
-  // Função para atualizar status de estado - agora considera ambos os formatos
-  const refreshStateStatuses = useCallback(() => {
-    // Primeiro verificamos na estrutura de "state_statuses" (formato do BD)
-    if (license.state_statuses && Array.isArray(license.state_statuses) && license.state_statuses.length > 0) {
-      console.log("Atualizando a partir de state_statuses:", license.state_statuses);
-      setStateStatuses(license.state_statuses);
-      return;
-    }
-    
-    // Depois verificamos na estrutura normal
-    if (Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
-      const validEntries = license.stateStatuses.filter(entry => 
-        typeof entry === 'string' && entry.length > 0 && entry.includes(':')
-      );
-      
-      console.log("Atualizando stateStatuses com dados do servidor:", validEntries);
-      setStateStatuses(validEntries);
-    }
-  }, [license.stateStatuses, license.state_statuses]);
-  
-  // Efeito para atualizar sempre que license.stateStatuses ou license.state_statuses mudar
-  useEffect(() => {
-    refreshStateStatuses();
-  }, [license.stateStatuses, license.state_statuses, refreshStateStatuses]);
-  
-  console.log("LicenseDetailsCard inicializado com:", {
-    licenseId: license.id,
-    stateStatuses: stateStatuses,
-    originalStateStatuses: license.stateStatuses
-  });
+  const [stateStatuses, setStateStatuses] = useState(license.stateStatuses || []);
   
   // Hook para acesso ao WebSocket
   const { lastMessage } = useWebSocketContext();
@@ -242,7 +146,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     }
   });
   
-  // Buscar dados do transportador (mantido para compatibilidade)
+  // Buscar dados do transportador
   const { data: transporter } = useQuery<Transporter>({
     queryKey: ['/api/public/transporters', license.transporterId],
     queryFn: async () => {
@@ -512,14 +416,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       {/* Cabeçalho do pedido com status atualizado em tempo real */}
       <div className="bg-slate-700 text-white p-4 rounded-md shadow-sm">
         <div className="flex flex-wrap justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
-            {license.aetNumber && (
-              <div className="text-slate-300 text-sm mt-1">
-                Nº AET: {license.aetNumber || (license as any).aet_number}
-              </div>
-            )}
-          </div>
+          <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
           <div className="flex items-center space-x-2 mt-2 sm:mt-0">
             <div className="hidden sm:block text-slate-300 text-sm mr-2">Status:</div>
             <StatusBadge 
@@ -531,14 +428,24 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Informações do Transportador */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Transportador</h3>
-        <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
-          <p><span className="font-medium">Nome:</span> {license.transporterName || (license as any).transporter_name || "Não informado"}</p>
-          <p><span className="font-medium">Documento:</span> {license.transporterDocument || (license as any).transporter_document || "Não informado"}</p>
+      {/* Dados do Transportador */}
+      {transporter && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Transportador</h3>
+          <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-gray-600 text-sm">Nome/Razão Social:</div>
+                <div className="font-medium">{transporter.name}</div>
+              </div>
+              <div>
+                <div className="text-gray-600 text-sm">CNPJ:</div>
+                <div className="font-medium">{transporter.documentNumber}</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Estados Solicitados */}
       <div className="space-y-2">
@@ -554,126 +461,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Status por Estado */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Status por Estado</h3>
-        <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
-          <div className="flex flex-wrap gap-2">
-            {license.states.map((state, idx) => {
-              // Determinar o status para este estado com lógica aprimorada
-              let stateStatus = 'pending_registration';
-              
-              // Primeiro verificar no campo state_statuses (formato do banco de dados)
-              if (license.state_statuses && Array.isArray(license.state_statuses) && license.state_statuses.length > 0) {
-                // Filtrar apenas entradas válidas
-                const validEntries = license.state_statuses.filter(
-                  entry => typeof entry === 'string' && entry.length > 0
-                );
-                
-                // Imprimir para diagnóstico
-                console.log(`Verificando status para o estado ${state} em state_statuses:`, validEntries);
-                
-                // Buscar a entrada específica para este estado
-                for (const entry of validEntries) {
-                  // Verificar se a entrada começa com o estado seguido por dois pontos
-                  const matches = entry.startsWith(`${state}:`);
-                  
-                  if (matches) {
-                    // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
-                    const parts = entry.split(':');
-                    if (parts.length >= 2) {
-                      stateStatus = parts[1];
-                      console.log(`Status definido de state_statuses para ${state}: ${stateStatus}`);
-                    }
-                    break; // Encontrou, não precisa continuar procurando
-                  }
-                }
-              }
-              // Depois verificar nos stateStatuses da própria licença
-              else if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
-                // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
-                const validEntries = license.stateStatuses.filter(
-                  entry => typeof entry === 'string' && entry.length > 0
-                );
-                
-                // Imprimir para diagnóstico
-                console.log(`Verificando status para o estado ${state} em stateStatuses:`, validEntries);
-                
-                // Buscar a entrada específica para este estado
-                for (const entry of validEntries) {
-                  // Verificar se a entrada começa com o estado seguido por dois pontos
-                  const matches = entry.startsWith(`${state}:`);
-                  
-                  if (matches) {
-                    // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
-                    const parts = entry.split(':');
-                    if (parts.length >= 2) {
-                      stateStatus = parts[1];
-                      console.log(`Status definido da licença original para ${state}: ${stateStatus}`);
-                    }
-                    break; // Encontrou, não precisa continuar procurando
-                  }
-                }
-              }
-              // Se não encontramos na licença, verificar o prop stateStatuses
-              else if (stateStatuses && Array.isArray(stateStatuses) && stateStatuses.length > 0) {
-                // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
-                const validEntries = stateStatuses.filter(
-                  entry => typeof entry === 'string' && entry.length > 0
-                );
-                
-                // Imprimir para diagnóstico
-                console.log(`Verificando status para o estado ${state} no prop, stateStatuses:`, validEntries);
-                
-                // Buscar a entrada específica para este estado
-                for (const entry of validEntries) {
-                  // Verificar se a entrada começa com o estado seguido por dois pontos
-                  const matches = entry.startsWith(`${state}:`);
-                  
-                  if (matches) {
-                    // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
-                    const parts = entry.split(':');
-                    if (parts.length >= 2) {
-                      stateStatus = parts[1];
-                      console.log(`Status definido do prop para ${state}: ${stateStatus}`);
-                    }
-                    break; // Encontrou, não precisa continuar procurando
-                  }
-                }
-              }
-              
-              console.log(`Status final para ${state}: ${stateStatus}`);
-              
-              // Determinar a classe CSS com base no status
-              const statusClass = 
-                stateStatus === 'approved' ? "bg-green-100 text-green-800 border-green-200" :
-                stateStatus === 'rejected' ? "bg-red-100 text-red-800 border-red-200" :
-                stateStatus === 'under_review' ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
-                stateStatus === 'pending_approval' ? "bg-purple-100 text-purple-800 border-purple-200" :
-                stateStatus === 'registration_in_progress' ? "bg-blue-100 text-blue-800 border-blue-200" :
-                "bg-gray-100 text-gray-800 border-gray-200";
-              
-              // Determinar o rótulo de status
-              const statusLabel =
-                stateStatus === 'approved' ? "Liberada" :
-                stateStatus === 'rejected' ? "Reprovada" :
-                stateStatus === 'under_review' ? "Em análise" :
-                stateStatus === 'pending_approval' ? "Pendente liberação" :
-                stateStatus === 'registration_in_progress' ? "Em cadastramento" :
-                "Cadastramento pendente";
-                
-              return (
-                <div key={idx} className={`border rounded-md px-3 py-2 ${statusClass}`}>
-                  <div className="flex items-center gap-2">
-                    <div className="font-bold">{state}</div>
-                    <div className="text-xs">{statusLabel}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      {/* Seção de Status por Estado removida conforme solicitado */}
       
       {/* Dados do Conjunto */}
       <div className="space-y-2">
@@ -713,8 +501,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         <h3 className="text-lg font-semibold">Linha de Frente</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Caminhão/Unidade Tratora - verificar diferentes formatos do tractorUnitId */}
-          {(license.tractorUnitId || (license as any).tractor_unit_id) && (
+          {/* Caminhão/Unidade Tratora */}
+          {license.tractorUnitId && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -780,7 +568,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Primeira Carreta */}
-          {(license.firstTrailerId || (license as any).first_trailer_id) && (
+          {license.firstTrailerId && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -846,7 +634,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Segunda Carreta */}
-          {(license.secondTrailerId || (license as any).second_trailer_id) && (
+          {license.secondTrailerId && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -912,7 +700,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Dolly (Se necessário) */}
-          {(license.dollyId || (license as any).dolly_id) && (
+          {license.dollyId && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -978,7 +766,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Prancha (se necessário) */}
-          {(license.flatbedId || (license as any).flatbed_id) && (
+          {license.flatbedId && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -1045,18 +833,13 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Placas Adicionais - com suporte para ambos os formatos (additionalPlates e additional_plates) */}
-      {/* Verificar ambos os formatos para placas adicionais (camelCase e snake_case) */}
-      {(((license.additionalPlates && license.additionalPlates.length > 0) || 
-         ((license as any).additional_plates && (license as any).additional_plates.length > 0))) && (
+      {/* Placas Adicionais */}
+      {license.additionalPlates && license.additionalPlates.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Placas Adicionais</h3>
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Suporte para ambos os formatos de dados */}
-              {((Array.isArray(license.additionalPlates) ? license.additionalPlates : []) || 
-                (Array.isArray((license as any).additional_plates) ? (license as any).additional_plates : [])
-              ).map((plate: string, index: number) => {
+              {license.additionalPlates.map((plate, index) => {
                 // Buscar o veículo pelo número da placa
                 const vehicle = Object.values(vehicles).find(v => v.plate === plate);
                 const vehicleId = vehicle?.id;
@@ -1148,10 +931,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       )}
 
       {/* Botão de download para licença aprovada/liberada */}
-      {currentStatus === "approved" && getLicenseFileUrl(license) && (
+      {currentStatus === "approved" && license.licenseFileUrl && (
         <div className="mt-6 flex justify-center">
           <Button asChild className="w-full sm:w-auto flex items-center gap-2" size="lg">
-            <a href={getLicenseFileUrl(license)} target="_blank" rel="noopener noreferrer">
+            <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
               <FileDown className="h-5 w-5" />
               Download da Licença Completa
             </a>

@@ -62,9 +62,7 @@ export default function IssuedLicensesPage() {
       if (!res.ok) {
         throw new Error("Erro ao buscar licenças emitidas");
       }
-      const data = await res.json();
-      console.log("Dados recebidos da API:", data);
-      return data;
+      return res.json();
     },
     // Desabilita o cache para garantir que sempre temos os dados mais recentes
     staleTime: 0,
@@ -87,7 +85,6 @@ export default function IssuedLicensesPage() {
     licenseFileUrl: string | null;
     stateFileUrl: string | null;
     transporterId: number;
-    transporterName: string | null; // Nome do transportador
     aetNumber: string | null; // Número da AET
   }
   
@@ -95,127 +92,49 @@ export default function IssuedLicensesPage() {
   const expandedLicenses = useMemo(() => {
     if (!issuedLicenses) return [];
     
-    console.log("Processando licenças emitidas:", issuedLicenses);
-    
     const result: ExpandedLicense[] = [];
     
-    // Verificação de segurança para garantir que temos dados
-    if (!Array.isArray(issuedLicenses) || issuedLicenses.length === 0) {
-      console.warn("Não há licenças para processar ou o formato é inválido");
-      return [];
-    }
-    
     issuedLicenses.forEach(license => {
-      try {
-        // Normaliza os campos para lidar com diferentes formatos de dados
-        const normalizedLicense = {
-          id: license.id,
-          licenseId: license.id,
-          requestNumber: license.requestNumber || license.request_number,
-          type: license.type,
-          mainVehiclePlate: license.mainVehiclePlate || license.main_vehicle_plate,
-          status: license.status,
-          transporterId: license.transporterId || license.transporter_id || 0,
-          transporterName: license.transporter_name || license.transporterName || "Não informado",
-          aetNumber: license.aetNumber || license.aet_number || null,
-          emissionDate: license.updatedAt || license.updated_at || null,
-          validUntil: license.validUntil || license.valid_until || null,
-          licenseFileUrl: license.licenseFileUrl || license.license_file_url || null,
-          states: Array.isArray(license.states) ? license.states : [],
-          stateStatuses: Array.isArray(license.stateStatuses) ? license.stateStatuses : 
-                         Array.isArray(license.state_statuses) ? license.state_statuses : [],
-          stateFiles: Array.isArray(license.stateFiles) ? license.stateFiles : 
-                      Array.isArray(license.state_files) ? license.state_files : []
-        }; 
+      // Para cada licença, expandir para uma linha por estado que tenha sido aprovado
+      license.states.forEach((state, index) => {
+        // Verifica se este estado específico foi aprovado
+        const stateStatusEntry = license.stateStatuses?.find(entry => entry.startsWith(`${state}:`));
+        const stateStatus = stateStatusEntry?.split(':')?.[1] || 'pending_registration';
+        const stateFileEntry = license.stateFiles?.find(entry => entry.startsWith(`${state}:`));
+        const stateFileUrl = stateFileEntry?.split(':')?.[1] || null;
         
-        // Debugging - exibir dados da licença
-        console.log("Processando licença normalizada:", normalizedLicense.id, 
-                   "Transportador:", normalizedLicense.transporterId, 
-                   "Nome transportador:", normalizedLicense.transporterName,
-                   "URL do arquivo:", normalizedLicense.licenseFileUrl);
-        
-        // Verificar se license.states existe e é um array
-        if (!Array.isArray(normalizedLicense.states) || normalizedLicense.states.length === 0) {
-          console.log(`Licença ${normalizedLicense.id} não tem estados definidos ou é um array vazio`);
+        // Só incluir estados com status "approved"
+        if (stateStatus === 'approved') {
+          // Obter data de validade específica para este estado, se disponível
+          let stateValidUntil = license.validUntil ? license.validUntil.toString() : null;
           
-          // Se a licença está aprovada, mas não tem estados definidos, criar uma linha padrão
-          if (normalizedLicense.status === 'approved') {
-            result.push({
-              id: normalizedLicense.id * 100, // Gerar ID único para a linha
-              licenseId: normalizedLicense.id,
-              requestNumber: normalizedLicense.requestNumber,
-              type: normalizedLicense.type,
-              mainVehiclePlate: normalizedLicense.mainVehiclePlate,
-              state: 'N/A',
-              status: 'approved',
-              stateStatus: 'approved',
-              emissionDate: normalizedLicense.emissionDate ? normalizedLicense.emissionDate.toString() : null,
-              validUntil: normalizedLicense.validUntil ? normalizedLicense.validUntil.toString() : null,
-              licenseFileUrl: normalizedLicense.licenseFileUrl,
-              stateFileUrl: null,
-              transporterId: normalizedLicense.transporterId,
-              aetNumber: normalizedLicense.aetNumber,
-              transporterName: normalizedLicense.transporterName
-            });
+          // Novo formato: "estado:status:data_validade"
+          if (stateStatusEntry && stateStatusEntry.split(':').length > 2) {
+            // Extrair data de validade do formato estado:status:data
+            stateValidUntil = stateStatusEntry.split(':')[2];
+            console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
           }
           
-          return; // Pular para a próxima licença
+          result.push({
+            id: license.id * 100 + index, // Gerar ID único para a linha
+            licenseId: license.id,
+            requestNumber: license.requestNumber,
+            type: license.type,
+            mainVehiclePlate: license.mainVehiclePlate,
+            state,
+            status: stateStatus,
+            stateStatus,
+            emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
+            validUntil: stateValidUntil,
+            licenseFileUrl: license.licenseFileUrl,
+            stateFileUrl,
+            transporterId: license.transporterId || 0,
+            aetNumber: license.aetNumber || null // Incluir número da AET
+          });
         }
-        
-        // Para cada licença, expandir para uma linha por estado
-        normalizedLicense.states.forEach((state, index) => {
-          try {
-            // Verifica se este estado específico foi aprovado
-            const stateStatusEntry = normalizedLicense.stateStatuses?.find(entry => entry.startsWith(`${state}:`));
-            const stateStatus = stateStatusEntry?.split(':')?.[1] || 'pending_registration';
-            const stateFileEntry = normalizedLicense.stateFiles?.find(entry => entry.startsWith(`${state}:`));
-            const stateFileUrl = stateFileEntry?.split(':')?.[1] || null;
-            
-            console.log(`Estado ${state} tem status: ${stateStatus}, licença geral tem status: ${normalizedLicense.status}`);
-            
-            // Incluir estados quando a licença tem status geral aprovado OU quando o estado específico tem status aprovado
-            if (normalizedLicense.status === 'approved' || stateStatus === 'approved') {
-              // Obter data de validade específica para este estado, se disponível
-              let stateValidUntil = normalizedLicense.validUntil ? normalizedLicense.validUntil.toString() : null;
-              
-              // Novo formato: "estado:status:data_validade"
-              if (stateStatusEntry && stateStatusEntry.split(':').length > 2) {
-                // Extrair data de validade do formato estado:status:data
-                stateValidUntil = stateStatusEntry.split(':')[2];
-                console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
-              }
-              
-              console.log(`Adicionando linha para licença ${normalizedLicense.id}, estado ${state}, transportador: ${normalizedLicense.transporterName}, URL arquivo: ${normalizedLicense.licenseFileUrl}`);
-              
-              // Criar uma entrada completa COM os campos normalizados
-              result.push({
-                id: normalizedLicense.id * 100 + index, // Gerar ID único para a linha
-                licenseId: normalizedLicense.id,
-                requestNumber: normalizedLicense.requestNumber,
-                type: normalizedLicense.type,
-                mainVehiclePlate: normalizedLicense.mainVehiclePlate,
-                state,
-                status: stateStatus === 'approved' ? 'approved' : normalizedLicense.status, // Priorizar o status do estado se aprovado
-                stateStatus,
-                emissionDate: normalizedLicense.emissionDate ? normalizedLicense.emissionDate.toString() : null,
-                validUntil: stateValidUntil,
-                licenseFileUrl: normalizedLicense.licenseFileUrl,
-                stateFileUrl,
-                transporterId: normalizedLicense.transporterId,
-                aetNumber: normalizedLicense.aetNumber,
-                transporterName: normalizedLicense.transporterName
-              });
-            }
-          } catch (err) {
-            console.error(`Erro ao processar estado ${state} da licença ${normalizedLicense.id}:`, err);
-          }
-        });
-      } catch (err) {
-        console.error("Erro ao processar licença:", license.id, err);
-      }
+      });
     });
     
-    console.log("Licenças expandidas:", result);
     return result;
   }, [issuedLicenses]);
 
@@ -559,13 +478,6 @@ export default function IssuedLicensesPage() {
                     currentDirection={sortDirection}
                     onSort={handleSort}
                   />
-                  <SortableHeader
-                    column="transporterName"
-                    label="Transportador"
-                    currentSort={sortColumn}
-                    currentDirection={sortDirection}
-                    onSort={handleSort}
-                  />
                   <TableHead>Nº Licença</TableHead>
                   <SortableHeader
                     column="emissionDate"
@@ -613,11 +525,6 @@ export default function IssuedLicensesPage() {
                         <TableCell className="font-medium">{license.requestNumber}</TableCell>
                         <TableCell>{license.mainVehiclePlate}</TableCell>
                         <TableCell>
-                          {license.transporterName || (
-                            <span className="text-gray-500">Não informado</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
                           {license.aetNumber ? (
                             <span className="font-semibold text-blue-700">{license.aetNumber}</span>
                           ) : (
@@ -663,25 +570,25 @@ export default function IssuedLicensesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-1">
-                            {/* Botão para baixar arquivo da licença completa - sempre visível */}
+                            {/* Botão para baixar arquivo da licença completa */}
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               asChild 
                               className="flex items-center justify-center" 
-                              title={license.licenseFileUrl || license.stateFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                              title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
                             >
                               <a 
-                                href={license.licenseFileUrl || license.stateFileUrl || '#'} 
+                                href={license.licenseFileUrl || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
-                                  if (!license.licenseFileUrl && !license.stateFileUrl) {
+                                  if (!license.licenseFileUrl) {
                                     e.preventDefault();
-                                    alert('Arquivo da licença não disponível no momento.');
+                                    alert('Arquivo da licença completa não disponível no momento.');
                                   }
                                 }}
-                                className={((!license.licenseFileUrl && !license.stateFileUrl) ? "opacity-40 cursor-not-allowed" : "")}
+                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
                               >
                                 <FileDown className="h-4 w-4 text-green-600" />
                               </a>
@@ -775,19 +682,19 @@ export default function IssuedLicensesPage() {
                           asChild 
                           className="h-8 w-8 p-0 flex items-center justify-center" 
                           aria-label="Download da licença" 
-                          title={license.licenseFileUrl || license.stateFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                          title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
                         >
                           <a 
-                            href={license.licenseFileUrl || license.stateFileUrl || '#'} 
+                            href={license.licenseFileUrl || '#'} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             onClick={(e) => {
-                              if (!license.licenseFileUrl && !license.stateFileUrl) {
+                              if (!license.licenseFileUrl) {
                                 e.preventDefault();
-                                alert('Arquivo da licença não disponível no momento.');
+                                alert('Arquivo da licença completa não disponível no momento.');
                               }
                             }}
-                            className={((!license.licenseFileUrl && !license.stateFileUrl) ? "opacity-40 cursor-not-allowed" : "")}
+                            className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
                           >
                             <FileDown className="h-4 w-4 text-green-600" />
                           </a>
@@ -845,14 +752,6 @@ export default function IssuedLicensesPage() {
                       <div>
                         <span className="text-xs text-gray-500">Placa:</span>
                         <div>{license.mainVehiclePlate}</div>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500">Transportador:</span>
-                        <div>
-                          {license.transporterName || (
-                            <span className="text-gray-500">Não informado</span>
-                          )}
-                        </div>
                       </div>
                       <div>
                         <span className="text-xs text-gray-500">Emissão:</span>

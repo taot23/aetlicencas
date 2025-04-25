@@ -53,70 +53,71 @@ export async function getDashboardStatsCombined() {
  * Obtém licenças com informações do transportador em uma única consulta
  */
 export async function getLicensesWithTransporters(filters: LicenseFilters = {}) {
-  try {
-    console.log("Executando consulta com filtros:", JSON.stringify(filters));
-
-    // Usando SQL bruto para maior controle
-    let query = sql`
-      SELECT 
-        l.*,
-        t.name as transporter_name,
-        t.document_number as transporter_document,
-        u.email as user_email
-      FROM ${licenseRequests} l
-      LEFT JOIN ${transporters} t ON l.transporter_id = t.id
-      LEFT JOIN ${users} u ON l.user_id = u.id
-      WHERE 1=1
-    `;
-    
-    let conditions = sql``;
-    
-    // Adicionar condições de filtro
-    if (filters.userId) {
-      conditions = sql`${conditions} AND l.user_id = ${filters.userId}`;
-    }
-    
-    if (filters.transporterId) {
-      conditions = sql`${conditions} AND l.transporter_id = ${filters.transporterId}`;
-    }
-    
-    if (filters.status) {
-      conditions = sql`${conditions} AND l.status = ${filters.status}`;
-    }
-    
-    if (filters.isDraft !== undefined) {
-      conditions = sql`${conditions} AND l.is_draft = ${filters.isDraft}`;
-    }
-    
-    if (filters.mainVehiclePlate) {
-      conditions = sql`${conditions} AND l.main_vehicle_plate ILIKE ${'%' + filters.mainVehiclePlate + '%'}`;
-    }
-    
-    if (filters.startDate) {
-      conditions = sql`${conditions} AND l.created_at >= ${filters.startDate}`;
-    }
-    
-    if (filters.endDate) {
-      conditions = sql`${conditions} AND l.created_at <= ${filters.endDate}`;
-    }
-    
-    // Adicionar ordenação e finalização
-    const finalQuery = sql`
-      ${query} ${conditions}
-      ORDER BY l.created_at DESC
-      ${filters.limit ? sql`LIMIT ${filters.limit}` : sql``}
-      ${filters.offset && filters.limit ? sql`OFFSET ${filters.offset}` : sql``}
-    `;
-    
-    console.log("Executando consulta SQL");
-    const result = await db.execute(finalQuery);
-    
-    // Retornar no formato esperado para manter compatibilidade
-    return result;
-  } catch (error) {
-    console.error("Erro na consulta getLicensesWithTransporters:", error);
-    throw error;
+  const query = sql`
+    SELECT l.*, t.name as transporter_name, t.document_number as transporter_document, u.email as user_email
+    FROM ${licenseRequests} l
+    LEFT JOIN ${transporters} t ON l.transporter_id = t.id
+    LEFT JOIN ${users} u ON l.user_id = u.id
+    WHERE 1=1
+  `;
+  
+  const conditions = [];
+  const params = [];
+  
+  if (filters.userId) {
+    conditions.push(`l.user_id = $${params.length + 1}`);
+    params.push(filters.userId);
   }
+  
+  if (filters.transporterId) {
+    conditions.push(`l.transporter_id = $${params.length + 1}`);
+    params.push(filters.transporterId);
+  }
+  
+  if (filters.status) {
+    conditions.push(`l.status = $${params.length + 1}`);
+    params.push(filters.status);
+  }
+  
+  if (filters.isDraft !== undefined) {
+    conditions.push(`l.is_draft = $${params.length + 1}`);
+    params.push(filters.isDraft);
+  }
+  
+  if (filters.mainVehiclePlate) {
+    conditions.push(`l.main_vehicle_plate ILIKE $${params.length + 1}`);
+    params.push(`%${filters.mainVehiclePlate}%`);
+  }
+  
+  if (filters.startDate) {
+    conditions.push(`l.created_at >= $${params.length + 1}`);
+    params.push(filters.startDate);
+  }
+  
+  if (filters.endDate) {
+    conditions.push(`l.created_at <= $${params.length + 1}`);
+    params.push(filters.endDate);
+  }
+  
+  // Se há condições, adicione-as à query
+  let fullQuery = query;
+  if (conditions.length > 0) {
+    fullQuery = sql`${query} AND ${sql.raw(conditions.join(' AND '))}`;
+  }
+  
+  // Adicione ordenação
+  fullQuery = sql`${fullQuery} ORDER BY l.created_at DESC`;
+  
+  // Adicione limit e offset se fornecidos
+  if (filters.limit) {
+    fullQuery = sql`${fullQuery} LIMIT ${filters.limit}`;
+    
+    if (filters.offset) {
+      fullQuery = sql`${fullQuery} OFFSET ${filters.offset}`;
+    }
+  }
+  
+  return await db.execute(fullQuery);
 }
 
 /**

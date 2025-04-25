@@ -16,7 +16,6 @@ import {
   userRoleEnum,
   licenseRequests
 } from "@shared/schema";
-import { getLicensesWithTransporters } from "./queries";
 import { eq } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
@@ -24,7 +23,6 @@ import path from "path";
 import * as fs from "fs";
 import { promisify } from "util";
 import { WebSocketServer, WebSocket } from "ws";
-import { setupDebugRoutes } from "./debug";
 
 // Set up file storage for uploads
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -734,10 +732,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       let drafts;
-      const renewalOnly = req.query.renewalOnly === 'true';
-      const excludeRenewal = req.query.excludeRenewal === 'true';
-      
-      console.log(`Buscando rascunhos com filtros: renewalOnly=${renewalOnly}, excludeRenewal=${excludeRenewal}`);
       
       // Se for usuário administrativo, buscar todos os rascunhos
       if (isAdminUser(user)) {
@@ -746,17 +740,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas seus rascunhos.`);
         drafts = await storage.getLicenseDraftsByUserId(user.id);
-      }
-      
-      // Filtragem de rascunhos de renovação se solicitado
-      if (renewalOnly) {
-        // Retorna apenas os rascunhos que são de renovação (contém "Renovação da licença" nos comentários)
-        drafts = drafts.filter(draft => draft.comments && draft.comments.startsWith('Renovação da licença'));
-        console.log(`Filtrando apenas rascunhos de renovação. Total: ${drafts.length}`);
-      } else if (excludeRenewal) {
-        // Retorna todos os rascunhos EXCETO os de renovação
-        drafts = drafts.filter(draft => !draft.comments || !draft.comments.startsWith('Renovação da licença'));
-        console.log(`Excluindo rascunhos de renovação. Total: ${drafts.length}`);
       }
       
       res.json(drafts);
@@ -1105,55 +1088,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let result;
-      let renewalDrafts = [];
+      let licenses;
       
       // Se for usuário administrativo, buscar todas as licenças
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças.`);
-        result = await getLicensesWithTransporters();
-        // Buscar também todos os rascunhos para administradores
-        renewalDrafts = await storage.getLicenseDraftsByUserId(0); // 0 = todos os rascunhos
+        licenses = await storage.getAllLicenseRequests();
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
-        result = await getLicensesWithTransporters({ userId: user.id });
-        // Buscar também os rascunhos do usuário
-        renewalDrafts = await storage.getLicenseDraftsByUserId(user.id);
+        licenses = await storage.getLicenseRequestsByUserId(user.id);
       }
       
-      console.log("Estrutura do resultado:", Object.keys(result));
-      
-      // Verificar se temos resultados
-      if (!result || !result.rows || !Array.isArray(result.rows)) {
-        console.log("Erro na estrutura do resultado:", result);
-        return res.json([]);
-      }
-      
-      console.log(`Total de licenças encontradas: ${result.rows.length}`);
-      if (result.rows.length > 0) {
-        console.log("Exemplo de licença:", JSON.stringify(result.rows[0], null, 2));
-      }
-      
-      // Filtrar apenas os rascunhos que são de renovação
-      console.log(`Total de rascunhos antes da filtragem: ${renewalDrafts.length}`);
-      const onlyRenewalDrafts = renewalDrafts.filter(draft => 
-        draft.comments && draft.comments.startsWith('Renovação da licença')
-      );
-      console.log(`Total de rascunhos de renovação encontrados: ${onlyRenewalDrafts.length}`);
-      
-      // Transformar os resultados das licenças para incluir o nome do transportador
-      const licenses = result.rows.map(license => ({
-        ...license,
-        transporterName: license.transporter_name,
-        transporterDocument: license.transporter_document,
-        userEmail: license.user_email
-      }));
-      
-      // Combinar licenças normais com rascunhos de renovação
-      const allLicenses = [...licenses, ...onlyRenewalDrafts];
-      console.log(`Total combinado (licenças + rascunhos de renovação): ${allLicenses.length}`);
-      
-      res.json(allLicenses);
+      res.json(licenses);
     } catch (error) {
       console.error('Error fetching license requests:', error);
       res.status(500).json({ message: 'Erro ao buscar solicitações de licenças' });
@@ -1498,55 +1444,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let result;
+      let issuedLicenses;
       
-      // Se for usuário administrativo, buscar todas as licenças não rascunho
+      // Se for usuário administrativo, buscar todas as licenças emitidas
       if (isAdminUser(user)) {
-        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças potencialmente emitidas.`);
-        // Pegar todas as licenças não rascunho (sem filtro de status)
-        result = await getLicensesWithTransporters({ isDraft: false });
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
+        issuedLicenses = await storage.getIssuedLicensesByUserId(0); // 0 = all users
       } else {
-        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças potencialmente emitidas.`);
-        // Pegar todas as licenças do usuário não rascunho (sem filtro de status)
-        result = await getLicensesWithTransporters({ userId: user.id, isDraft: false });
-      }
-      
-      console.log("Estrutura do resultado:", Object.keys(result));
-      
-      // Verificar se temos resultados
-      if (!result || !result.rows || !Array.isArray(result.rows)) {
-        console.log("Erro na estrutura do resultado:", result);
-        return res.json([]);
-      }
-      
-      console.log(`Total de licenças emitidas encontradas: ${result.rows.length}`);
-      if (result.rows.length > 0) {
-        console.log("Exemplo de licença emitida:", JSON.stringify(result.rows[0], null, 2));
-      }
-      
-      // Filtrar apenas licenças que têm status geral 'approved' OU pelo menos um estado com 'approved'
-      const issuedLicenses = result.rows.filter(license => {
-        // Verificar se a licença tem status geral 'approved'
-        if (license.status === 'approved') return true;
-        
-        // Verificar se a licença tem state_statuses
-        if (!license.state_statuses || !Array.isArray(license.state_statuses)) return false;
-        
-        // Verificar se pelo menos um estado tem status 'approved'
-        return license.state_statuses.some(stateStatus => {
-          if (typeof stateStatus !== 'string') return false;
-          return stateStatus.includes(':approved');
-        });
-      }).map(license => ({
-        ...license,
-        transporterName: license.transporter_name,
-        transporterDocument: license.transporter_document,
-        userEmail: license.user_email
-      }));
-      
-      console.log(`Total de licenças emitidas após filtro: ${issuedLicenses.length}`);
-      if (issuedLicenses.length > 0) {
-        console.log("Exemplo de licença emitida após filtro:", JSON.stringify(issuedLicenses[0], null, 2));
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
+        issuedLicenses = await storage.getIssuedLicensesByUserId(user.id);
       }
       
       res.json(issuedLicenses);
@@ -1561,31 +1467,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para admin/operational obter todas as licenças
   app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
-      console.log("Executando consulta com filtros aplicados");
+      const licenses = await storage.getAllLicenseRequests();
       
-      // Usar a função que inclui informações do transportador
-      const result = await getLicensesWithTransporters();
-      
-      console.log("Estrutura do resultado:", Object.keys(result));
-      
-      // Verificar se temos resultados
-      if (!result || !result.rows || !Array.isArray(result.rows)) {
-        console.log("Erro na estrutura do resultado:", result);
-        return res.json([]);
+      // Log para diagnóstico
+      if (licenses.length > 0) {
+        // Get direct database row of last license for comparison
+        const lastLicenseId = licenses[licenses.length - 1].id;
+        const dbResult = await db.select().from(licenseRequests).where(eq(licenseRequests.id, lastLicenseId));
+        
+        console.log("Licença exemplo recuperada:", JSON.stringify(licenses[licenses.length - 1], null, 2));
+        console.log("Mesma licença diretamente do banco de dados:", JSON.stringify(dbResult[0], null, 2));
       }
-      
-      console.log(`Total de licenças encontradas: ${result.rows.length}`);
-      if (result.rows.length > 0) {
-        console.log("Exemplo de licença:", JSON.stringify(result.rows[0], null, 2));
-      }
-      
-      // Transformar os resultados para incluir o nome do transportador
-      const licenses = result.rows.map(license => ({
-        ...license,
-        transporterName: license.transporter_name,
-        transporterDocument: license.transporter_document,
-        userEmail: license.user_email
-      }));
       
       res.json(licenses);
     } catch (error) {
@@ -1618,32 +1510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para staff (operational/supervisor) obter todas as licenças
   app.get('/api/staff/licenses', requireOperational, async (req, res) => {
     try {
-      console.log("Executando consulta com filtros aplicados");
-      
-      // Usar a função que inclui informações do transportador
-      const result = await getLicensesWithTransporters();
-      
-      console.log("Estrutura do resultado:", Object.keys(result));
-      
-      // Verificar se temos resultados
-      if (!result || !result.rows || !Array.isArray(result.rows)) {
-        console.log("Erro na estrutura do resultado:", result);
-        return res.json([]);
-      }
-      
-      console.log(`Total de licenças staff encontradas: ${result.rows.length}`);
-      if (result.rows.length > 0) {
-        console.log("Exemplo de licença staff:", JSON.stringify(result.rows[0], null, 2));
-      }
-      
-      // Transformar os resultados para incluir o nome do transportador
-      const licenses = result.rows.map(license => ({
-        ...license,
-        transporterName: license.transporter_name,
-        transporterDocument: license.transporter_document,
-        userEmail: license.user_email
-      }));
-      
+      const licenses = await storage.getAllLicenseRequests();
       res.json(licenses);
     } catch (error) {
       console.error('Error fetching all license requests for staff:', error);
@@ -2383,12 +2250,7 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
   // Endpoint específico para atualizar o status de um estado específico em uma licença
   app.patch('/api/admin/licenses/:id/state-status', requireOperational, upload.single('stateFile'), async (req, res) => {
     try {
-      console.log("[API] Recebendo requisição para atualizar status de estado de licença");
-      console.log("[API] Corpo da requisição:", req.body);
-      console.log("[API] Arquivo:", req.file);
-      
       const licenseId = parseInt(req.params.id);
-      console.log("[API] ID da licença:", licenseId);
       
       // Validar dados do status do estado
       const stateStatusData = {
@@ -2399,8 +2261,6 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         validUntil: req.body.validUntil,
         aetNumber: req.body.aetNumber, // Incluir número da AET
       };
-      
-      console.log("[API] Dados validados para atualização:", stateStatusData);
       
       try {
         updateLicenseStateSchema.parse(stateStatusData);
@@ -2426,61 +2286,23 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         file = req.file;
       }
       
-      // Obter a licença atual para diagnóstico
-      console.log("==== DIAGNÓSTICO DE ATUALIZAÇÃO DE ESTADO ====");
-      console.log("Licença original:", JSON.stringify(existingLicense, null, 2));
-      console.log("Atualizando estado:", stateStatusData.state, "para status:", stateStatusData.status);
-      
       // Atualizar status do estado da licença
       const updatedLicense = await storage.updateLicenseStateStatus({
         ...stateStatusData,
         file,
       });
       
-      // Verificar o resultado após a atualização
-      console.log("Licença após atualização:", JSON.stringify(updatedLicense, null, 2));
-      console.log("==== FIM DO DIAGNÓSTICO ====");
-      
-      // Garantir que estamos enviando a lista completa de status de estados
-      if (updatedLicense.stateStatuses) {
-        console.log("Enviando stateStatuses completo via WebSocket:", 
-          JSON.stringify(updatedLicense.stateStatuses)
-        );
-      } else {
-        console.log("ATENÇÃO: stateStatuses está vazio ou não definido na licença atualizada");
-      }
-      
-      // Verificar se stateStatuses é um array válido antes de enviar
-      const stateStatusesToSend = Array.isArray(updatedLicense.stateStatuses) && updatedLicense.stateStatuses.length > 0
-        ? updatedLicense.stateStatuses
-        : [];
-        
-      console.log("Preparando mensagem WebSocket com stateStatuses:", JSON.stringify(stateStatusesToSend));
-      
-      // Criar uma cópia limpa da licença para garantir serialização correta
-      const sanitizedLicense = {
-        ...updatedLicense,
-        stateStatuses: stateStatusesToSend,
-        createdAt: updatedLicense.createdAt ? new Date(updatedLicense.createdAt).toISOString() : null,
-        updatedAt: updatedLicense.updatedAt ? new Date(updatedLicense.updatedAt).toISOString() : null,
-        validUntil: updatedLicense.validUntil ? new Date(updatedLicense.validUntil).toISOString() : null
-      };
-      
-      // Enviar notificação em tempo real via WebSocket com a lista completa de status
-      const wsMessage = {
+      // Enviar notificação em tempo real via WebSocket
+      broadcastMessage({
         type: 'STATUS_UPDATE',
         data: {
           licenseId: updatedLicense.id,
           state: stateStatusData.state,
           status: stateStatusData.status,
           updatedAt: new Date().toISOString(),
-          stateStatuses: stateStatusesToSend, // Enviar a lista processada
-          license: sanitizedLicense
+          license: updatedLicense
         }
-      };
-      
-      console.log("Enviando mensagem WebSocket:", JSON.stringify(wsMessage));
-      broadcastMessage(wsMessage);
+      });
       
       console.log(`Status da licença ${licenseId} para o estado ${stateStatusData.state} atualizado para ${stateStatusData.status}. Notificação enviada.`);
       

@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
 import { DimensionField } from "./dimension-field";
 import { 
   insertLicenseRequestSchema, 
@@ -121,13 +120,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     queryKey: ["/api/vehicles"],
   });
   
-  // Verificar se o usuário é admin
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin" || user?.isAdmin;
-  
-  // Fetch transporters - se for admin, busca todos; caso contrário, busca apenas os do usuário
+  // Fetch transporters linked to the user
   const { data: transporters = [], isLoading: isLoadingTransporters } = useQuery<Transporter[]>({
-    queryKey: [isAdmin ? "/api/admin/transporters" : "/api/user/transporters"],
+    queryKey: ["/api/user/transporters"],
   });
 
   // Define filtered vehicle lists based on type
@@ -158,9 +153,8 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       length: draft.length / 100, // Convert from cm to meters for display
       width: draft.width ? draft.width / 100 : undefined, // Convert from cm to meters for display
       height: draft.height ? draft.height / 100 : undefined, // Convert from cm to meters for display
-      // Suporte para ambos os formatos de dados (camelCase e snake_case)
-      additionalPlates: draft.additionalPlates || (draft as any).additional_plates || [],
-      additionalPlatesDocuments: draft.additionalPlatesDocuments || (draft as any).additional_plates_documents || [],
+      additionalPlates: draft.additionalPlates || [],
+      additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
       states: draft.states,
       isDraft: draft.isDraft,
       comments: draft.comments || undefined,

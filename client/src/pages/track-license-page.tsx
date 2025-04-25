@@ -23,7 +23,6 @@ import { useToast } from "@/hooks/use-toast";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { LicenseDetailsCard } from "@/components/licenses/license-details-card";
-import { queryClient } from "@/lib/queryClient";
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,23 +57,6 @@ export default function TrackLicensePage() {
     // Permite uma tentativa adicional em caso de falha
     retry: 1
   });
-  
-  // Buscar rascunhos específicos de renovação
-  const { data: renewalDrafts, isLoading: isLoadingRenewalDrafts } = useQuery<LicenseRequest[]>({
-    queryKey: ["/api/licenses/drafts", { renewalOnly: true }],
-    queryFn: async () => {
-      // Adicionar parâmetro renewalOnly=true para buscar apenas os rascunhos de renovação
-      const res = await fetch("/api/licenses/drafts?renewalOnly=true", {
-        credentials: "include"
-      });
-      if (!res.ok) {
-        throw new Error("Erro ao buscar rascunhos de renovação");
-      }
-      return res.json();
-    },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true
-  });
 
   // Usado para notificar o usuário sobre a disponibilidade de dados em cache
   useEffect(() => {
@@ -86,14 +68,6 @@ export default function TrackLicensePage() {
       });
     }
   }, [licenses, toast]);
-  
-  // Log para debug de rascunhos de renovação
-  useEffect(() => {
-    console.log("Rascunhos de renovação carregados:", renewalDrafts);
-    if (renewalDrafts && renewalDrafts.length > 0) {
-      console.log(`Encontrados ${renewalDrafts.length} rascunhos de renovação`);
-    }
-  }, [renewalDrafts]);
 
   // Otimizado usando useMemo para evitar recálculos desnecessários
   // Criar interface estendida para a licença com estado específico
@@ -126,24 +100,13 @@ export default function TrackLicensePage() {
     uniqueId?: string;
   }
   
-  // Função para atualizar ambas as consultas (licenças e rascunhos de renovação)
-  const handleRefresh = () => {
-    console.log("Atualizando licenças e rascunhos de renovação...");
-    // Atualizar ambas as consultas
-    refetch();
-    // Também atualizar a consulta de rascunhos de renovação usando o queryClient
-    queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts", { renewalOnly: true }] });
-  };
-  
   // Criar uma lista expandida de licenças separadas por estado (sem duplicação quando ordenadas)
   const expandedLicenses = useMemo(() => {
-    // Combinamos licenças regulares e rascunhos de renovação
-    const allLicenses = [...(licenses || []), ...(renewalDrafts || [])];
-    if (allLicenses.length === 0) return [];
+    if (!licenses) return [];
     
     const result: ExtendedLicenseWithId[] = [];
     
-    allLicenses.forEach(license => {
+    licenses.forEach(license => {
       // Para cada estado na licença, crie uma entrada específica
       if (license.states && license.states.length > 0) {
         license.states.forEach((state, index) => {
@@ -187,7 +150,7 @@ export default function TrackLicensePage() {
     });
     
     return result;
-  }, [licenses, renewalDrafts]);
+  }, [licenses]);
   
   // Aplicar filtros à lista expandida
   const filteredLicenses = useMemo(() => {
@@ -346,9 +309,9 @@ export default function TrackLicensePage() {
 
       <LicenseList 
         licenses={sortedLicenses || []} 
-        isLoading={isLoading || isLoadingRenewalDrafts}
+        isLoading={isLoading}
         onView={handleViewLicense}
-        onRefresh={handleRefresh}
+        onRefresh={refetch}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
@@ -370,15 +333,9 @@ export default function TrackLicensePage() {
                 <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
                   <div className="grid grid-cols-1 gap-4">
                     {selectedLicense.states.map(state => {
-                      // Procura o status para este estado em qualquer um dos formatos disponíveis
-                      // Verificamos tanto stateStatuses quanto state_statuses para compatibilidade
-                      const stateStatusesArray = selectedLicense.stateStatuses || (selectedLicense as any).state_statuses || [];
-                      console.log(`Procurando status para ${state} em:`, stateStatusesArray);
-                      const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
-                      
-                      // Status encontrado ou fallback para pending_registration
+                      // Procura o status para este estado
+                      const stateStatusEntry = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
                       const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
-                      console.log(`Status para ${state}: ${stateStatus}`);
                       
                       // Extrair data de validade
                       const stateValidUntil = stateStatusEntry && stateStatusEntry.split(':').length > 2 ? 
@@ -387,14 +344,7 @@ export default function TrackLicensePage() {
                       return (
                         <div key={state} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
                           <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença: {state}</h4>
-                          <StateProgressFlow 
-                            stateStatus={stateStatus} 
-                            size="sm" 
-                            className="py-1" 
-                            licenseId={selectedLicense.id}
-                            state={state}
-                            key={`${state}-${stateStatus}`}
-                          />
+                          <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
                         </div>
                       );
                     })}
@@ -422,10 +372,8 @@ export default function TrackLicensePage() {
                   <h3 className="font-medium text-sm text-gray-500 mb-2">Licenças por Estado</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedLicense.states.map(state => {
-                      // Verificar o status para este estado específico 
-                      // usando tanto stateStatuses quanto state_statuses para compatibilidade
-                      const stateStatusesArray = selectedLicense.stateStatuses || (selectedLicense as any).state_statuses || [];
-                      const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
+                      // Verificar o status para este estado específico
+                      const stateStatusEntry = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
                       const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
                       
                       // Extrair data de validade se existir

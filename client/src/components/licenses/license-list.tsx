@@ -48,15 +48,6 @@ export function LicenseList({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   
-  // Função para obter a URL do arquivo da licença de qualquer estrutura
-  const getLicenseFileUrl = (license: any): string | null => {
-    // Tenta todas as possíveis propriedades onde a URL pode estar
-    return license.licenseFileUrl || 
-           license.license_file_url || 
-           (license as any).license_file_url || 
-           (license.stateFiles && license.stateFiles.length > 0 ? license.stateFiles[0].split(':')[1] : null);
-  };
-  
   // Delete mutation for drafts
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -128,9 +119,6 @@ export function LicenseList({
 
   // Function to render actions based on list type and license status
   const renderActions = (license: LicenseRequest) => {
-    // Obter URL do arquivo uma única vez para evitar múltiplas chamadas à função
-    const licenseFileUrl = getLicenseFileUrl(license);
-    
     if (isDraftList) {
       return (
         <>
@@ -176,19 +164,19 @@ export function LicenseList({
               size="icon"
               asChild
               className="text-green-600 hover:text-green-800 hover:bg-green-50"
-              title={licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
             >
               <a 
-                href={licenseFileUrl || '#'} 
+                href={license.licenseFileUrl || '#'} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={(e) => {
-                  if (!licenseFileUrl) {
+                  if (!license.licenseFileUrl) {
                     e.preventDefault();
                     alert('Arquivo da licença não disponível no momento.');
                   }
                 }}
-                className={!licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
               >
                 <Download className="h-4 w-4" />
               </a>
@@ -246,29 +234,7 @@ export function LicenseList({
               <div key={(license as any).uniqueId || license.id} className="bg-white shadow rounded-lg p-4 border border-gray-100">
                 <div className="flex justify-between mb-2">
                   <div className="font-medium text-lg">{license.requestNumber}</div>
-                  {!isDraftList && (
-                    ((license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) || 
-                      ((license as any).state_statuses && Array.isArray((license as any).state_statuses) && (license as any).state_statuses.length > 0)) && 
-                    license.states && Array.isArray(license.states) && license.states.length > 0 ? (
-                      <div className="flex flex-col gap-1 mt-1">
-                        {license.states.map((state: string) => {
-                          // Procura o status para este estado (verifica tanto stateStatuses quanto state_statuses)
-                          const stateStatusesArray = license.stateStatuses || (license as any).state_statuses || [];
-                          const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
-                          const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
-                          
-                          return (
-                            <div key={`${state}-${stateStatus}`} className="flex items-center">
-                              <span className="text-xs font-medium text-gray-500 min-w-[30px] mr-1">{state}:</span>
-                              <StatusBadge status={stateStatus} showIcon={false} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <StatusBadge status={(license as any).specificStateStatus || license.status} />
-                    )
-                  )}
+                  {!isDraftList && <StatusBadge status={(license as any).specificStateStatus || license.status} />}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -341,8 +307,6 @@ export function LicenseList({
                     (() => {
                       // Verificar tanto o status específico do estado quanto o status geral
                       const stateStatus = (license as any).specificStateStatus || license.status;
-                      // Obter URL do arquivo uma única vez para evitar múltiplas chamadas à função
-                      const licenseFileUrl = getLicenseFileUrl(license);
                       
                       if (stateStatus === "approved") {
                         return (
@@ -352,19 +316,19 @@ export function LicenseList({
                               size="sm"
                               asChild
                               className="text-green-600 border-green-200 mr-1"
-                              title={licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
                             >
                               <a 
-                                href={licenseFileUrl || '#'} 
+                                href={license.licenseFileUrl || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
-                                  if (!licenseFileUrl) {
+                                  if (!license.licenseFileUrl) {
                                     e.preventDefault();
                                     alert('Arquivo da licença não disponível no momento.');
                                   }
                                 }}
-                                className={!licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
                               >
                                 <Download className="h-4 w-4 mr-1" /> Download
                               </a>
@@ -477,19 +441,6 @@ export function LicenseList({
                 <TableHead>Estado</TableHead>
               )}
               
-              {/* Coluna de Transportador */}
-              {onSort ? (
-                <SortableHeader
-                  column="transporterName"
-                  label="Transportador"
-                  currentSort={sortColumn}
-                  currentDirection={sortDirection}
-                  onSort={onSort}
-                />
-              ) : (
-                <TableHead>Transportador</TableHead>
-              )}
-              
               {onSort ? (
                 <SortableHeader
                   column={isDraftList ? "updatedAt" : "createdAt"}
@@ -539,10 +490,10 @@ export function LicenseList({
               <TableRow>
                 <TableCell 
                   colSpan={isDraftList 
-                    ? 7 // Rascunhos (agora com coluna de transportador)
+                    ? 6 // Rascunhos
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 9 // Licenças emitidas (com coluna de validade e transportador)
-                      : 8 // Outras páginas de licenças (com transportador, sem validade)
+                      ? 8 // Licenças emitidas (com coluna de validade)
+                      : 7 // Outras páginas de licenças (sem coluna de validade)
                   } 
                   className="text-center py-10">
                   Carregando...
@@ -551,28 +502,16 @@ export function LicenseList({
             ) : licenses.length > 0 ? (
               licenses.map((license) => (
                 <TableRow key={(license as any).uniqueId || license.id}>
-                  <TableCell className="font-medium">
-                    {/* Renderizar o Nº de Solicitação - pode vir como request_number ou requestNumber dependendo da API */}
-                    {license.requestNumber || (license as any).request_number || "N/A"}
-                  </TableCell>
+                  <TableCell className="font-medium">{license.requestNumber}</TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
-                  <TableCell>
-                    {/* Renderizar a placa do veículo principal - pode vir como mainVehiclePlate ou main_vehicle_plate */}
-                    {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}
-                  </TableCell>
+                  <TableCell>{license.mainVehiclePlate}</TableCell>
                   <TableCell>
                     {(license as any).specificState || license.states.join(", ")}
                   </TableCell>
                   <TableCell>
-                    {/* Exibir nome do transportador */}
-                    {(license as any).transporterName || (license.transporterId ? `ID: ${license.transporterId}` : "-")}
-                  </TableCell>
-                  <TableCell>
                     {isDraftList 
-                      ? ((license.updatedAt || (license as any).updated_at) ? 
-                         format(new Date(license.updatedAt || (license as any).updated_at), "dd/MM/yyyy HH:mm") : "-")
-                      : ((license.createdAt || (license as any).created_at) ? 
-                         format(new Date(license.createdAt || (license as any).created_at), "dd/MM/yyyy") : "-")}
+                      ? (license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy HH:mm"))
+                      : (license.createdAt && format(new Date(license.createdAt), "dd/MM/yyyy"))}
                   </TableCell>
                   {/* Coluna de validade apenas na página de licenças emitidas */}
                   {!isDraftList && window.location.pathname.includes('/licenses/issued') && (
@@ -591,28 +530,7 @@ export function LicenseList({
                   {/* Coluna de status sempre presente para licenças não-rascunho */}
                   {!isDraftList && (
                     <TableCell>
-                      {/* Exibir status específico por estado de forma compacta */}
-                      {((license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) || 
-                        ((license as any).state_statuses && Array.isArray((license as any).state_statuses) && (license as any).state_statuses.length > 0)) && 
-                       license.states && Array.isArray(license.states) && license.states.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {license.states.map((state: string) => {
-                            // Procura o status para este estado (verifica tanto stateStatuses quanto state_statuses)
-                            const stateStatusesArray = license.stateStatuses || (license as any).state_statuses || [];
-                            const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
-                            const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
-                            
-                            return (
-                              <div key={`${state}-${stateStatus}`} className="flex items-center">
-                                <span className="text-xs font-medium text-gray-500 min-w-[30px] mr-1">{state}:</span>
-                                <StatusBadge status={stateStatus} showIcon={false} />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <StatusBadge status={(license as any).specificStateStatus || license.status} />
-                      )}
+                      <StatusBadge status={(license as any).specificStateStatus || license.status} />
                     </TableCell>
                   )}
                   <TableCell className="text-right">
@@ -624,10 +542,10 @@ export function LicenseList({
               <TableRow>
                 <TableCell 
                   colSpan={isDraftList 
-                    ? 7 // Rascunhos (agora com coluna de transportador)
+                    ? 6 // Rascunhos
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 9 // Licenças emitidas (com coluna de validade e transportador)
-                      : 8 // Outras páginas de licenças (com transportador, sem validade)
+                      ? 8 // Licenças emitidas (com coluna de validade)
+                      : 7 // Outras páginas de licenças (sem coluna de validade)
                   } 
                   className="text-center py-10 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />

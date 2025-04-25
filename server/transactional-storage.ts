@@ -630,84 +630,22 @@ export class TransactionalStorage implements IStorage {
       throw new Error("Pedido de licença não encontrado");
     }
     
-    // Buscar novamente do banco para garantir dados mais recentes
-    const refreshedLicense = await db
-      .select()
-      .from(licenseRequests)
-      .where(eq(licenseRequests.id, data.licenseId))
-      .limit(1);
+    // Preparar os dados de atualização
+    let stateStatuses = [...(license.stateStatuses || [])];
     
-    const currentLicense = refreshedLicense.length > 0 ? refreshedLicense[0] : license;
-    
-    console.log("=== ATUALIZANDO ESTADO ===");
-    console.log(`Licença ID: ${data.licenseId}, Estado: ${data.state}, Novo Status: ${data.status}`);
-    console.log("Estado atual dos StateStatuses:", currentLicense.stateStatuses);
-    
-    // ========= INÍCIO DO FIX COMPLETO =========
-    console.log("==== CORREÇÃO CRÍTICA: PERSISTÊNCIA DE STATUS DE ESTADOS ====");
-    console.log("Estado a ser atualizado:", data.state);
-    console.log("Novo status:", data.status);
-    
-    // Garantir que temos dados consistentes
-    let currentStateStatuses: string[] = [];
-    
-    // Verificar e processar o array de estados existentes
-    if (currentLicense.stateStatuses && Array.isArray(currentLicense.stateStatuses)) {
-      // Filtrar entradas vazias ou null
-      currentStateStatuses = currentLicense.stateStatuses.filter(entry => 
-        entry !== null && entry !== undefined && entry !== ""
-      );
-      
-      console.log("Array original de status de estados:", JSON.stringify(currentStateStatuses));
-    } else {
-      console.log("Nenhum status de estado encontrado na licença. Criando um array vazio.");
-      // Se não existir array de status, criar um novo
-      currentStateStatuses = [];
-    }
-    
-    // Construir o novo status para o estado específico
+    // Incluir data de validade no status se fornecida
     let newStateStatus = `${data.state}:${data.status}`;
     if (data.validUntil) {
       newStateStatus = `${data.state}:${data.status}:${data.validUntil}`;
     }
-    console.log("Novo status a ser aplicado:", newStateStatus);
     
-    // Mapear todos os estados da licença e seus status atuais
-    const allStates = license.states || [];
-    const stateStatusMap = new Map();
-    
-    // Preencher o mapa com status existentes
-    for (const stateStatus of currentStateStatuses) {
-      if (typeof stateStatus === 'string') {
-        const [state, ...rest] = stateStatus.split(':');
-        if (state) {
-          stateStatusMap.set(state, stateStatus);
-        }
-      }
+    // Verificar se o estado já existe na lista
+    const existingIndex = stateStatuses.findIndex(s => s.startsWith(`${data.state}:`));
+    if (existingIndex >= 0) {
+      stateStatuses[existingIndex] = newStateStatus;
+    } else {
+      stateStatuses.push(newStateStatus);
     }
-    
-    // Adicionar ou atualizar o status do estado específico
-    stateStatusMap.set(data.state, newStateStatus);
-    
-    // Adicionar estados faltantes com status padrão "pending_registration"
-    for (const state of allStates) {
-      if (!stateStatusMap.has(state)) {
-        stateStatusMap.set(state, `${state}:pending_registration`);
-      }
-    }
-    
-    // Converter de volta para array
-    const updatedStateStatuses = Array.from(stateStatusMap.values());
-    
-    console.log("Status de estados após processamento:", JSON.stringify(updatedStateStatuses));
-    console.log("Total de estados processados:", updatedStateStatuses.length);
-    console.log("==== FIM DO DIAGNÓSTICO ====");
-    // ========= FIM DO FIX COMPLETO =========
-    
-    // Usar o resultado do processamento acima para a atualização
-    const stateStatuses = updatedStateStatuses;
-    
-    console.log("StateStatuses após processamento:", stateStatuses);
     
     // Atualizar arquivo do estado se fornecido
     let stateFiles = [...(license.stateFiles || [])];
@@ -770,12 +708,6 @@ export class TransactionalStorage implements IStorage {
     }
     
     // Executar a atualização com todos os campos corretos
-    console.log("====== ANTES DE ATUALIZAR BANCO DE DADOS ======");
-    console.log("Valores que serão salvos:");
-    console.log("- stateStatuses:", JSON.stringify(stateStatuses));
-    console.log("- licenceId:", data.licenseId);
-    console.log("- overallStatus:", overallStatus);
-    
     const [updatedLicense] = await db
       .update(licenseRequests)
       .set({
@@ -790,36 +722,6 @@ export class TransactionalStorage implements IStorage {
       .where(eq(licenseRequests.id, data.licenseId))
       .returning();
     
-    // Verificar se os dados foram realmente salvos conforme esperado
-    console.log("====== APÓS ATUALIZAÇÃO NO BANCO ======");
-    console.log("Licença atualizada recebida:", updatedLicense.id);
-    console.log("stateStatuses no banco após atualização:", JSON.stringify(updatedLicense.stateStatuses));
-    
-    // Recuperar a licença do banco novamente para confirmar a persistência
-    const verificationQuery = await db
-      .select()
-      .from(licenseRequests)
-      .where(eq(licenseRequests.id, data.licenseId))
-      .limit(1);
-    
-    if (verificationQuery.length > 0) {
-      const verifiedLicense = verificationQuery[0];
-      console.log("Verificação de persistência - stateStatuses:", JSON.stringify(verifiedLicense.stateStatuses));
-      
-      // Se dados divergirem, fazer nova atualização
-      if (JSON.stringify(verifiedLicense.stateStatuses) !== JSON.stringify(stateStatuses)) {
-        console.log("ALERTA: Dados divergem após atualização. Fazendo nova atualização forçada.");
-        await db
-          .update(licenseRequests)
-          .set({
-            stateStatuses: stateStatuses,
-          })
-          .where(eq(licenseRequests.id, data.licenseId));
-          
-        console.log("Segunda atualização concluída.");
-      }
-    }
-    
     return updatedLicense;
   }
   
@@ -829,18 +731,6 @@ export class TransactionalStorage implements IStorage {
     if (!license) {
       throw new Error("Pedido de licença não encontrado");
     }
-    
-    // Buscar do banco para garantir dados mais recentes
-    const refreshedLicense = await db
-      .select()
-      .from(licenseRequests)
-      .where(eq(licenseRequests.id, id))
-      .limit(1);
-    
-    const currentLicense = refreshedLicense.length > 0 ? refreshedLicense[0] : license;
-    
-    console.log("=== ATUALIZANDO STATUS GERAL DA LICENÇA ===");
-    console.log(`Licença ID: ${id}, Novo Status: ${statusData.status}`);
     
     // Prepare os dados de atualização
     const updateData: Partial<LicenseRequest> = {
@@ -863,69 +753,21 @@ export class TransactionalStorage implements IStorage {
     
     // Atualizar status de um estado específico, se fornecido
     if (statusData.state && statusData.stateStatus) {
-      console.log(`Atualizando estado específico: ${statusData.state} para ${statusData.stateStatus}`);
+      // Incluir data de validade no status se disponível
+      let newStateStatus = `${statusData.state}:${statusData.stateStatus}`;
+      if (statusData.validUntil) {
+        newStateStatus = `${statusData.state}:${statusData.stateStatus}:${statusData.validUntil}`;
+      }
       
-      // Esse código foi substituído pelo fix abaixo
+      let stateStatuses = [...(license.stateStatuses || [])];
       
-      // ========= INÍCIO DO FIX PARA updateLicenseStatus =========
-      console.log("==== CORREÇÃO CRÍTICA: PERSISTÊNCIA DE STATUS DE ESTADOS EM updateLicenseStatus ====");
-      console.log("Estado a ser atualizado:", statusData.state);
-      console.log("Novo status:", statusData.stateStatus);
-      
-      // Garantir que temos dados consistentes
-      let currentStateStatuses: string[] = [];
-      
-      // Verificar e processar o array de estados existentes
-      if (currentLicense.stateStatuses && Array.isArray(currentLicense.stateStatuses)) {
-        // Filtrar entradas vazias ou null
-        currentStateStatuses = currentLicense.stateStatuses.filter(entry => 
-          entry !== null && entry !== undefined && entry !== ""
-        );
-        
-        console.log("Array original de status de estados:", JSON.stringify(currentStateStatuses));
+      // Verificar se o estado já existe na lista
+      const existingIndex = stateStatuses.findIndex(s => s.startsWith(`${statusData.state}:`));
+      if (existingIndex >= 0) {
+        stateStatuses[existingIndex] = newStateStatus;
       } else {
-        console.log("Nenhum status de estado encontrado na licença. Criando um array vazio.");
-        // Se não existir array de status, criar um novo
-        currentStateStatuses = [];
+        stateStatuses.push(newStateStatus);
       }
-      
-      // Construir o novo status para o estado específico
-      const statusStateString = `${statusData.state}:${statusData.stateStatus}${statusData.validUntil ? `:${statusData.validUntil}` : ''}`;
-      console.log("Novo status a ser aplicado:", statusStateString);
-      
-      // Mapear todos os estados da licença e seus status atuais
-      const allStates = currentLicense.states || [];
-      const stateStatusMap = new Map();
-      
-      // Preencher o mapa com status existentes
-      for (const stateStatus of currentStateStatuses) {
-        if (typeof stateStatus === 'string') {
-          const [state, ...rest] = stateStatus.split(':');
-          if (state) {
-            stateStatusMap.set(state, stateStatus);
-          }
-        }
-      }
-      
-      // Adicionar ou atualizar o status do estado específico
-      stateStatusMap.set(statusData.state, statusStateString);
-      
-      // Adicionar estados faltantes com status padrão "pending_registration"
-      for (const state of allStates) {
-        if (!stateStatusMap.has(state)) {
-          stateStatusMap.set(state, `${state}:pending_registration`);
-        }
-      }
-      
-      // Converter de volta para array
-      const stateStatuses = Array.from(stateStatusMap.values());
-      
-      console.log("Status de estados após processamento:", JSON.stringify(stateStatuses));
-      console.log("Total de estados processados:", stateStatuses.length);
-      console.log("==== FIM DA CORREÇÃO ====");
-      // ========= FIM DO FIX PARA updateLicenseStatus =========
-      
-      console.log("StateStatuses após processamento:", stateStatuses);
       
       updateData.stateStatuses = stateStatuses;
       
