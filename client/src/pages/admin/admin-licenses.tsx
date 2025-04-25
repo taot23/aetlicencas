@@ -719,6 +719,7 @@ export default function AdminLicensesPage() {
                               )}
                             </div>
                           </TableHead>
+                          <TableHead>Transportador</TableHead>
                           <TableHead>Estados</TableHead>
                           <TableHead
                             className="cursor-pointer hover:bg-gray-50"
