@@ -1046,12 +1046,17 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       </div>
       
       {/* Placas Adicionais - com suporte para ambos os formatos (additionalPlates e additional_plates) */}
-      {(license.additionalPlates || (license as any).additional_plates) && (license.additionalPlates?.length > 0 || (license as any).additional_plates?.length > 0) && (
+      {/* Verificar ambos os formatos para placas adicionais (camelCase e snake_case) */}
+      {(((license.additionalPlates && license.additionalPlates.length > 0) || 
+         ((license as any).additional_plates && (license as any).additional_plates.length > 0))) && (
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Placas Adicionais</h3>
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {(license.additionalPlates || (license as any).additional_plates || []).map((plate, index) => {
+              {/* Suporte para ambos os formatos de dados */}
+              {((Array.isArray(license.additionalPlates) ? license.additionalPlates : []) || 
+                (Array.isArray((license as any).additional_plates) ? (license as any).additional_plates : [])
+              ).map((plate: string, index: number) => {
                 // Buscar o veículo pelo número da placa
                 const vehicle = Object.values(vehicles).find(v => v.plate === plate);
                 const vehicleId = vehicle?.id;
