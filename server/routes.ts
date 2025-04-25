@@ -1557,21 +1557,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requestNumber = `AET-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       // Criar um novo rascunho baseado na licença original, mas apenas com o estado escolhido
-      const draftData = {
-        transporterId: originalLicense.transporterId,
+      // Aqui, precisamos garantir que os campos opcionais sejam tratados corretamente
+      const draftData: any = {
+        transporterId: originalLicense.transporterId || null,
         mainVehiclePlate: originalLicense.mainVehiclePlate,
-        tractorUnitId: originalLicense.tractorUnitId,
-        firstTrailerId: originalLicense.firstTrailerId,
-        dollyId: originalLicense.dollyId,
-        secondTrailerId: originalLicense.secondTrailerId,
-        flatbedId: originalLicense.flatbedId,
-        length: originalLicense.length,
-        width: originalLicense.width,
-        height: originalLicense.height,
+        length: originalLicense.length || 0,
         type: originalLicense.type,
-        cargoType: originalLicense.cargoType,
-        additionalPlates: originalLicense.additionalPlates,
-        additionalPlatesDocuments: originalLicense.additionalPlatesDocuments,
+        // Valores padrão para campos opcionais
+        width: originalLicense.width || (originalLicense.type === "flatbed" ? 320 : 260),
+        height: originalLicense.height || (originalLicense.type === "flatbed" ? 495 : 440),
+        cargoType: originalLicense.cargoType || (originalLicense.type === "flatbed" ? "indivisible_cargo" : "dry_cargo"),
         // Incluir apenas o estado específico sendo renovado
         states: [state],
         requestNumber,
@@ -1579,8 +1574,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         comments: `Renovação da licença ${originalLicense.requestNumber} para o estado ${state}`,
       };
       
+      // Copiar campos de referência de veículos somente se existirem
+      if (originalLicense.tractorUnitId) draftData.tractorUnitId = originalLicense.tractorUnitId;
+      if (originalLicense.firstTrailerId) draftData.firstTrailerId = originalLicense.firstTrailerId;
+      if (originalLicense.dollyId) draftData.dollyId = originalLicense.dollyId;
+      if (originalLicense.secondTrailerId) draftData.secondTrailerId = originalLicense.secondTrailerId; 
+      if (originalLicense.flatbedId) draftData.flatbedId = originalLicense.flatbedId;
+      
+      // Garantir que arrays existam ou sejam vazios
+      draftData.additionalPlates = originalLicense.additionalPlates || [];
+      draftData.additionalPlatesDocuments = originalLicense.additionalPlatesDocuments || [];
+      
+      // Logar os dados que serão enviados para criar o rascunho
+      console.log("[RENOVAÇÃO] Criando rascunho com os seguintes dados:", JSON.stringify(draftData, null, 2));
+      
       // Criar o novo rascunho
       const newDraft = await storage.createLicenseDraft(userId, draftData);
+      
+      // Logar o rascunho criado
+      console.log("[RENOVAÇÃO] Rascunho criado com sucesso:", JSON.stringify(newDraft, null, 2));
       
       // Responder com o novo rascunho criado
       res.status(201).json({
@@ -1589,7 +1601,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error renewing license:', error);
-      res.status(500).json({ message: 'Erro ao renovar licença' });
+      
+      // Logar os detalhes para diagnóstico
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      
+      // Verificar se é um erro conhecido e fornecer mensagem mais específica
+      const errorMessage = error instanceof Error 
+        ? `Erro ao renovar licença: ${error.message}`
+        : 'Erro ao renovar licença';
+      
+      res.status(500).json({ message: errorMessage });
     }
   });
 
