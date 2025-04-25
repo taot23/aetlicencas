@@ -461,7 +461,91 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Seção de Status por Estado removida conforme solicitado */}
+      {/* Status por Estado com Números AET Específicos */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Status por Estado</h3>
+        <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Licença</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Validade</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {license.states.map((state, idx) => {
+                  // Encontrar status para este estado
+                  const stateStatusEntry = stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                  let status = "pending_registration";
+                  let validUntil = null;
+                  
+                  if (stateStatusEntry) {
+                    const parts = stateStatusEntry.split(':');
+                    status = parts[1];
+                    validUntil = parts.length > 2 ? parts[2] : null;
+                  }
+                  
+                  // Encontrar arquivo para este estado
+                  const stateFileEntry = license.stateFiles?.find(entry => entry.startsWith(`${state}:`));
+                  const stateFileUrl = stateFileEntry ? stateFileEntry.split(':')[1] : null;
+                  
+                  // Encontrar número AET para este estado
+                  const stateAETEntry = license.stateAETNumbers?.find(entry => entry.startsWith(`${state}:`));
+                  const stateAETNumber = stateAETEntry ? stateAETEntry.split(':')[1] : null;
+                  
+                  return (
+                    <tr key={idx}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant="outline" className="px-2.5 py-0.5">
+                          {state}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge status={status} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {stateAETNumber ? (
+                          <span className="font-semibold text-blue-700">{stateAETNumber}</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {validUntil ? (
+                          <span className="font-medium">
+                            {new Date(validUntil).toLocaleDateString('pt-BR')}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {stateFileUrl ? (
+                          <a 
+                            href={stateFileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                          >
+                            <FileDown className="h-4 w-4 mr-1" />
+                            Baixar
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       
       {/* Dados do Conjunto */}
       <div className="space-y-2">

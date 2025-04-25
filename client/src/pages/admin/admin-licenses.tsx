@@ -1241,7 +1241,13 @@ export default function AdminLicensesPage() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={updateStateStatusMutation.isPending}
+                  disabled={
+                    updateStateStatusMutation.isPending || 
+                    ((stateStatusForm.watch("status") === "under_review" || 
+                      stateStatusForm.watch("status") === "pending_approval" || 
+                      stateStatusForm.watch("status") === "approved") && 
+                     !stateStatusForm.watch("aetNumber"))
+                  }
                   className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
                 >
                   {updateStateStatusMutation.isPending && (
