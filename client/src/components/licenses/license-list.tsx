@@ -547,8 +547,10 @@ export function LicenseList({
                   </TableCell>
                   <TableCell>
                     {isDraftList 
-                      ? (license.updatedAt && format(new Date(license.updatedAt), "dd/MM/yyyy HH:mm"))
-                      : (license.createdAt && format(new Date(license.createdAt), "dd/MM/yyyy"))}
+                      ? ((license.updatedAt || (license as any).updated_at) ? 
+                         format(new Date(license.updatedAt || (license as any).updated_at), "dd/MM/yyyy HH:mm") : "-")
+                      : ((license.createdAt || (license as any).created_at) ? 
+                         format(new Date(license.createdAt || (license as any).created_at), "dd/MM/yyyy") : "-")}
                   </TableCell>
                   {/* Coluna de validade apenas na página de licenças emitidas */}
                   {!isDraftList && window.location.pathname.includes('/licenses/issued') && (
