@@ -503,8 +503,9 @@ export default function IssuedLicensesPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
+                          {/* Botão para baixar arquivo específico do estado */}
                           {license.stateFileUrl && (
-                            <Button variant="ghost" size="icon" asChild className="mr-2 flex items-center justify-center">
+                            <Button variant="ghost" size="icon" asChild className="mr-1 flex items-center justify-center" title="Baixar arquivo do estado">
                               <a 
                                 href={license.stateFileUrl || '#'} 
                                 target="_blank" 
@@ -520,10 +521,32 @@ export default function IssuedLicensesPage() {
                               </a>
                             </Button>
                           )}
+                          
+                          {/* Botão para baixar arquivo da licença completa */}
+                          {license.licenseFileUrl && (
+                            <Button variant="ghost" size="icon" asChild className="mr-1 flex items-center justify-center" title="Baixar licença completa">
+                              <a 
+                                href={license.licenseFileUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  if (!license.licenseFileUrl) {
+                                    e.preventDefault();
+                                    alert('Arquivo não disponível no momento.');
+                                  }
+                                }}
+                              >
+                                <FileDown className="h-4 w-4 text-green-600" />
+                              </a>
+                            </Button>
+                          )}
+                          
+                          {/* Botão para visualizar detalhes */}
                           <Button 
                             variant="ghost" 
                             size="icon"
                             className="flex items-center justify-center"
+                            title="Ver detalhes"
                             onClick={() => {
                               // Buscar a licença original
                               const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
@@ -579,8 +602,9 @@ export default function IssuedLicensesPage() {
                         <span className="font-medium text-gray-900">{license.requestNumber}</span>
                       </div>
                       <div className="flex space-x-1">
+                        {/* Botão para baixar arquivo específico do estado */}
                         {license.stateFileUrl && (
-                          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 flex items-center justify-center" aria-label="Download">
+                          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 flex items-center justify-center" aria-label="Download do estado" title="Baixar arquivo do estado">
                             <a 
                               href={license.stateFileUrl || '#'} 
                               target="_blank" 
@@ -596,11 +620,33 @@ export default function IssuedLicensesPage() {
                             </a>
                           </Button>
                         )}
+                        
+                        {/* Botão para baixar arquivo da licença completa */}
+                        {license.licenseFileUrl && (
+                          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 flex items-center justify-center" aria-label="Download da licença" title="Baixar licença completa">
+                            <a 
+                              href={license.licenseFileUrl || '#'} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                if (!license.licenseFileUrl) {
+                                  e.preventDefault();
+                                  alert('Arquivo não disponível no momento.');
+                                }
+                              }}
+                            >
+                              <FileDown className="h-4 w-4 text-green-600" />
+                            </a>
+                          </Button>
+                        )}
+                        
+                        {/* Botão para visualizar detalhes */}
                         <Button 
                           variant="ghost" 
                           size="sm"
                           className="h-8 w-8 p-0 flex items-center justify-center"
                           aria-label="Ver detalhes"
+                          title="Ver detalhes"
                           onClick={() => {
                             // Buscar a licença original
                             const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
