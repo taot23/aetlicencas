@@ -478,6 +478,13 @@ export default function IssuedLicensesPage() {
                     currentDirection={sortDirection}
                     onSort={handleSort}
                   />
+                  <SortableHeader
+                    column="transporterName"
+                    label="Transportador"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={handleSort}
+                  />
                   <TableHead>Nº Licença</TableHead>
                   <SortableHeader
                     column="emissionDate"
@@ -524,6 +531,11 @@ export default function IssuedLicensesPage() {
                         </TableCell>
                         <TableCell className="font-medium">{license.requestNumber}</TableCell>
                         <TableCell>{license.mainVehiclePlate}</TableCell>
+                        <TableCell>
+                          {(license as any).transporterName || (
+                            <span className="text-gray-500">Não informado</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {license.aetNumber ? (
                             <span className="font-semibold text-blue-700">{license.aetNumber}</span>
@@ -752,6 +764,14 @@ export default function IssuedLicensesPage() {
                       <div>
                         <span className="text-xs text-gray-500">Placa:</span>
                         <div>{license.mainVehiclePlate}</div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500">Transportador:</span>
+                        <div>
+                          {(license as any).transporterName || (
+                            <span className="text-gray-500">Não informado</span>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <span className="text-xs text-gray-500">Emissão:</span>
