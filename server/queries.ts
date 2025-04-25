@@ -53,71 +53,68 @@ export async function getDashboardStatsCombined() {
  * Obtém licenças com informações do transportador em uma única consulta
  */
 export async function getLicensesWithTransporters(filters: LicenseFilters = {}) {
-  const query = sql`
+  // Construindo a query de forma diferente para evitar problemas com os parâmetros
+  let queryStr = `
     SELECT l.*, t.name as transporter_name, t.document_number as transporter_document, u.email as user_email
-    FROM ${licenseRequests} l
-    LEFT JOIN ${transporters} t ON l.transporter_id = t.id
-    LEFT JOIN ${users} u ON l.user_id = u.id
+    FROM "license_requests" l
+    LEFT JOIN "transporters" t ON l.transporter_id = t.id
+    LEFT JOIN "users" u ON l.user_id = u.id
     WHERE 1=1
   `;
   
-  const conditions = [];
   const params = [];
+  let paramCount = 1;
   
   if (filters.userId) {
-    conditions.push(`l.user_id = $${params.length + 1}`);
+    queryStr += ` AND l.user_id = $${paramCount++}`;
     params.push(filters.userId);
   }
   
   if (filters.transporterId) {
-    conditions.push(`l.transporter_id = $${params.length + 1}`);
+    queryStr += ` AND l.transporter_id = $${paramCount++}`;
     params.push(filters.transporterId);
   }
   
   if (filters.status) {
-    conditions.push(`l.status = $${params.length + 1}`);
+    queryStr += ` AND l.status = $${paramCount++}`;
     params.push(filters.status);
   }
   
   if (filters.isDraft !== undefined) {
-    conditions.push(`l.is_draft = $${params.length + 1}`);
+    queryStr += ` AND l.is_draft = $${paramCount++}`;
     params.push(filters.isDraft);
   }
   
   if (filters.mainVehiclePlate) {
-    conditions.push(`l.main_vehicle_plate ILIKE $${params.length + 1}`);
+    queryStr += ` AND l.main_vehicle_plate ILIKE $${paramCount++}`;
     params.push(`%${filters.mainVehiclePlate}%`);
   }
   
   if (filters.startDate) {
-    conditions.push(`l.created_at >= $${params.length + 1}`);
+    queryStr += ` AND l.created_at >= $${paramCount++}`;
     params.push(filters.startDate);
   }
   
   if (filters.endDate) {
-    conditions.push(`l.created_at <= $${params.length + 1}`);
+    queryStr += ` AND l.created_at <= $${paramCount++}`;
     params.push(filters.endDate);
   }
   
-  // Se há condições, adicione-as à query
-  let fullQuery = query;
-  if (conditions.length > 0) {
-    fullQuery = sql`${query} AND ${sql.raw(conditions.join(' AND '))}`;
-  }
-  
   // Adicione ordenação
-  fullQuery = sql`${fullQuery} ORDER BY l.created_at DESC`;
+  queryStr += ` ORDER BY l.created_at DESC`;
   
   // Adicione limit e offset se fornecidos
   if (filters.limit) {
-    fullQuery = sql`${fullQuery} LIMIT ${filters.limit}`;
+    queryStr += ` LIMIT $${paramCount++}`;
+    params.push(filters.limit);
     
     if (filters.offset) {
-      fullQuery = sql`${fullQuery} OFFSET ${filters.offset}`;
+      queryStr += ` OFFSET $${paramCount++}`;
+      params.push(filters.offset);
     }
   }
   
-  return await db.execute(fullQuery);
+  return await db.execute(sql.raw(queryStr), params);
 }
 
 /**

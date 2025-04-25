@@ -515,7 +515,10 @@ export function LicenseList({
             ) : licenses.length > 0 ? (
               licenses.map((license) => (
                 <TableRow key={(license as any).uniqueId || license.id}>
-                  <TableCell className="font-medium">{license.requestNumber}</TableCell>
+                  <TableCell className="font-medium">
+                    {/* Renderizar o Nº de Solicitação - pode vir como request_number ou requestNumber dependendo da API */}
+                    {license.requestNumber || (license as any).request_number || "N/A"}
+                  </TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
                   <TableCell>{license.mainVehiclePlate}</TableCell>
                   <TableCell>
