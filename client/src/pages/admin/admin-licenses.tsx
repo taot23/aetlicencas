@@ -774,11 +774,21 @@ export default function AdminLicensesPage() {
                                     // Encontrar o status atual deste estado
                                     let stateStatus = "pending";
                                     if (license.stateStatuses && license.stateStatuses.length > 0) {
-                                      const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
-                                      if (stateStatusEntry) {
-                                        const [_, status] = stateStatusEntry.split(':');
-                                        if (status) {
-                                          stateStatus = status;
+                                      // Verificar diferentes formatos do array stateStatuses
+                                      let stateStatusArray = license.stateStatuses;
+                                      
+                                      // Procurar pelo estado atual nas entradas de status
+                                      const stateStatusEntry = stateStatusArray.find(entry => {
+                                        if (typeof entry === 'string') {
+                                          return entry.startsWith(`${state}:`);
+                                        }
+                                        return false;
+                                      });
+                                      
+                                      if (stateStatusEntry && typeof stateStatusEntry === 'string') {
+                                        const parts = stateStatusEntry.split(':');
+                                        if (parts.length >= 2) {
+                                          stateStatus = parts[1];
                                         }
                                       }
                                     }
@@ -794,6 +804,8 @@ export default function AdminLicensesPage() {
                                     } else if (stateStatus === "under_review") {
                                       badgeClass = "bg-blue-50 border-blue-200 text-blue-800";
                                     }
+                                    
+                                    console.log(`Estado ${state}, status: ${stateStatus}, classe: ${badgeClass}`);
                                     
                                     return (
                                       <Badge key={idx} variant="outline" className={`text-xs ${badgeClass}`}>
@@ -861,11 +873,21 @@ export default function AdminLicensesPage() {
                                       // Encontrar o status atual deste estado
                                       let stateStatus = "pending";
                                       if (license.stateStatuses && license.stateStatuses.length > 0) {
-                                        const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
-                                        if (stateStatusEntry) {
-                                          const [_, status] = stateStatusEntry.split(':');
-                                          if (status) {
-                                            stateStatus = status;
+                                        // Verificar diferentes formatos do array stateStatuses
+                                        let stateStatusArray = license.stateStatuses;
+                                        
+                                        // Procurar pelo estado atual nas entradas de status
+                                        const stateStatusEntry = stateStatusArray.find(entry => {
+                                          if (typeof entry === 'string') {
+                                            return entry.startsWith(`${state}:`);
+                                          }
+                                          return false;
+                                        });
+                                        
+                                        if (stateStatusEntry && typeof stateStatusEntry === 'string') {
+                                          const parts = stateStatusEntry.split(':');
+                                          if (parts.length >= 2) {
+                                            stateStatus = parts[1];
                                           }
                                         }
                                       }
