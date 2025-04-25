@@ -1089,19 +1089,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let licensesResult;
+      let result;
       
       // Se for usuário administrativo, buscar todas as licenças
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças.`);
-        licensesResult = await getLicensesWithTransporters();
+        result = await getLicensesWithTransporters();
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
-        licensesResult = await getLicensesWithTransporters({ userId: user.id });
+        result = await getLicensesWithTransporters({ userId: user.id });
+      }
+      
+      console.log("Estrutura do resultado:", Object.keys(result));
+      
+      // Verificar se temos resultados
+      if (!result || !result.rows || !Array.isArray(result.rows)) {
+        console.log("Erro na estrutura do resultado:", result);
+        return res.json([]);
+      }
+      
+      console.log(`Total de licenças encontradas: ${result.rows.length}`);
+      if (result.rows.length > 0) {
+        console.log("Exemplo de licença:", JSON.stringify(result.rows[0], null, 2));
       }
       
       // Transformar os resultados para incluir o nome do transportador
-      const licenses = licensesResult.rows.map(license => ({
+      const licenses = result.rows.map(license => ({
         ...license,
         transporterName: license.transporter_name,
         transporterDocument: license.transporter_document,
@@ -1453,22 +1466,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let licensesResult;
+      let result;
       
       // Se for usuário administrativo, buscar todas as licenças emitidas
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
-        licensesResult = await getLicensesWithTransporters({ status: 'approved' });
+        result = await getLicensesWithTransporters({ status: 'approved' });
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
-        licensesResult = await getLicensesWithTransporters({ userId: user.id, status: 'approved' });
+        result = await getLicensesWithTransporters({ userId: user.id, status: 'approved' });
       }
       
-      // Verificar formato dos resultados
-      console.log("Licença exemplo recuperada com transportador:", licensesResult.rows && licensesResult.rows.length > 0 ? JSON.stringify(licensesResult.rows[0], null, 2) : "Nenhuma licença encontrada");
+      console.log("Estrutura do resultado:", Object.keys(result));
+      
+      // Verificar se temos resultados
+      if (!result || !result.rows || !Array.isArray(result.rows)) {
+        console.log("Erro na estrutura do resultado:", result);
+        return res.json([]);
+      }
+      
+      console.log(`Total de licenças emitidas encontradas: ${result.rows.length}`);
+      if (result.rows.length > 0) {
+        console.log("Exemplo de licença emitida:", JSON.stringify(result.rows[0], null, 2));
+      }
       
       // Transformar os resultados para incluir o nome do transportador
-      const issuedLicenses = licensesResult.rows.map(license => ({
+      const issuedLicenses = result.rows.map(license => ({
         ...license,
         transporterName: license.transporter_name,
         transporterDocument: license.transporter_document,
@@ -1490,13 +1513,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Executando consulta com filtros aplicados");
       
       // Usar a função que inclui informações do transportador
-      const licensesResult = await getLicensesWithTransporters();
+      const result = await getLicensesWithTransporters();
       
-      // Verificar formato dos resultados
-      console.log("Licença exemplo recuperada com transportador:", licensesResult.rows && licensesResult.rows.length > 0 ? JSON.stringify(licensesResult.rows[0], null, 2) : "Nenhuma licença encontrada");
+      console.log("Estrutura do resultado:", Object.keys(result));
+      
+      // Verificar se temos resultados
+      if (!result || !result.rows || !Array.isArray(result.rows)) {
+        console.log("Erro na estrutura do resultado:", result);
+        return res.json([]);
+      }
+      
+      console.log(`Total de licenças encontradas: ${result.rows.length}`);
+      if (result.rows.length > 0) {
+        console.log("Exemplo de licença:", JSON.stringify(result.rows[0], null, 2));
+      }
       
       // Transformar os resultados para incluir o nome do transportador
-      const licenses = licensesResult.rows.map(license => ({
+      const licenses = result.rows.map(license => ({
         ...license,
         transporterName: license.transporter_name,
         transporterDocument: license.transporter_document,
@@ -1537,13 +1570,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Executando consulta com filtros aplicados");
       
       // Usar a função que inclui informações do transportador
-      const licensesResult = await getLicensesWithTransporters();
+      const result = await getLicensesWithTransporters();
       
-      // Verificar formato dos resultados e adicionar log
-      console.log("Formato do resultado recebido:", Object.keys(licensesResult));
+      console.log("Estrutura do resultado:", Object.keys(result));
+      
+      // Verificar se temos resultados
+      if (!result || !result.rows || !Array.isArray(result.rows)) {
+        console.log("Erro na estrutura do resultado:", result);
+        return res.json([]);
+      }
+      
+      console.log(`Total de licenças staff encontradas: ${result.rows.length}`);
+      if (result.rows.length > 0) {
+        console.log("Exemplo de licença staff:", JSON.stringify(result.rows[0], null, 2));
+      }
       
       // Transformar os resultados para incluir o nome do transportador
-      const licenses = licensesResult.rows.map(license => ({
+      const licenses = result.rows.map(license => ({
         ...license,
         transporterName: license.transporter_name,
         transporterDocument: license.transporter_document,
