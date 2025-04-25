@@ -770,6 +770,12 @@ export class TransactionalStorage implements IStorage {
     }
     
     // Executar a atualização com todos os campos corretos
+    console.log("====== ANTES DE ATUALIZAR BANCO DE DADOS ======");
+    console.log("Valores que serão salvos:");
+    console.log("- stateStatuses:", JSON.stringify(stateStatuses));
+    console.log("- licenceId:", data.licenseId);
+    console.log("- overallStatus:", overallStatus);
+    
     const [updatedLicense] = await db
       .update(licenseRequests)
       .set({
@@ -783,6 +789,36 @@ export class TransactionalStorage implements IStorage {
       })
       .where(eq(licenseRequests.id, data.licenseId))
       .returning();
+    
+    // Verificar se os dados foram realmente salvos conforme esperado
+    console.log("====== APÓS ATUALIZAÇÃO NO BANCO ======");
+    console.log("Licença atualizada recebida:", updatedLicense.id);
+    console.log("stateStatuses no banco após atualização:", JSON.stringify(updatedLicense.stateStatuses));
+    
+    // Recuperar a licença do banco novamente para confirmar a persistência
+    const verificationQuery = await db
+      .select()
+      .from(licenseRequests)
+      .where(eq(licenseRequests.id, data.licenseId))
+      .limit(1);
+    
+    if (verificationQuery.length > 0) {
+      const verifiedLicense = verificationQuery[0];
+      console.log("Verificação de persistência - stateStatuses:", JSON.stringify(verifiedLicense.stateStatuses));
+      
+      // Se dados divergirem, fazer nova atualização
+      if (JSON.stringify(verifiedLicense.stateStatuses) !== JSON.stringify(stateStatuses)) {
+        console.log("ALERTA: Dados divergem após atualização. Fazendo nova atualização forçada.");
+        await db
+          .update(licenseRequests)
+          .set({
+            stateStatuses: stateStatuses,
+          })
+          .where(eq(licenseRequests.id, data.licenseId));
+          
+        console.log("Segunda atualização concluída.");
+      }
+    }
     
     return updatedLicense;
   }
