@@ -345,8 +345,8 @@ export default function TrackLicensePage() {
               
               {/* Estados Solicitados */}
               {selectedLicense.states && selectedLicense.states.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  <h3 className="text-lg font-semibold">Estados Solicitados</h3>
+                <>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">Estados Solicitados</h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedLicense.states.map((state, index) => (
                       <Badge key={index} variant="outline" className="bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100">
@@ -354,7 +354,7 @@ export default function TrackLicensePage() {
                       </Badge>
                     ))}
                   </div>
-                </div>
+                </>
               )}
               
               {selectedLicense.comments && (
