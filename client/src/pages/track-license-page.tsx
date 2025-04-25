@@ -349,7 +349,71 @@ export default function TrackLicensePage() {
                 </div>
               )}
               
-              {/* Área de Status por Estado foi removida conforme solicitação do cliente */}
+              {/* Área de Status por Estado - Exibindo apenas botões de download para estados liberados */}
+              {selectedLicense.states && selectedLicense.states.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-sm text-gray-500 mb-2">Licenças por Estado</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedLicense.states.map(state => {
+                      // Verificar o status para este estado específico
+                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
+                      
+                      // Verificar se existe um arquivo específico para este estado
+                      const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
+                      const stateFileUrl = stateFileEntry ? stateFileEntry.split(':').slice(1).join(':') : undefined;
+                      
+                      return (
+                        <div 
+                          key={state} 
+                          className={`p-3 rounded-lg border ${
+                            stateStatus === "approved" 
+                              ? "bg-green-50 border-green-200" 
+                              : "bg-gray-50 border-gray-200"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium">{state}</span>
+                                <StatusBadge status={stateStatus} />
+                              </div>
+                              <p className="text-xs text-gray-600">
+                                {stateStatus === "approved" 
+                                  ? "Licença liberada para download" 
+                                  : "Status em processamento"}
+                              </p>
+                            </div>
+                            
+                            {stateStatus === "approved" && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                asChild
+                                className="text-green-600 border-green-200"
+                              >
+                                <a 
+                                  href={stateFileUrl || selectedLicense.licenseFileUrl || '#'} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => {
+                                    if (!stateFileUrl && !selectedLicense.licenseFileUrl) {
+                                      e.preventDefault();
+                                      alert('Arquivo da licença não disponível no momento.');
+                                    }
+                                  }}
+                                  className={(!stateFileUrl && !selectedLicense.licenseFileUrl) ? "opacity-40 cursor-not-allowed" : ""}
+                                >
+                                  <Download className="h-4 w-4 mr-1" /> Download
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               
               {/* Arquivo principal da licença (manter para compatibilidade) */}
               {selectedLicense.status === "approved" && selectedLicense.licenseFileUrl && (

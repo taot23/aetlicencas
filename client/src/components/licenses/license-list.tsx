@@ -151,15 +151,19 @@ export function LicenseList({
         </>
       );
     } else {
-      if (license.status === "approved") {
+      // Para licenças em acompanhamento
+      const stateStatus = (license as any).specificStateStatus || license.status;
+      
+      // Se o status do estado específico ou o status geral for "approved" (liberada)
+      if (stateStatus === "approved") {
         // Sempre mostrar botão de download para licenças aprovadas/liberadas, mesmo se o arquivo ainda não estiver disponível
         return (
-          <>
+          <div className="flex justify-end items-center space-x-1">
             <Button
               variant="ghost"
               size="icon"
               asChild
-              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 mr-1"
+              className="text-green-600 hover:text-green-800 hover:bg-green-50"
               title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
             >
               <a 
@@ -185,9 +189,9 @@ export function LicenseList({
             >
               <ExternalLink className="h-4 w-4" />
             </Button>
-          </>
+          </div>
         );
-      } else if (license.status === "rejected") {
+      } else if (stateStatus === "rejected") {
         return (
           <Button
             variant="ghost"
@@ -289,49 +293,69 @@ export function LicenseList({
                       </Button>
                     </>
                   ) : (
-                    license.status === "approved" ? (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          className="text-blue-600 border-blue-200 mr-1"
-                          title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
-                        >
-                          <a 
-                            href={license.licenseFileUrl || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              if (!license.licenseFileUrl) {
-                                e.preventDefault();
-                                alert('Arquivo da licença não disponível no momento.');
-                              }
-                            }}
-                            className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                    (() => {
+                      // Verificar tanto o status específico do estado quanto o status geral
+                      const stateStatus = (license as any).specificStateStatus || license.status;
+                      
+                      if (stateStatus === "approved") {
+                        return (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="text-green-600 border-green-200 mr-1"
+                              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                            >
+                              <a 
+                                href={license.licenseFileUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  if (!license.licenseFileUrl) {
+                                    e.preventDefault();
+                                    alert('Arquivo da licença não disponível no momento.');
+                                  }
+                                }}
+                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                              >
+                                <Download className="h-4 w-4 mr-1" /> Download
+                              </a>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onView && onView(license)}
+                              className="text-blue-600 border-blue-200"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
+                            </Button>
+                          </>
+                        );
+                      } else if (stateStatus === "rejected") {
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onView && onView(license)}
+                            className="text-red-600 border-red-200"
                           >
-                            <Download className="h-4 w-4 mr-1" /> Download
-                          </a>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onView && onView(license)}
-                          className="text-blue-600 border-blue-200"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onView && onView(license)}
-                        className={license.status === "rejected" ? "text-red-600 border-red-200" : "text-blue-600 border-blue-200"}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
-                      </Button>
-                    )
+                            <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onView && onView(license)}
+                            className="text-blue-600 border-blue-200"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
+                          </Button>
+                        );
+                      }
+                    })()
                   )}
                 </div>
               </div>
