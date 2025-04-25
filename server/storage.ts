@@ -1030,21 +1030,54 @@ export class DatabaseStorage implements IStorage {
     // Executar a consulta e ordenar
     const allLicenses = await query.orderBy(desc(licenseRequests.createdAt));
     
+    console.log(`[DEBUG] getIssuedLicensesByUserId: Obtidas ${allLicenses.length} licenças não-rascunho`);
+    
+    // Log para verificar cada licença
+    allLicenses.forEach(license => {
+      console.log(`[DEBUG] Licença #${license.id} - ${license.requestNumber}`);
+      console.log(`  Status principal: ${license.status}`);
+      console.log(`  stateStatuses: ${JSON.stringify(license.stateStatuses)}`);
+      
+      // Detectar se tem algum estado aprovado
+      const hasApprovedState = license.stateStatuses && 
+                               Array.isArray(license.stateStatuses) && 
+                               license.stateStatuses.some(stateStatus => 
+                                 stateStatus.includes(':approved') || 
+                                 stateStatus.includes(':approved:')
+                               );
+      console.log(`  Tem estado aprovado: ${hasApprovedState ? 'SIM' : 'NÃO'}`);
+    });
+    
     // Filtrar em memória para encontrar licenças com pelo menos um estado aprovado
-    return allLicenses.filter(license => {
+    const issuedLicenses = allLicenses.filter(license => {
       // Verificar se o status principal é 'approved'
-      if (license.status === 'approved') return true;
+      if (license.status === 'approved') {
+        console.log(`[DEBUG] Licença #${license.id} incluída - status principal approved`);
+        return true;
+      }
       
       // Verificar se pelo menos um estado tem status 'approved'
       if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
-        return license.stateStatuses.some(stateStatus => 
-          stateStatus.includes(':approved') || 
-          stateStatus.includes(':approved:') // Formato com data de validade
-        );
+        const hasApprovedState = license.stateStatuses.some(stateStatus => {
+          const isApproved = stateStatus.includes(':approved') || stateStatus.includes(':approved:');
+          if (isApproved) {
+            console.log(`[DEBUG] Estado aprovado encontrado em #${license.id}: ${stateStatus}`);
+          }
+          return isApproved;
+        });
+        
+        if (hasApprovedState) {
+          console.log(`[DEBUG] Licença #${license.id} incluída - tem pelo menos um estado approved`);
+          return true;
+        }
       }
       
+      console.log(`[DEBUG] Licença #${license.id} excluída - não atende aos critérios`);
       return false;
     });
+    
+    console.log(`[DEBUG] getIssuedLicensesByUserId: Retornando ${issuedLicenses.length} licenças emitidas`);
+    return issuedLicenses;
   }
 
   async getAllLicenseRequests(): Promise<LicenseRequest[]> {
@@ -1058,21 +1091,54 @@ export class DatabaseStorage implements IStorage {
       .where(eq(licenseRequests.isDraft, false))
       .orderBy(desc(licenseRequests.createdAt));
     
+    console.log(`[DEBUG] getAllIssuedLicenses: Obtidas ${allLicenses.length} licenças não-rascunho`);
+    
+    // Log para verificar cada licença
+    allLicenses.forEach(license => {
+      console.log(`[DEBUG] Licença #${license.id} - ${license.requestNumber}`);
+      console.log(`  Status principal: ${license.status}`);
+      console.log(`  stateStatuses: ${JSON.stringify(license.stateStatuses)}`);
+      
+      // Detectar se tem algum estado aprovado
+      const hasApprovedState = license.stateStatuses && 
+                               Array.isArray(license.stateStatuses) && 
+                               license.stateStatuses.some(stateStatus => 
+                                 stateStatus.includes(':approved') || 
+                                 stateStatus.includes(':approved:')
+                               );
+      console.log(`  Tem estado aprovado: ${hasApprovedState ? 'SIM' : 'NÃO'}`);
+    });
+    
     // Filtrar em memória para encontrar licenças com pelo menos um estado aprovado
-    return allLicenses.filter(license => {
+    const issuedLicenses = allLicenses.filter(license => {
       // Verificar se o status principal é 'approved'
-      if (license.status === 'approved') return true;
+      if (license.status === 'approved') {
+        console.log(`[DEBUG] Licença #${license.id} incluída - status principal approved`);
+        return true;
+      }
       
       // Verificar se pelo menos um estado tem status 'approved'
       if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
-        return license.stateStatuses.some(stateStatus => 
-          stateStatus.includes(':approved') || 
-          stateStatus.includes(':approved:') // Formato com data de validade
-        );
+        const hasApprovedState = license.stateStatuses.some(stateStatus => {
+          const isApproved = stateStatus.includes(':approved') || stateStatus.includes(':approved:');
+          if (isApproved) {
+            console.log(`[DEBUG] Estado aprovado encontrado em #${license.id}: ${stateStatus}`);
+          }
+          return isApproved;
+        });
+        
+        if (hasApprovedState) {
+          console.log(`[DEBUG] Licença #${license.id} incluída - tem pelo menos um estado approved`);
+          return true;
+        }
       }
       
+      console.log(`[DEBUG] Licença #${license.id} excluída - não atende aos critérios`);
       return false;
     });
+    
+    console.log(`[DEBUG] getAllIssuedLicenses: Retornando ${issuedLicenses.length} licenças emitidas`);
+    return issuedLicenses;
   }
 
   async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
