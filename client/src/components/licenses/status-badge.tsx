@@ -26,6 +26,15 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
   const [recentUpdate, setRecentUpdate] = useState(false);
   const { lastMessage } = useWebSocketContext();
   
+  // Log quando o componente é renderizado para diagnóstico
+  console.log(`StatusBadge renderizado para ${state || 'geral'}, status inicial: ${initialStatus}, id: ${licenseId}`);
+  
+  // Atualizar o status sempre que o initialStatus mudar (por exemplo, quando a licença é recarregada do banco)
+  useEffect(() => {
+    console.log(`StatusBadge: initialStatus alterado para ${initialStatus}`);
+    setStatus(initialStatus);
+  }, [initialStatus]);
+  
   // Efeito para resetar o indicador de atualização recente após 3 segundos
   useEffect(() => {
     if (recentUpdate) {

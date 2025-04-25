@@ -30,7 +30,18 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   // Estado para armazenar o status atual (será atualizado pelo WebSocket)
   const [currentStatus, setCurrentStatus] = useState(license.status);
   // Estado para armazenar os status por estado (será atualizado pelo WebSocket)
-  const [stateStatuses, setStateStatuses] = useState(license.stateStatuses || []);
+  const [stateStatuses, setStateStatuses] = useState<string[]>(
+    // Garantir que temos um array válido e eliminar entradas inválidas
+    Array.isArray(license.stateStatuses) 
+      ? license.stateStatuses.filter(entry => typeof entry === 'string' && entry.length > 0)
+      : []
+  );
+  
+  console.log("LicenseDetailsCard inicializado com:", {
+    licenseId: license.id,
+    stateStatuses: stateStatuses,
+    originalStateStatuses: license.stateStatuses
+  });
   
   // Hook para acesso ao WebSocket
   const { lastMessage } = useWebSocketContext();

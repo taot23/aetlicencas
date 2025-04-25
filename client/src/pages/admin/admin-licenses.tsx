@@ -911,23 +911,24 @@ export default function AdminLicensesPage() {
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {license.states.map((state, idx) => {
                                       // Encontrar o status atual deste estado
-                                      let stateStatus = "pending";
-                                      if (license.stateStatuses && license.stateStatuses.length > 0) {
-                                        // Verificar diferentes formatos do array stateStatuses
-                                        let stateStatusArray = license.stateStatuses;
+                                      let stateStatus = "pending_registration"; // Valor padrão mais específico
+                                      
+                                      // Verificar se temos stateStatuses válidos
+                                      if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
+                                        // Filtrar apenas entradas válidas que são strings
+                                        const validEntries = license.stateStatuses.filter(entry => 
+                                          typeof entry === 'string' && entry.length > 0
+                                        );
                                         
-                                        // Procurar pelo estado atual nas entradas de status
-                                        const stateStatusEntry = stateStatusArray.find(entry => {
-                                          if (typeof entry === 'string') {
-                                            return entry.startsWith(`${state}:`);
-                                          }
-                                          return false;
-                                        });
+                                        // Procurar pela entrada deste estado específico
+                                        const stateStatusEntry = validEntries.find(entry => entry.startsWith(`${state}:`));
                                         
-                                        if (stateStatusEntry && typeof stateStatusEntry === 'string') {
+                                        if (stateStatusEntry) {
+                                          // Extrair o status do formato "ESTADO:STATUS[:DATA]"
                                           const parts = stateStatusEntry.split(':');
                                           if (parts.length >= 2) {
                                             stateStatus = parts[1];
+                                            console.log(`License card: Estado ${state} tem status ${stateStatus}`);
                                           }
                                         }
                                       }
