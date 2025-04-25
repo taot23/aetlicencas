@@ -1106,14 +1106,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       let result;
+      let renewalDrafts = [];
       
       // Se for usuário administrativo, buscar todas as licenças
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças.`);
         result = await getLicensesWithTransporters();
+        // Buscar também todos os rascunhos para administradores
+        renewalDrafts = await storage.getLicenseDraftsByUserId(0); // 0 = todos os rascunhos
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
         result = await getLicensesWithTransporters({ userId: user.id });
+        // Buscar também os rascunhos do usuário
+        renewalDrafts = await storage.getLicenseDraftsByUserId(user.id);
       }
       
       console.log("Estrutura do resultado:", Object.keys(result));
@@ -1129,7 +1134,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Exemplo de licença:", JSON.stringify(result.rows[0], null, 2));
       }
       
-      // Transformar os resultados para incluir o nome do transportador
+      // Filtrar apenas os rascunhos que são de renovação
+      console.log(`Total de rascunhos antes da filtragem: ${renewalDrafts.length}`);
+      const onlyRenewalDrafts = renewalDrafts.filter(draft => 
+        draft.comments && draft.comments.startsWith('Renovação da licença')
+      );
+      console.log(`Total de rascunhos de renovação encontrados: ${onlyRenewalDrafts.length}`);
+      
+      // Transformar os resultados das licenças para incluir o nome do transportador
       const licenses = result.rows.map(license => ({
         ...license,
         transporterName: license.transporter_name,
@@ -1137,7 +1149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userEmail: license.user_email
       }));
       
-      res.json(licenses);
+      // Combinar licenças normais com rascunhos de renovação
+      const allLicenses = [...licenses, ...onlyRenewalDrafts];
+      console.log(`Total combinado (licenças + rascunhos de renovação): ${allLicenses.length}`);
+      
+      res.json(allLicenses);
     } catch (error) {
       console.error('Error fetching license requests:', error);
       res.status(500).json({ message: 'Erro ao buscar solicitações de licenças' });
