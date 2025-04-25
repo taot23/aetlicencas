@@ -275,6 +275,7 @@ export const licenseRequests = pgTable("license_requests", {
   status: text("status").default("pending_registration").notNull(), // Status principal (legado)
   stateStatuses: text("state_statuses").array(), // Array com formato "ESTADO:STATUS" (ex: "SP:approved")
   stateFiles: text("state_files").array(), // Array com formato "ESTADO:URL" (ex: "SP:http://...pdf")
+  stateAETNumbers: text("state_aet_numbers").array(), // Array com formato "ESTADO:NUMERO_AET" (ex: "SP:123456")
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isDraft: boolean("is_draft").default(true).notNull(),
@@ -303,7 +304,8 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
     updatedAt: true, 
     licenseFileUrl: true, 
     validUntil: true,
-    aetNumber: true
+    aetNumber: true,
+    stateAETNumbers: true
   })
   .extend({
     transporterId: z.number().positive("Um transportador deve ser selecionado"),

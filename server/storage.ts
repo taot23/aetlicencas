@@ -1348,10 +1348,16 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     let stateStatuses = [...(license.stateStatuses || [])];
     let stateFiles = [...(license.stateFiles || [])];
+    let stateAETNumbers = [...(license.stateAETNumbers || [])];
     
     // Atualizar o status para o estado específico
     const stateStatusIndex = stateStatuses.findIndex(ss => ss.startsWith(`${data.state}:`));
-    const newStateStatus = `${data.state}:${data.status}`;
+    
+    // Incluir data de validade no status se estiver sendo aprovado e tiver data de validade
+    let newStateStatus = `${data.state}:${data.status}`;
+    if (data.status === 'approved' && data.validUntil) {
+      newStateStatus = `${data.state}:${data.status}:${data.validUntil}`;
+    }
     
     if (stateStatusIndex >= 0) {
       stateStatuses[stateStatusIndex] = newStateStatus;
@@ -1371,10 +1377,23 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    // Adicionar número AET para o estado específico, se fornecido
+    if (data.aetNumber) {
+      const stateAETIndex = stateAETNumbers.findIndex(aet => aet.startsWith(`${data.state}:`));
+      const newStateAET = `${data.state}:${data.aetNumber}`;
+      
+      if (stateAETIndex >= 0) {
+        stateAETNumbers[stateAETIndex] = newStateAET;
+      } else {
+        stateAETNumbers.push(newStateAET);
+      }
+    }
+    
     // Atualizar a licença
     const updateData: any = {
       stateStatuses,
       stateFiles,
+      stateAETNumbers,
       updatedAt: now
     };
     
@@ -1391,6 +1410,11 @@ export class DatabaseStorage implements IStorage {
     // Para status approved, atualizar o status geral para approved
     if (data.status === 'approved') {
       updateData.status = 'approved';
+      
+      // Se tiver número AET, atualizar o número AET geral (legado)
+      if (data.aetNumber) {
+        updateData.aetNumber = data.aetNumber;
+      }
     }
     
     const results = await db.update(licenseRequests)

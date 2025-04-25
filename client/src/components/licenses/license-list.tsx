@@ -181,7 +181,33 @@ export function LicenseList({
   
   // Função para obter o número AET de um estado específico
   const getStateAETNumber = (license: LicenseRequest): string | undefined => {
-    // Se a licença tiver um estado específico
+    // Primeiro, tente encontrar no array stateAETNumbers se existir 
+    // (formato esperado "estado:numeroAET")
+    if (license.stateAETNumbers && Array.isArray(license.stateAETNumbers)) {
+      // Se temos um estado específico
+      if ((license as any).specificState) {
+        const stateAET = license.stateAETNumbers.find(aet => 
+          aet.startsWith(`${(license as any).specificState}:`)
+        );
+        
+        if (stateAET) {
+          const parts = stateAET.split(':');
+          if (parts.length >= 2) {
+            return parts[1]; // Retorna o número AET
+          }
+        }
+      } 
+      // Sem estado específico, use o primeiro AET disponível
+      else if (license.stateAETNumbers.length > 0) {
+        const firstAET = license.stateAETNumbers[0];
+        const parts = firstAET.split(':');
+        if (parts.length >= 2) {
+          return parts[1];
+        }
+      }
+    }
+    
+    // Se a licença tiver um estado específico, tente extrair do stateStatuses
     if ((license as any).specificState && license.stateStatuses && Array.isArray(license.stateStatuses)) {
       // Verificar nos status aprovados que têm o formato "estado:approved:data:numeroAET"
       const approvedStatus = license.stateStatuses.find(ss => 
@@ -208,10 +234,7 @@ export function LicenseList({
         }
       }
     }
-    // Se tiver aetNumber diretamente (para compatibilidade)
-    else if ((license as any).aetNumber) {
-      return (license as any).aetNumber;
-    }
+    
     // Para licenças com múltiplos estados sem estado específico
     else if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
       // Buscar primeiro número AET de qualquer estado aprovado
@@ -236,6 +259,11 @@ export function LicenseList({
         const parts = pendingWithAET.split(':');
         return parts[2];
       }
+    }
+    
+    // Se tiver aetNumber diretamente (para compatibilidade com código legado)
+    if ((license as any).aetNumber) {
+      return (license as any).aetNumber;
     }
     
     return undefined;
