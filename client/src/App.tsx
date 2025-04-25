@@ -19,9 +19,18 @@ import RedirectPage from "@/pages/redirect-page";
 import { ProtectedRoute, AdminRoute, StaffRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { WebSocketProvider } from "./hooks/use-websocket-context";
+import { MobileProvider, useMobileContext } from "./hooks/use-mobile-context";
 import { useEffect } from "react";
 
+// Importar páginas mobile
+import MobileDashboardPage from "@/pages/mobile/mobile-dashboard";
+import MobileVehiclesPage from "@/pages/mobile/mobile-vehicles";
+import MobileTrackLicensePage from "@/pages/mobile/mobile-track-license";
+import MobileIssuedLicensesPage from "@/pages/mobile/mobile-issued-licenses";
+
 function Router() {
+  const { isMobile } = useMobileContext();
+  
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
@@ -36,13 +45,31 @@ function Router() {
       <AdminRoute path="/admin/users" component={AdminUsersPage} />
       <StaffRoute path="/admin/vehicles" component={AdminVehiclesPage} requiredRole="operational" />
       
-      {/* Sistema de Controle de Licenças - Rotas do usuário */}
-      <ProtectedRoute path="/dashboard" component={RegularDashboardPage} />
-      <ProtectedRoute path="/my-companies" component={MyCompaniesPage} />
-      <ProtectedRoute path="/vehicles" component={VehiclesPage} />
-      <ProtectedRoute path="/request-license" component={RequestLicensePage} />
-      <ProtectedRoute path="/track-license" component={TrackLicensePage} />
-      <ProtectedRoute path="/issued-licenses" component={IssuedLicensesPage} />
+      {/* Sistema de Controle de Licenças - Rotas do usuário (versão desktop ou mobile) */}
+      <ProtectedRoute 
+        path="/dashboard" 
+        component={isMobile ? MobileDashboardPage : RegularDashboardPage} 
+      />
+      <ProtectedRoute
+        path="/my-companies"
+        component={MyCompaniesPage}
+      />
+      <ProtectedRoute 
+        path="/vehicles" 
+        component={isMobile ? MobileVehiclesPage : VehiclesPage} 
+      />
+      <ProtectedRoute 
+        path="/request-license" 
+        component={RequestLicensePage} 
+      />
+      <ProtectedRoute 
+        path="/track-license" 
+        component={isMobile ? MobileTrackLicensePage : TrackLicensePage} 
+      />
+      <ProtectedRoute 
+        path="/issued-licenses" 
+        component={isMobile ? MobileIssuedLicensesPage : IssuedLicensesPage} 
+      />
       
       <Route component={NotFound} />
     </Switch>
@@ -51,6 +78,8 @@ function Router() {
 
 // Componente para pré-carregar dados importantes
 function AppInitializer() {
+  const { isMobile } = useMobileContext();
+  
   // Efeito para carregar dados do usuário e outros recursos importantes
   useEffect(() => {
     // Pré-carregar dados da sessão atual
@@ -58,7 +87,20 @@ function AppInitializer() {
       queryKey: ["/api/user"],
       queryFn: getQueryFn({ on401: "returnNull" }),
     });
-  }, []);
+    
+    // Adicionar classe para identificar dispositivos móveis no body
+    if (isMobile) {
+      document.body.classList.add('mobile-device');
+    } else {
+      document.body.classList.remove('mobile-device');
+    }
+    
+    // Configurar viewport para dispositivos móveis
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta && isMobile) {
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+  }, [isMobile]);
   
   return null;
 }
@@ -68,9 +110,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <WebSocketProvider>
-          <AppInitializer />
-          <Router />
-          <Toaster />
+          <MobileProvider>
+            <AppInitializer />
+            <Router />
+            <Toaster />
+          </MobileProvider>
         </WebSocketProvider>
       </AuthProvider>
     </QueryClientProvider>
