@@ -77,6 +77,7 @@ export default function IssuedLicensesPage() {
     requestNumber: string;
     type: string;
     mainVehiclePlate: string;
+    transporterId: number;
     state: string;
     status: string;
     stateStatus: string;
@@ -84,7 +85,6 @@ export default function IssuedLicensesPage() {
     validUntil: string | null;
     licenseFileUrl: string | null;
     stateFileUrl: string | null;
-    transporterId: number;
     aetNumber: string | null; // Número da AET
   }
   
@@ -478,6 +478,7 @@ export default function IssuedLicensesPage() {
                     currentDirection={sortDirection}
                     onSort={handleSort}
                   />
+                  <TableHead>Transportador</TableHead>
                   <TableHead>Nº Licença</TableHead>
                   <SortableHeader
                     column="emissionDate"
@@ -500,7 +501,7 @@ export default function IssuedLicensesPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10">
+                    <TableCell colSpan={9} className="text-center py-10">
                       Carregando licenças...
                     </TableCell>
                   </TableRow>
@@ -524,6 +525,9 @@ export default function IssuedLicensesPage() {
                         </TableCell>
                         <TableCell className="font-medium">{license.requestNumber}</TableCell>
                         <TableCell>{license.mainVehiclePlate}</TableCell>
+                        <TableCell>
+                          <TransporterInfo transporterId={license.transporterId} />
+                        </TableCell>
                         <TableCell>
                           {license.aetNumber ? (
                             <span className="font-semibold text-blue-700">{license.aetNumber}</span>
@@ -634,7 +638,7 @@ export default function IssuedLicensesPage() {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10">
+                    <TableCell colSpan={9} className="text-center py-10">
                       Nenhuma licença emitida encontrada.
                     </TableCell>
                   </TableRow>
