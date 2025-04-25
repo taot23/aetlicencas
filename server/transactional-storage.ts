@@ -643,74 +643,69 @@ export class TransactionalStorage implements IStorage {
     console.log(`Licença ID: ${data.licenseId}, Estado: ${data.state}, Novo Status: ${data.status}`);
     console.log("Estado atual dos StateStatuses:", currentLicense.stateStatuses);
     
-    // Preparar os dados de atualização - garantir que começamos com um array válido
-    let stateStatuses = Array.isArray(currentLicense.stateStatuses) 
-      ? [...currentLicense.stateStatuses] 
-      : [];
-      
-    console.log("StateStatuses iniciais para processamento:", stateStatuses);
+    // ========= INÍCIO DO FIX COMPLETO =========
+    console.log("==== CORREÇÃO CRÍTICA: PERSISTÊNCIA DE STATUS DE ESTADOS ====");
+    console.log("Estado a ser atualizado:", data.state);
+    console.log("Novo status:", data.status);
     
-    // Incluir data de validade no status se fornecida
+    // Garantir que temos dados consistentes
+    let currentStateStatuses: string[] = [];
+    
+    // Verificar e processar o array de estados existentes
+    if (currentLicense.stateStatuses && Array.isArray(currentLicense.stateStatuses)) {
+      // Filtrar entradas vazias ou null
+      currentStateStatuses = currentLicense.stateStatuses.filter(entry => 
+        entry !== null && entry !== undefined && entry !== ""
+      );
+      
+      console.log("Array original de status de estados:", JSON.stringify(currentStateStatuses));
+    } else {
+      console.log("Nenhum status de estado encontrado na licença. Criando um array vazio.");
+      // Se não existir array de status, criar um novo
+      currentStateStatuses = [];
+    }
+    
+    // Construir o novo status para o estado específico
     let newStateStatus = `${data.state}:${data.status}`;
     if (data.validUntil) {
       newStateStatus = `${data.state}:${data.status}:${data.validUntil}`;
     }
+    console.log("Novo status a ser aplicado:", newStateStatus);
     
-    // IMPORTANTE: Inicializar status para todos os estados se não estiverem presentes
-    // Isso garante que todos os estados tenham um status, mesmo que seja o padrão
+    // Mapear todos os estados da licença e seus status atuais
     const allStates = license.states || [];
-    let missingStates = [...allStates];
+    const stateStatusMap = new Map();
     
-    // Normalizar o formato para garantir consistência
-    stateStatuses = stateStatuses.filter(Boolean).map(entry => {
-      // Se for objeto, converter para string
-      if (typeof entry === 'object' && entry !== null) {
-        const stateStr = `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
-        const stateParts = stateStr.split(':');
-        // Remover da lista de estados faltantes
-        missingStates = missingStates.filter(s => s !== stateParts[0]);
-        return stateStr;
+    // Preencher o mapa com status existentes
+    for (const stateStatus of currentStateStatuses) {
+      if (typeof stateStatus === 'string') {
+        const [state, ...rest] = stateStatus.split(':');
+        if (state) {
+          stateStatusMap.set(state, stateStatus);
+        }
       }
-      
-      // Se for string, verificar formato e remover da lista de estados faltantes
-      if (typeof entry === 'string') {
-        const stateParts = entry.split(':');
-        missingStates = missingStates.filter(s => s !== stateParts[0]);
-        return entry;
-      }
-      
-      return null;
-    }).filter(Boolean);
-    
-    console.log("States missing statuses:", missingStates);
-    
-    // Adicionar status padrão para estados faltantes
-    missingStates.forEach(state => {
-      // Não adicionar para o estado que estamos atualizando
-      if (state !== data.state) {
-        stateStatuses.push(`${state}:pending_registration`);
-        console.log(`Adicionando status padrão para estado ${state}`);
-      }
-    });
-    
-    // Buscar o status existente para o estado que queremos atualizar
-    const existingIndex = stateStatuses.findIndex(s => {
-      if (typeof s === 'string') {
-        return s.startsWith(`${data.state}:`);
-      }
-      return false;
-    });
-    
-    console.log(`Atualizando status do estado ${data.state} para ${data.status}. Índice encontrado: ${existingIndex}`);
-    
-    // Atualizar ou adicionar o novo status
-    if (existingIndex >= 0) {
-      stateStatuses[existingIndex] = newStateStatus;
-      console.log(`Status atualizado para: ${newStateStatus}`);
-    } else {
-      stateStatuses.push(newStateStatus);
-      console.log(`Novo status adicionado: ${newStateStatus}`);
     }
+    
+    // Adicionar ou atualizar o status do estado específico
+    stateStatusMap.set(data.state, newStateStatus);
+    
+    // Adicionar estados faltantes com status padrão "pending_registration"
+    for (const state of allStates) {
+      if (!stateStatusMap.has(state)) {
+        stateStatusMap.set(state, `${state}:pending_registration`);
+      }
+    }
+    
+    // Converter de volta para array
+    const updatedStateStatuses = Array.from(stateStatusMap.values());
+    
+    console.log("Status de estados após processamento:", JSON.stringify(updatedStateStatuses));
+    console.log("Total de estados processados:", updatedStateStatuses.length);
+    console.log("==== FIM DO DIAGNÓSTICO ====");
+    // ========= FIM DO FIX COMPLETO =========
+    
+    // Usar o resultado do processamento acima para a atualização
+    const stateStatuses = updatedStateStatuses;
     
     console.log("StateStatuses após processamento:", stateStatuses);
     
@@ -834,72 +829,65 @@ export class TransactionalStorage implements IStorage {
     if (statusData.state && statusData.stateStatus) {
       console.log(`Atualizando estado específico: ${statusData.state} para ${statusData.stateStatus}`);
       
-      // Incluir data de validade no status se disponível
-      let newStateStatus = `${statusData.state}:${statusData.stateStatus}`;
-      if (statusData.validUntil) {
-        newStateStatus = `${statusData.state}:${statusData.stateStatus}:${statusData.validUntil}`;
-      }
+      // Esse código foi substituído pelo fix abaixo
       
-      // Garantir que stateStatuses seja um array atualizado do banco
-      let stateStatuses = Array.isArray(currentLicense.stateStatuses) 
-        ? [...currentLicense.stateStatuses] 
-        : [];
+      // ========= INÍCIO DO FIX PARA updateLicenseStatus =========
+      console.log("==== CORREÇÃO CRÍTICA: PERSISTÊNCIA DE STATUS DE ESTADOS EM updateLicenseStatus ====");
+      console.log("Estado a ser atualizado:", statusData.state);
+      console.log("Novo status:", statusData.stateStatus);
       
-      console.log("StateStatuses antes da normalização:", stateStatuses);
+      // Garantir que temos dados consistentes
+      let currentStateStatuses: string[] = [];
       
-      // IMPORTANTE: Inicializar status para todos os estados se não estiverem presentes
-      const allStates = currentLicense.states || [];
-      let missingStates = [...allStates];
-      
-      // Normalizar o formato para garantir consistência
-      stateStatuses = stateStatuses.filter(Boolean).map(entry => {
-        // Se for objeto, converter para string
-        if (typeof entry === 'object' && entry !== null) {
-          const stateStr = `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
-          const stateParts = stateStr.split(':');
-          // Remover da lista de estados faltantes
-          missingStates = missingStates.filter(s => s !== stateParts[0]);
-          return stateStr;
-        }
+      // Verificar e processar o array de estados existentes
+      if (currentLicense.stateStatuses && Array.isArray(currentLicense.stateStatuses)) {
+        // Filtrar entradas vazias ou null
+        currentStateStatuses = currentLicense.stateStatuses.filter(entry => 
+          entry !== null && entry !== undefined && entry !== ""
+        );
         
-        // Se for string, verificar formato e remover da lista de estados faltantes
-        if (typeof entry === 'string') {
-          const stateParts = entry.split(':');
-          missingStates = missingStates.filter(s => s !== stateParts[0]);
-          return entry;
-        }
-        
-        return null;
-      }).filter(Boolean);
-      
-      console.log("States missing statuses:", missingStates);
-      
-      // Adicionar status padrão para estados faltantes
-      missingStates.forEach(state => {
-        // Não adicionar para o estado que estamos atualizando
-        if (state !== statusData.state) {
-          stateStatuses.push(`${state}:pending_registration`);
-          console.log(`Adicionando status padrão para estado ${state}`);
-        }
-      });
-      
-      // Verificar se o estado já existe na lista
-      const existingIndex = stateStatuses.findIndex(s => {
-        if (typeof s === 'string') {
-          return s.startsWith(`${statusData.state}:`);
-        }
-        return false;
-      });
-      
-      console.log(`UpdateLicenseStatus: Atualizando ${statusData.state} para ${statusData.stateStatus}. Índice: ${existingIndex}`);
-      
-      if (existingIndex >= 0) {
-        stateStatuses[existingIndex] = newStateStatus;
-        console.log(`Status atualizado para: ${newStateStatus}`);
+        console.log("Array original de status de estados:", JSON.stringify(currentStateStatuses));
       } else {
-        stateStatuses.push(newStateStatus);
-        console.log(`Novo status adicionado: ${newStateStatus}`);
+        console.log("Nenhum status de estado encontrado na licença. Criando um array vazio.");
+        // Se não existir array de status, criar um novo
+        currentStateStatuses = [];
       }
+      
+      // Construir o novo status para o estado específico
+      const statusStateString = `${statusData.state}:${statusData.stateStatus}${statusData.validUntil ? `:${statusData.validUntil}` : ''}`;
+      console.log("Novo status a ser aplicado:", statusStateString);
+      
+      // Mapear todos os estados da licença e seus status atuais
+      const allStates = currentLicense.states || [];
+      const stateStatusMap = new Map();
+      
+      // Preencher o mapa com status existentes
+      for (const stateStatus of currentStateStatuses) {
+        if (typeof stateStatus === 'string') {
+          const [state, ...rest] = stateStatus.split(':');
+          if (state) {
+            stateStatusMap.set(state, stateStatus);
+          }
+        }
+      }
+      
+      // Adicionar ou atualizar o status do estado específico
+      stateStatusMap.set(statusData.state, statusStateString);
+      
+      // Adicionar estados faltantes com status padrão "pending_registration"
+      for (const state of allStates) {
+        if (!stateStatusMap.has(state)) {
+          stateStatusMap.set(state, `${state}:pending_registration`);
+        }
+      }
+      
+      // Converter de volta para array
+      const stateStatuses = Array.from(stateStatusMap.values());
+      
+      console.log("Status de estados após processamento:", JSON.stringify(stateStatuses));
+      console.log("Total de estados processados:", stateStatuses.length);
+      console.log("==== FIM DA CORREÇÃO ====");
+      // ========= FIM DO FIX PARA updateLicenseStatus =========
       
       console.log("StateStatuses após processamento:", stateStatuses);
       

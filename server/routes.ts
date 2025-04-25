@@ -2368,11 +2368,20 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         file = req.file;
       }
       
+      // Obter a licença atual para diagnóstico
+      console.log("==== DIAGNÓSTICO DE ATUALIZAÇÃO DE ESTADO ====");
+      console.log("Licença original:", JSON.stringify(existingLicense, null, 2));
+      console.log("Atualizando estado:", stateStatusData.state, "para status:", stateStatusData.status);
+      
       // Atualizar status do estado da licença
       const updatedLicense = await storage.updateLicenseStateStatus({
         ...stateStatusData,
         file,
       });
+      
+      // Verificar o resultado após a atualização
+      console.log("Licença após atualização:", JSON.stringify(updatedLicense, null, 2));
+      console.log("==== FIM DO DIAGNÓSTICO ====");
       
       // Enviar notificação em tempo real via WebSocket
       broadcastMessage({
