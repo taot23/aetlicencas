@@ -649,6 +649,8 @@ export class TransactionalStorage implements IStorage {
     
     // Atualizar arquivo do estado se fornecido
     let stateFiles = [...(license.stateFiles || [])];
+    let licenseFileUrl = license.licenseFileUrl;
+    
     if (data.file && typeof data.file !== 'string') {
       // Extrair o nome do arquivo do caminho completo
       const filename = data.file.filename;
@@ -664,18 +666,58 @@ export class TransactionalStorage implements IStorage {
       
       // Se o estado for aprovado, atualizar também o licenseFileUrl
       if (data.status === "approved") {
-        license.licenseFileUrl = fileUrl;
+        licenseFileUrl = fileUrl;
       }
     }
     
-    // Executar a atualização
+    // Se recebemos número da AET, armazenar
+    let aetNumber = license.aetNumber;
+    if (data.aetNumber) {
+      aetNumber = data.aetNumber;
+    }
+    
+    // Se recebemos data de validade para status aprovado, armazenar como licença principal também
+    let validUntil = license.validUntil;
+    if (data.status === "approved" && data.validUntil) {
+      try {
+        validUntil = new Date(data.validUntil);
+      } catch (e) {
+        console.error("Erro ao converter data de validade:", e);
+      }
+    }
+    
+    // Verificar se todos os estados estão aprovados para potencialmente atualizar o status geral da licença
+    let overallStatus = license.status;
+    if (data.status === "approved") {
+      // Verificar se TODOS os estados estão aprovados para atualizar o status geral
+      const allStatesApproved = license.states.every(state => {
+        // O estado atual está sendo atualizado para aprovado
+        if (state === data.state) return true;
+        
+        // Verificar outros estados
+        const stateEntry = stateStatuses.find(s => s.startsWith(`${state}:`));
+        if (!stateEntry) return false;
+        
+        const statusParts = stateEntry.split(':');
+        return statusParts[1] === "approved";
+      });
+      
+      if (allStatesApproved) {
+        overallStatus = "approved";
+      }
+    }
+    
+    // Executar a atualização com todos os campos corretos
     const [updatedLicense] = await db
       .update(licenseRequests)
       .set({
         stateStatuses,
         stateFiles,
         updatedAt: new Date(),
-        licenseFileUrl: license.licenseFileUrl // Incluir o licenseFileUrl se estiver definido
+        licenseFileUrl,
+        validUntil,
+        aetNumber,
+        status: overallStatus // Atualizar status geral se todos estados estiverem aprovados
       })
       .where(eq(licenseRequests.id, data.licenseId))
       .returning();

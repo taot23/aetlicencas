@@ -256,10 +256,27 @@ export default function AdminLicensesPage() {
         title: "Status do estado atualizado",
         description: "Status do estado atualizado com sucesso!",
       });
+      
+      // Primeiro, fechar o diálogo
+      setStateStatusDialogOpen(false);
+      
+      // Depois, limpar o formulário completamente
+      stateStatusForm.reset({
+        state: "",
+        status: "",
+        comments: "",
+        aetNumber: "",
+        licenseFile: undefined,
+        validUntil: "",
+      });
+      
       // Invalidar as queries para manter a consistência
       queryClient.invalidateQueries({ queryKey: [apiEndpoint] });
-      setStateStatusDialogOpen(false);
-      stateStatusForm.reset();
+      
+      // Forçar um pequeno atraso para permitir que os estados dos componentes sejam atualizados
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/licenses/issued'] });
+      }, 300);
     },
     onError: (error: Error) => {
       toast({
@@ -445,8 +462,11 @@ export default function AdminLicensesPage() {
       }
     }
     
+    // Garantir que useEffect não crie conflitos durante o processamento
+    const licenseId = selectedLicense.id;
+    
     updateStateStatusMutation.mutate({ 
-      id: selectedLicense.id,
+      id: licenseId,
       data
     });
   };
