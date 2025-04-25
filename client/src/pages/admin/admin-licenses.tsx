@@ -155,21 +155,43 @@ export default function AdminLicensesPage() {
       selectedLicense && 
       lastMessage.data.licenseId === selectedLicense.id
     ) {
-      // Se o evento é para um estado específico
-      if (lastMessage.data.state) {
+      // Se recebemos a licença completa, usar todos os dados dela
+      if (lastMessage.data.license && lastMessage.data.license.stateStatuses) {
+        setSelectedLicense(prevLicense => {
+          if (!prevLicense) return null;
+          return {
+            ...prevLicense,
+            ...lastMessage.data.license,
+          };
+        });
+        
+        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} atualizada com dados completos`);
+      }
+      // Se o evento é apenas para um estado específico
+      else if (lastMessage.data.state) {
         // Atualização de status de um estado específico
-        const updatedStateStatuses = [...(selectedLicense.stateStatuses || [])];
-        const stateStatusIndex = updatedStateStatuses.findIndex(
-          entry => entry.startsWith(`${lastMessage.data.state}:`)
+        // Garantir que temos um array de status existente para trabalhar
+        const currentStateStatuses = selectedLicense.stateStatuses || [];
+        
+        // Criar um Map para manipulação fácil dos status de estado
+        const stateStatusMap = new Map();
+        
+        // Preencher o mapa com os status existentes
+        for (const entry of currentStateStatuses) {
+          if (typeof entry === 'string' && entry.includes(':')) {
+            const [state] = entry.split(':');
+            stateStatusMap.set(state, entry);
+          }
+        }
+        
+        // Atualizar ou adicionar o novo status
+        stateStatusMap.set(
+          lastMessage.data.state, 
+          `${lastMessage.data.state}:${lastMessage.data.status}`
         );
         
-        // Se o estado já existe nos status, atualizar
-        if (stateStatusIndex >= 0) {
-          updatedStateStatuses[stateStatusIndex] = `${lastMessage.data.state}:${lastMessage.data.status}`;
-        } else {
-          // Se não existe, adicionar
-          updatedStateStatuses.push(`${lastMessage.data.state}:${lastMessage.data.status}`);
-        }
+        // Converter de volta para array
+        const updatedStateStatuses = Array.from(stateStatusMap.values());
         
         // Criar uma cópia atualizada da licença selecionada
         setSelectedLicense(prevLicense => {
@@ -183,19 +205,6 @@ export default function AdminLicensesPage() {
         });
         
         console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} estado ${lastMessage.data.state} => ${lastMessage.data.status}`);
-      } 
-      // Se o evento é para a licença inteira (sem estado específico)
-      else if (lastMessage.data.license) {
-        setSelectedLicense(prevLicense => {
-          if (!prevLicense) return null;
-          return {
-            ...prevLicense,
-            status: lastMessage.data.license.status,
-            ...(lastMessage.data.license.stateStatuses && { stateStatuses: lastMessage.data.license.stateStatuses })
-          };
-        });
-        
-        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} => ${lastMessage.data.license.status}`);
       }
     }
   }, [lastMessage, selectedLicense]);

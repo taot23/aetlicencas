@@ -483,18 +483,29 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
                   entry => typeof entry === 'string' && entry.length > 0
                 );
                 
-                // Buscar a entrada específica para este estado
-                const stateStatusEntry = validEntries.find(entry => entry.startsWith(`${state}:`));
+                // Imprimir para diagnóstico
+                console.log(`Verificando status para o estado ${state}, stateStatuses:`, JSON.stringify(validEntries));
                 
-                // Se encontramos uma entrada válida para este estado
-                if (stateStatusEntry) {
-                  // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
-                  const parts = stateStatusEntry.split(':');
-                  if (parts.length >= 2) {
-                    stateStatus = parts[1];
+                // Buscar a entrada específica para este estado
+                for (const entry of validEntries) {
+                  // Verificar se a entrada começa com o estado seguido por dois pontos
+                  const matches = entry.startsWith(`${state}:`);
+                  console.log(`Verificando entry '${entry}' para estado ${state}, matches: ${matches}`);
+                  
+                  if (matches) {
+                    console.log(`Encontrou entry para ${state}:`, JSON.stringify(entry));
+                    // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
+                    const parts = entry.split(':');
+                    if (parts.length >= 2) {
+                      stateStatus = parts[1];
+                      console.log(`Status definido para ${state}: ${stateStatus}`);
+                    }
+                    break; // Encontrou, não precisa continuar procurando
                   }
                 }
               }
+              
+              console.log(`Status final para ${state}: ${stateStatus}`);
               
               // Determinar a classe CSS com base no status
               const statusClass = 
