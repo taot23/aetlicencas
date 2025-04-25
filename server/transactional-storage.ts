@@ -670,9 +670,22 @@ export class TransactionalStorage implements IStorage {
       }
     }
     
-    // Se recebemos número da AET, armazenar
+    // Se recebemos número da AET, armazenar específico para o estado
     let aetNumber = license.aetNumber;
+    let stateAETNumbers = [...(license.stateAETNumbers || [])];
+    
     if (data.aetNumber) {
+      // Atualizar o array stateAETNumbers (formato "SP:123456")
+      const newStateAET = `${data.state}:${data.aetNumber}`;
+      const existingAETIndex = stateAETNumbers.findIndex(s => s.startsWith(`${data.state}:`));
+      
+      if (existingAETIndex >= 0) {
+        stateAETNumbers[existingAETIndex] = newStateAET;
+      } else {
+        stateAETNumbers.push(newStateAET);
+      }
+      
+      // Manter o campo legado aetNumber também atualizado (usar o último número cadastrado)
       aetNumber = data.aetNumber;
     }
     
@@ -713,6 +726,7 @@ export class TransactionalStorage implements IStorage {
       .set({
         stateStatuses,
         stateFiles,
+        stateAETNumbers, // Incluir o array de números AET específicos por estado
         updatedAt: new Date(),
         licenseFileUrl,
         validUntil,
@@ -791,6 +805,24 @@ export class TransactionalStorage implements IStorage {
         if (statusData.stateStatus === "approved") {
           updateData.licenseFileUrl = fileUrl;
         }
+      }
+      
+      // Se houver um número AET para o estado, atualizá-lo no array stateAETNumbers
+      if (statusData.aetNumber) {
+        const newStateAET = `${statusData.state}:${statusData.aetNumber}`;
+        let stateAETNumbers = [...(license.stateAETNumbers || [])];
+        
+        const existingAETIndex = stateAETNumbers.findIndex(s => s.startsWith(`${statusData.state}:`));
+        if (existingAETIndex >= 0) {
+          stateAETNumbers[existingAETIndex] = newStateAET;
+        } else {
+          stateAETNumbers.push(newStateAET);
+        }
+        
+        updateData.stateAETNumbers = stateAETNumbers;
+        
+        // Manter o campo legado aetNumber também atualizado (usar o último número cadastrado)
+        updateData.aetNumber = statusData.aetNumber;
       }
     }
     
