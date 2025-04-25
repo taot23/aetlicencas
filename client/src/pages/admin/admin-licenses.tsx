@@ -128,7 +128,7 @@ export default function AdminLicensesPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  // Filtro de transportador removido
+  const [transporterFilter, setTransporterFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   const [licenseDetailsOpen, setLicenseDetailsOpen] = useState(false);
@@ -336,7 +336,10 @@ export default function AdminLicensesPage() {
       // Filtro de status
       const matchesStatus = !statusFilter || statusFilter === "all" || license.status === statusFilter;
       
-      // Filtro de transportador removido
+      // Filtro de transportador
+      const matchesTransporter = !transporterFilter || transporterFilter === "all" || (
+        license.transporterId != null && license.transporterId.toString() === transporterFilter
+      );
       
       // Filtro de data
       let matchesDate = true;
@@ -355,7 +358,7 @@ export default function AdminLicensesPage() {
         }
       }
       
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearch && matchesStatus && matchesTransporter && matchesDate;
     })
     // Aplicar ordenação
     .sort((a, b) => {
@@ -607,7 +610,36 @@ export default function AdminLicensesPage() {
                   </div>
                 </div>
                 
-                {/* Filtro de transportador removido */}
+                <div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="transporter-filter">Transportador</Label>
+                    <Select value={transporterFilter} onValueChange={setTransporterFilter}>
+                      <SelectTrigger id="transporter-filter">
+                        <SelectValue placeholder="Todos os transportadores" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os transportadores</SelectItem>
+                        {/* Obter transportadores únicos do array de licenças */}
+                        {Array.from(
+                          new Set(
+                            licenses
+                              .filter(license => license.transporterId != null)
+                              .map(license => license.transporterId?.toString())
+                          )
+                        ).map(transporterId => {
+                          const transporter = licenses.find(
+                            license => license.transporterId?.toString() === transporterId
+                          );
+                          return (
+                            <SelectItem key={transporterId} value={transporterId || ""}>
+                              {transporter?.transporterName || `Transportador #${transporterId}`}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               {isLoading ? (
