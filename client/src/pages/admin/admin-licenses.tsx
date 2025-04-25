@@ -757,7 +757,7 @@ export default function AdminLicensesPage() {
 
       {/* Diálogo para atualizar status por estado */}
       <Dialog open={stateStatusDialogOpen} onOpenChange={setStateStatusDialogOpen}>
-        <DialogContent className="w-full max-w-md mx-auto overflow-y-auto max-h-[90vh]">
+        <DialogContent className="w-full max-w-4xl mx-auto overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Editar Status do Estado {selectedState}</DialogTitle>
             <DialogDescription>
@@ -777,55 +777,58 @@ export default function AdminLicensesPage() {
                 <li><span className="font-semibold">Cancelado:</span> Licença cancelada pelo cliente ou pelo sistema</li>
               </ul>
             </div>
-            <form onSubmit={stateStatusForm.handleSubmit(onSubmitStateStatus)} className="space-y-4">
-              <FormField
-                control={stateStatusForm.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um estado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {brazilianStates.map((state) => (
-                          <SelectItem key={state} value={state}>
-                            {state}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={stateStatusForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {statusOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={stateStatusForm.handleSubmit(onSubmitStateStatus)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={stateStatusForm.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um estado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {brazilianStates.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={stateStatusForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {statusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
               <FormField
                 control={stateStatusForm.control}
                 name="comments"
@@ -884,7 +887,7 @@ export default function AdminLicensesPage() {
               {stateStatusForm.watch("status") === "approved" && (
                 <div className="space-y-4">
                   <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Licença Liberada</h3>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={stateStatusForm.control}
                       name="validUntil"
@@ -917,9 +920,9 @@ export default function AdminLicensesPage() {
                           <FormLabel>
                             Upload Licença <span className="text-red-500">*</span>
                           </FormLabel>
-                          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                          <div className="mt-1 flex justify-center px-4 pt-4 pb-5 border-2 border-gray-300 border-dashed rounded-md">
                             <div className="space-y-1 text-center">
-                              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+                              <UploadCloud className="mx-auto h-10 w-10 text-gray-400" />
                               <div className="flex text-sm text-gray-600">
                                 <label
                                   htmlFor="licenseFile"
@@ -965,7 +968,30 @@ export default function AdminLicensesPage() {
               {stateStatusForm.watch("status") === "rejected" && (
                 <div className="space-y-4">
                   <h3 className="font-medium text-sm text-gray-800 mt-2 border-t pt-4">Informações para Licença Reprovada</h3>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={stateStatusForm.control}
+                      name="comments"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Motivo da Reprovação <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Detalhe os motivos da reprovação"
+                              className="min-h-[100px]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Informações sobre o motivo da reprovação
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormField
                       control={stateStatusForm.control}
                       name="licenseFile"
@@ -974,9 +1000,9 @@ export default function AdminLicensesPage() {
                           <FormLabel>
                             Upload Documento de Reprovação <span className="text-red-500">*</span>
                           </FormLabel>
-                          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                          <div className="mt-1 flex justify-center px-4 pt-4 pb-5 border-2 border-gray-300 border-dashed rounded-md">
                             <div className="space-y-1 text-center">
-                              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+                              <UploadCloud className="mx-auto h-10 w-10 text-gray-400" />
                               <div className="flex text-sm text-gray-600">
                                 <label
                                   htmlFor="licenseFile-rejected"
