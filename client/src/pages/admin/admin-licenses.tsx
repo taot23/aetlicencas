@@ -211,7 +211,7 @@ export default function AdminLicensesPage() {
       comments: "",
       aetNumber: "", // Adicionar campo para número da AET
       licenseFile: undefined, // Adicionar valor padrão para licenseFile
-      validUntil: undefined, // Adicionar valor padrão para validUntil
+      validUntil: "", // Corrigindo: iniciar como string vazia ao invés de undefined
     },
   });
 
@@ -403,7 +403,7 @@ export default function AdminLicensesPage() {
       comments: "",
       aetNumber: "", // Resetar também o campo de número da AET
       licenseFile: undefined, // Resetar o campo de arquivo
-      validUntil: undefined, // Resetar a data de validade
+      validUntil: "", // Resetar a data de validade como string vazia, não undefined
     });
     
     setStateStatusDialogOpen(true);
@@ -1010,7 +1010,10 @@ export default function AdminLicensesPage() {
                           <FormControl>
                             <Input
                               type="date"
-                              {...field}
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
                               min={new Date().toISOString().split('T')[0]}
                               className="w-full"
                             />
