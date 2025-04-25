@@ -444,7 +444,14 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Seção de transportador removida */}
+      {/* Informações do Transportador */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Transportador</h3>
+        <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+          <p><span className="font-medium">Nome:</span> {license.transporterName || (license as any).transporter_name || "Não informado"}</p>
+          <p><span className="font-medium">Documento:</span> {license.transporterDocument || (license as any).transporter_document || "Não informado"}</p>
+        </div>
+      </div>
       
       {/* Estados Solicitados */}
       <div className="space-y-2">
