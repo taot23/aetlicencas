@@ -318,8 +318,14 @@ export default function IssuedLicensesPage() {
       }
     },
     onSuccess: (data) => {
+      console.log("Renovação bem-sucedida:", data);
+      
+      // Fechar o diálogo de renovação
+      setRenewDialogOpen(false);
+      
       // Invalidar a cache para garantir que os dados são atualizados
       queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses/issued"] });
       
       // Notificar o usuário e redirecionar para a página de edição do rascunho
       toast({
@@ -328,14 +334,19 @@ export default function IssuedLicensesPage() {
         duration: 5000,
       });
       
-      // Navegar para a página de edição do rascunho
-      setLocation(`/request-license?draft=${data.draft.id}`);
+      // Navegar para a página de edição do rascunho após um pequeno atraso
+      setTimeout(() => {
+        setLocation(`/request-license?draft=${data.draft.id}`);
+      }, 1000);
     },
     onError: (error: Error) => {
+      console.error("Erro na renovação:", error);
+      
       toast({
         title: "Erro ao renovar licença",
-        description: error.message,
+        description: error.message || "Não foi possível completar a renovação da licença. Tente novamente.",
         variant: "destructive",
+        duration: 5000,
       });
     }
   });
@@ -951,11 +962,12 @@ export default function IssuedLicensesPage() {
               disabled={renewLicenseMutation.isPending || !licenseToRenew}
               onClick={() => {
                 if (licenseToRenew) {
+                  console.log("Renovando licença:", licenseToRenew);
                   renewLicenseMutation.mutate({
                     licenseId: licenseToRenew.licenseId,
                     state: licenseToRenew.state
                   });
-                  setRenewDialogOpen(false);
+                  // Não fechar automaticamente, aguardar resultado da mutação
                 }
               }}
             >
