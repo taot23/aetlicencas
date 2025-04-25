@@ -82,7 +82,7 @@ export const TransporterInfo = ({
           <span className="text-sm text-gray-500">Carregando dados do transportador...</span>
         </div>
       ) : transporter ? (
-        <div className="space-y-2">
+        <>
           <p className="text-gray-900 font-medium">
             {transporter.name}
           </p>
@@ -93,7 +93,7 @@ export const TransporterInfo = ({
               </span> {transporter.documentNumber}
             </p>
           )}
-        </div>
+        </>
       ) : (
         <p className="text-gray-500">Transportador não encontrado</p>
       )}
