@@ -425,7 +425,14 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       {/* Cabeçalho do pedido com status atualizado em tempo real */}
       <div className="bg-slate-700 text-white p-4 rounded-md shadow-sm">
         <div className="flex flex-wrap justify-between items-center">
-          <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
+          <div>
+            <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
+            {license.aetNumber && (
+              <div className="text-slate-300 text-sm mt-1">
+                Nº AET: {license.aetNumber || (license as any).aet_number}
+              </div>
+            )}
+          </div>
           <div className="flex items-center space-x-2 mt-2 sm:mt-0">
             <div className="hidden sm:block text-slate-300 text-sm mr-2">Status:</div>
             <StatusBadge 
