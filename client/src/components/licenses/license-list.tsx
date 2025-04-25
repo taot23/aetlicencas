@@ -48,6 +48,15 @@ export function LicenseList({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLicense, setSelectedLicense] = useState<LicenseRequest | null>(null);
   
+  // Função para obter a URL do arquivo da licença de qualquer estrutura
+  const getLicenseFileUrl = (license: any): string | null => {
+    // Tenta todas as possíveis propriedades onde a URL pode estar
+    return license.licenseFileUrl || 
+           license.license_file_url || 
+           (license as any).license_file_url || 
+           (license.stateFiles && license.stateFiles.length > 0 ? license.stateFiles[0].split(':')[1] : null);
+  };
+  
   // Delete mutation for drafts
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -119,15 +128,7 @@ export function LicenseList({
 
   // Function to render actions based on list type and license status
   const renderActions = (license: LicenseRequest) => {
-    // Função para obter a URL do arquivo da licença de qualquer estrutura
-    const getLicenseFileUrl = (license: any): string | null => {
-      // Tenta todas as possíveis propriedades onde a URL pode estar
-      return license.licenseFileUrl || 
-             license.license_file_url || 
-             (license as any).license_file_url || 
-             (license.stateFiles && license.stateFiles.length > 0 ? license.stateFiles[0].split(':')[1] : null);
-    };
-    
+    // Obter URL do arquivo uma única vez para evitar múltiplas chamadas à função
     const licenseFileUrl = getLicenseFileUrl(license);
     
     if (isDraftList) {
@@ -318,6 +319,8 @@ export function LicenseList({
                     (() => {
                       // Verificar tanto o status específico do estado quanto o status geral
                       const stateStatus = (license as any).specificStateStatus || license.status;
+                      // Obter URL do arquivo uma única vez para evitar múltiplas chamadas à função
+                      const licenseFileUrl = getLicenseFileUrl(license);
                       
                       if (stateStatus === "approved") {
                         return (
@@ -327,19 +330,19 @@ export function LicenseList({
                               size="sm"
                               asChild
                               className="text-green-600 border-green-200 mr-1"
-                              title={getLicenseFileUrl(license) ? "Baixar licença" : "Arquivo não disponível"}
+                              title={licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
                             >
                               <a 
-                                href={getLicenseFileUrl(license) || '#'} 
+                                href={licenseFileUrl || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
-                                  if (!getLicenseFileUrl(license)) {
+                                  if (!licenseFileUrl) {
                                     e.preventDefault();
                                     alert('Arquivo da licença não disponível no momento.');
                                   }
                                 }}
-                                className={!getLicenseFileUrl(license) ? "opacity-40 cursor-not-allowed" : ""}
+                                className={!licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
                               >
                                 <Download className="h-4 w-4 mr-1" /> Download
                               </a>
