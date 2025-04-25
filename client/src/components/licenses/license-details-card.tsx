@@ -517,8 +517,8 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         <h3 className="text-lg font-semibold">Linha de Frente</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Caminhão/Unidade Tratora */}
-          {license.tractorUnitId && (
+          {/* Caminhão/Unidade Tratora - verificar diferentes formatos do tractorUnitId */}
+          {(license.tractorUnitId || (license as any).tractor_unit_id) && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -584,7 +584,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Primeira Carreta */}
-          {license.firstTrailerId && (
+          {(license.firstTrailerId || (license as any).first_trailer_id) && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -650,7 +650,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Segunda Carreta */}
-          {license.secondTrailerId && (
+          {(license.secondTrailerId || (license as any).second_trailer_id) && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -716,7 +716,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Dolly (Se necessário) */}
-          {license.dollyId && (
+          {(license.dollyId || (license as any).dolly_id) && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
@@ -782,7 +782,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           )}
           
           {/* Prancha (se necessário) */}
-          {license.flatbedId && (
+          {(license.flatbedId || (license as any).flatbed_id) && (
             <div className="border border-gray-200 rounded-md overflow-hidden h-full">
               <div className="bg-white flex flex-wrap items-center justify-between p-2">
                 {/* Cabeçalho com placa e tipo */}
