@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { LicenseRequest, LicenseStatus } from "@shared/schema";
 import { format, isAfter, isBefore, addDays, differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,14 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
-import { FileDown, ExternalLink, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { FileDown, ExternalLink, AlertCircle, CheckCircle2, Clock, RefreshCcw } from "lucide-react";
 import { Status, StatusBadge } from "@/components/licenses/status-badge";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { Badge } from "@/components/ui/badge";
 import { SortableHeader } from "@/components/ui/sortable-header";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function IssuedLicensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -257,6 +260,39 @@ export default function IssuedLicensesPage() {
   const viewLicenseDetails = (license: LicenseRequest) => {
     setSelectedLicense(license);
   };
+  
+  // Navegação para redirecionar após renovação
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Mutação para renovar licença
+  const renewLicenseMutation = useMutation({
+    mutationFn: async ({ licenseId, state }: { licenseId: number, state: string }) => {
+      const response = await apiRequest("POST", "/api/licenses/renew", { licenseId, state });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      // Invalidar a cache para garantir que os dados são atualizados
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts"] });
+      
+      // Notificar o usuário e redirecionar para a página de edição do rascunho
+      toast({
+        title: "Licença renovada com sucesso",
+        description: `Licença renovada para o estado ${data.draft.states[0]}. Você será redirecionado para editar o rascunho.`,
+        duration: 5000,
+      });
+      
+      // Navegar para a página de edição do rascunho
+      navigate("/request-license?draft=" + data.draft.id);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao renovar licença",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
   return (
     <MainLayout>

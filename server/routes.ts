@@ -1374,6 +1374,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Renovar licença para um estado específico
+  app.post('/api/licenses/renew', requireAuth, async (req, res) => {
+    try {
+      const { licenseId, state } = req.body;
+      
+      if (!licenseId || !state) {
+        return res.status(400).json({ message: 'ID da licença e estado são obrigatórios' });
+      }
+      
+      const userId = req.user!.id;
+      
+      // Verificar se a licença existe
+      const originalLicense = await storage.getLicenseRequestById(licenseId);
+      if (!originalLicense) {
+        return res.status(404).json({ message: 'Pedido de licença não encontrado' });
+      }
+      
+      // Verificar se o usuário é o dono da licença ou tem papel administrativo
+      if (originalLicense.userId !== userId && !isAdminUser(req.user!)) {
+        return res.status(403).json({ message: 'Você não tem permissão para renovar esta licença' });
+      }
+      
+      // Verificar se o estado está presente na licença original
+      if (!originalLicense.states.includes(state)) {
+        return res.status(400).json({ message: `O estado ${state} não faz parte da licença original` });
+      }
+      
+      // Gerar número de pedido baseado no ano atual
+      const requestNumber = `AET-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      
+      // Criar um novo rascunho baseado na licença original, mas apenas com o estado escolhido
+      const draftData = {
+        transporterId: originalLicense.transporterId,
+        mainVehiclePlate: originalLicense.mainVehiclePlate,
+        tractorUnitId: originalLicense.tractorUnitId,
+        firstTrailerId: originalLicense.firstTrailerId,
+        dollyId: originalLicense.dollyId,
+        secondTrailerId: originalLicense.secondTrailerId,
+        flatbedId: originalLicense.flatbedId,
+        length: originalLicense.length,
+        width: originalLicense.width,
+        height: originalLicense.height,
+        type: originalLicense.type,
+        cargoType: originalLicense.cargoType,
+        additionalPlates: originalLicense.additionalPlates,
+        additionalPlatesDocuments: originalLicense.additionalPlatesDocuments,
+        // Incluir apenas o estado específico sendo renovado
+        states: [state],
+        requestNumber,
+        isDraft: true,
+        comments: `Renovação da licença ${originalLicense.requestNumber} para o estado ${state}`,
+      };
+      
+      // Criar o novo rascunho
+      const newDraft = await storage.createLicenseDraft(userId, draftData);
+      
+      // Responder com o novo rascunho criado
+      res.status(201).json({
+        message: `Licença renovada com sucesso para o estado ${state}`,
+        draft: newDraft
+      });
+    } catch (error) {
+      console.error('Error renewing license:', error);
+      res.status(500).json({ message: 'Erro ao renovar licença' });
+    }
+  });
+
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
