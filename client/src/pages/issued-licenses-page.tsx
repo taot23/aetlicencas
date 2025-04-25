@@ -85,6 +85,7 @@ export default function IssuedLicensesPage() {
     licenseFileUrl: string | null;
     stateFileUrl: string | null;
     transporterId: number;
+    aetNumber: string | null; // Número da AET
   }
   
   // Obter licenças com status aprovado por estado
@@ -127,7 +128,8 @@ export default function IssuedLicensesPage() {
             validUntil: stateValidUntil,
             licenseFileUrl: license.licenseFileUrl,
             stateFileUrl,
-            transporterId: license.transporterId || 0
+            transporterId: license.transporterId || 0,
+            aetNumber: license.aetNumber || null // Incluir número da AET
           });
         }
       });
