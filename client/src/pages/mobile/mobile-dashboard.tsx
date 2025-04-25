@@ -5,10 +5,28 @@ import { MobileLayout } from "@/components/layouts/mobile-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Truck, FileText, ClipboardCheck, Clock } from "lucide-react";
+import { 
+  ArrowRight, 
+  Truck, 
+  FileText, 
+  ClipboardCheck, 
+  Clock, 
+  Users, 
+  FileCheck, 
+  AlertTriangle 
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { isAdminUser } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { StatCard } from "@/components/mobile/stat-card";
+
+interface DashboardStats {
+  totalVehicles: number;
+  activeLicenses: number;
+  pendingApproval: number;
+  expiringSoon: number;
+  totalLicenses?: number;
+}
 
 export default function MobileDashboardPage() {
   const { user } = useAuth();
@@ -20,7 +38,7 @@ export default function MobileDashboardPage() {
   });
   
   // Buscar estatísticas do dashboard
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
@@ -74,10 +92,10 @@ export default function MobileDashboardPage() {
   
   return (
     <MobileLayout title="Dashboard">
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Saudação */}
-        <section className="space-y-2 mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">
+        <section className="bg-gradient-to-r from-primary/5 to-primary/10 p-4 rounded-lg border border-primary/20">
+          <h2 className="text-2xl font-bold tracking-tight mb-1">
             Olá, {user?.fullName?.split(' ')[0] || 'Usuário'}
           </h2>
           <p className="text-muted-foreground">
@@ -86,46 +104,46 @@ export default function MobileDashboardPage() {
         </section>
         
         {/* Ações rápidas */}
-        <section className="space-y-2">
+        <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Ações rápidas</h3>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
-            <Link href="/vehicles">
-              <Card className="h-full cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardContent className="flex flex-col items-center justify-center p-4 h-full">
-                  <Truck className="h-8 w-8 mb-2 text-primary" />
-                  <span className="text-sm font-medium text-center">Meus Veículos</span>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-2 gap-4">
+            <Link href="/vehicles" className="no-underline">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 shadow-sm h-full border border-blue-100 hover:shadow-md transition-all flex flex-col items-center justify-center">
+                <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mb-3">
+                  <Truck className="h-6 w-6 text-blue-600" />
+                </div>
+                <span className="text-sm font-medium text-blue-800 text-center">Meus Veículos</span>
+              </div>
             </Link>
             
-            <Link href="/request-license">
-              <Card className="h-full cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardContent className="flex flex-col items-center justify-center p-4 h-full">
-                  <FileText className="h-8 w-8 mb-2 text-primary" />
-                  <span className="text-sm font-medium text-center">Nova Licença</span>
-                </CardContent>
-              </Card>
+            <Link href="/request-license" className="no-underline">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 shadow-sm h-full border border-green-100 hover:shadow-md transition-all flex flex-col items-center justify-center">
+                <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mb-3">
+                  <FileText className="h-6 w-6 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-green-800 text-center">Nova Licença</span>
+              </div>
             </Link>
             
-            <Link href="/track-license">
-              <Card className="h-full cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardContent className="flex flex-col items-center justify-center p-4 h-full">
-                  <ClipboardCheck className="h-8 w-8 mb-2 text-primary" />
-                  <span className="text-sm font-medium text-center">Acompanhar</span>
-                </CardContent>
-              </Card>
+            <Link href="/track-license" className="no-underline">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 shadow-sm h-full border border-purple-100 hover:shadow-md transition-all flex flex-col items-center justify-center">
+                <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mb-3">
+                  <ClipboardCheck className="h-6 w-6 text-purple-600" />
+                </div>
+                <span className="text-sm font-medium text-purple-800 text-center">Acompanhar</span>
+              </div>
             </Link>
             
-            <Link href="/issued-licenses">
-              <Card className="h-full cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardContent className="flex flex-col items-center justify-center p-4 h-full">
-                  <Clock className="h-8 w-8 mb-2 text-primary" />
-                  <span className="text-sm font-medium text-center">Licenças Emitidas</span>
-                </CardContent>
-              </Card>
+            <Link href="/issued-licenses" className="no-underline">
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 shadow-sm h-full border border-amber-100 hover:shadow-md transition-all flex flex-col items-center justify-center">
+                <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center mb-3">
+                  <Clock className="h-6 w-6 text-amber-600" />
+                </div>
+                <span className="text-sm font-medium text-amber-800 text-center">Licenças Emitidas</span>
+              </div>
             </Link>
           </div>
         </section>
@@ -137,68 +155,52 @@ export default function MobileDashboardPage() {
           <div className="space-y-3">
             {isLoading ? (
               Array(4).fill(0).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <Skeleton className="h-6 w-[120px]" />
-                      <Skeleton className="h-6 w-[40px]" />
-                    </div>
-                    <Skeleton className="h-2 w-full mt-3" />
-                  </CardContent>
-                </Card>
+                <div key={i} className="bg-white rounded-lg p-4 shadow-sm">
+                  <Skeleton className="h-5 w-[120px] mb-2" />
+                  <div className="flex items-center">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <Skeleton className="h-8 w-16 ml-3" />
+                  </div>
+                  <Skeleton className="h-4 w-32 mt-2" />
+                </div>
               ))
             ) : (
-              <>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Veículos Cadastrados</h4>
-                      <span className="text-xl font-bold">{animatedStats.totalVehicles}</span>
-                    </div>
-                    <Progress value={100} className="h-2 mt-2" />
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <StatCard
+                  title="Veículos Cadastrados"
+                  value={animatedStats.totalVehicles}
+                  icon={<Truck className="h-6 w-6 text-blue-500" />}
+                  changePercentage={2}
+                  iconClassName="bg-blue-50"
+                />
                 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Licenças Ativas</h4>
-                      <span className="text-xl font-bold">{animatedStats.activeLicenses}</span>
-                    </div>
-                    <Progress 
-                      value={calculateProgress(animatedStats.activeLicenses, stats?.totalLicenses || 1)} 
-                      className="h-2 mt-2" 
-                    />
-                  </CardContent>
-                </Card>
+                <StatCard
+                  title="Licenças Ativas"
+                  value={animatedStats.activeLicenses}
+                  icon={<FileCheck className="h-6 w-6 text-green-500" />}
+                  changePercentage={8}
+                  iconClassName="bg-green-50"
+                  valueClassName="text-green-600"
+                />
                 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Pendentes de Aprovação</h4>
-                      <span className="text-xl font-bold">{animatedStats.pendingApproval}</span>
-                    </div>
-                    <Progress 
-                      value={calculateProgress(animatedStats.pendingApproval, stats?.totalLicenses || 1)} 
-                      className="h-2 mt-2" 
-                    />
-                  </CardContent>
-                </Card>
+                <StatCard
+                  title="Pendentes de Aprovação"
+                  value={animatedStats.pendingApproval}
+                  icon={<Clock className="h-6 w-6 text-purple-500" />}
+                  changePercentage={-5}
+                  iconClassName="bg-purple-50"
+                  valueClassName="text-purple-600"
+                />
                 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Expirando em Breve</h4>
-                      <span className="text-xl font-bold">{animatedStats.expiringSoon}</span>
-                    </div>
-                    <Progress 
-                      value={calculateProgress(animatedStats.expiringSoon, stats?.activeLicenses || 1)} 
-                      className="h-2 mt-2 bg-amber-200"
-                      indicatorClassName="bg-amber-500" 
-                    />
-                  </CardContent>
-                </Card>
-              </>
+                <StatCard
+                  title="Expirando em Breve"
+                  value={animatedStats.expiringSoon}
+                  icon={<AlertTriangle className="h-6 w-6 text-amber-500" />}
+                  changePercentage={12}
+                  iconClassName="bg-amber-50"
+                  valueClassName="text-amber-600"
+                />
+              </div>
             )}
           </div>
         </section>
