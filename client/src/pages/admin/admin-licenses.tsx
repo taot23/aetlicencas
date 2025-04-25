@@ -780,6 +780,12 @@ export default function AdminLicensesPage() {
                               </TableCell>
                               <TableCell>{license.mainVehiclePlate}</TableCell>
                               <TableCell>
+                                <TransporterInfo 
+                                  transporterId={license.transporterId} 
+                                  compact={true}
+                                />
+                              </TableCell>
+                              <TableCell>
                                 <div className="flex flex-wrap gap-1">
                                   {license.states.map((state, idx) => {
                                     // Encontrar o status atual deste estado
@@ -863,6 +869,10 @@ export default function AdminLicensesPage() {
                               
                               <div className="mt-2">
                                 <p className="text-sm"><span className="font-medium">Veículo:</span> {license.mainVehiclePlate}</p>
+                                <p className="text-sm">
+                                  <span className="font-medium">Transportador:</span>{" "}
+                                  <TransporterInfo transporterId={license.transporterId} compact={true} />
+                                </p>
                                 <p className="text-sm"><span className="font-medium">Data:</span> {formatDate(license.createdAt)}</p>
                                 <div className="mt-1">
                                   <span className="text-sm font-medium">Estados:</span>
