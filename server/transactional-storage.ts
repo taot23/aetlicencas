@@ -632,7 +632,12 @@ export class TransactionalStorage implements IStorage {
     
     // Preparar os dados de atualização
     let stateStatuses = [...(license.stateStatuses || [])];
-    const newStateStatus = `${data.state}:${data.status}`;
+    
+    // Incluir data de validade no status se fornecida
+    let newStateStatus = `${data.state}:${data.status}`;
+    if (data.validUntil) {
+      newStateStatus = `${data.state}:${data.status}:${data.validUntil}`;
+    }
     
     // Verificar se o estado já existe na lista
     const existingIndex = stateStatuses.findIndex(s => s.startsWith(`${data.state}:`));
@@ -706,7 +711,12 @@ export class TransactionalStorage implements IStorage {
     
     // Atualizar status de um estado específico, se fornecido
     if (statusData.state && statusData.stateStatus) {
-      const newStateStatus = `${statusData.state}:${statusData.stateStatus}`;
+      // Incluir data de validade no status se disponível
+      let newStateStatus = `${statusData.state}:${statusData.stateStatus}`;
+      if (statusData.validUntil) {
+        newStateStatus = `${statusData.state}:${statusData.stateStatus}:${statusData.validUntil}`;
+      }
+      
       let stateStatuses = [...(license.stateStatuses || [])];
       
       // Verificar se o estado já existe na lista
