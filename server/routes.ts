@@ -740,7 +740,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allDrafts = await storage.getLicenseDraftsByUserId(0); // 0 = todos os rascunhos
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas seus rascunhos.`);
-        allDrafts = await storage.getLicenseDraftsByUserId(user.id);
+        
+        // Primeiro, obter os transportadores associados ao usuário
+        const userTransporters = await db.select()
+          .from(transporters)
+          .where(eq(transporters.userId, user.id));
+          
+        const transporterIds = userTransporters.map(t => t.id);
+        console.log(`[DEBUG RASCUNHOS] Transportadores associados ao usuário ${user.id}: ${transporterIds.join(', ')}`);
+        
+        // Buscar licenças onde o usuário é o dono OU o transportador está associado ao usuário
+        let rascunhosNoBanco = [];
+        
+        // Se houver transportadores associados, buscar rascunhos por transporterId também
+        if (transporterIds.length > 0) {
+          rascunhosNoBanco = await db.select()
+            .from(licenseRequests)
+            .where(eq(licenseRequests.isDraft, true))
+            .where(
+              or(
+                eq(licenseRequests.userId, user.id),
+                inArray(licenseRequests.transporterId, transporterIds)
+              )
+            );
+            
+          console.log(`[DEBUG RASCUNHOS] Encontrados ${rascunhosNoBanco.length} rascunhos para usuário ${user.id} ou transportadores ${transporterIds.join(', ')}`);
+        } else {
+          // Se não houver transportadores, buscar apenas por userId
+          rascunhosNoBanco = await db.select()
+            .from(licenseRequests)
+            .where(eq(licenseRequests.isDraft, true))
+            .where(eq(licenseRequests.userId, user.id));
+            
+          console.log(`[DEBUG RASCUNHOS] Encontrados ${rascunhosNoBanco.length} rascunhos para usuário ${user.id} sem transportadores associados`);
+        }
+        
+        allDrafts = rascunhosNoBanco;
       }
       
       // Verificar se deve incluir rascunhos de renovação
@@ -1110,7 +1145,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allLicenses = await storage.getAllLicenseRequests();
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
-        allLicenses = await storage.getLicenseRequestsByUserId(user.id);
+        
+        // Primeiro, obter os transportadores associados ao usuário
+        const userTransporters = await db.select()
+          .from(transporters)
+          .where(eq(transporters.userId, user.id));
+          
+        const transporterIds = userTransporters.map(t => t.id);
+        console.log(`[DEBUG ACOMPANHAR LICENÇAS] Transportadores associados ao usuário ${user.id}: ${transporterIds.join(', ')}`);
+        
+        // Buscar licenças onde o usuário é o dono OU o transportador está associado ao usuário
+        let licencasNoBanco = [];
+        
+        // Se houver transportadores associados, buscar licenças por transporterId também
+        if (transporterIds.length > 0) {
+          licencasNoBanco = await db.select()
+            .from(licenseRequests)
+            .where(
+              or(
+                eq(licenseRequests.userId, user.id),
+                inArray(licenseRequests.transporterId, transporterIds)
+              )
+            );
+            
+          console.log(`[DEBUG ACOMPANHAR LICENÇAS] Encontradas ${licencasNoBanco.length} licenças para usuário ${user.id} ou transportadores ${transporterIds.join(', ')}`);
+        } else {
+          // Se não houver transportadores, buscar apenas por userId
+          licencasNoBanco = await db.select()
+            .from(licenseRequests)
+            .where(eq(licenseRequests.userId, user.id));
+            
+          console.log(`[DEBUG ACOMPANHAR LICENÇAS] Encontradas ${licencasNoBanco.length} licenças para usuário ${user.id} sem transportadores associados`);
+        }
+        
+        allLicenses = licencasNoBanco;
       }
       
       // Verificar se deve incluir rascunhos de renovação
