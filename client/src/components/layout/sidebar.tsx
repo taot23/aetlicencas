@@ -62,7 +62,7 @@ export function Sidebar({ className }: SidebarProps) {
         <Logo width={120} className="py-2" />
       </div>
       
-      <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
+      <div className="px-2 py-4 space-y-1">
         {/* Seção do Usuário Regular - Dashboard é visível apenas para usuários não-administrativos */}
         {!isOperational && (
           <Button
