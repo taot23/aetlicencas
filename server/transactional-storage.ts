@@ -630,8 +630,25 @@ export class TransactionalStorage implements IStorage {
       throw new Error("Pedido de licença não encontrado");
     }
     
-    // Preparar os dados de atualização
-    let stateStatuses = [...(license.stateStatuses || [])];
+    // Buscar novamente do banco para garantir dados mais recentes
+    const refreshedLicense = await db
+      .select()
+      .from(licenseRequests)
+      .where(eq(licenseRequests.id, data.licenseId))
+      .limit(1);
+    
+    const currentLicense = refreshedLicense.length > 0 ? refreshedLicense[0] : license;
+    
+    console.log("=== ATUALIZANDO ESTADO ===");
+    console.log(`Licença ID: ${data.licenseId}, Estado: ${data.state}, Novo Status: ${data.status}`);
+    console.log("Estado atual dos StateStatuses:", currentLicense.stateStatuses);
+    
+    // Preparar os dados de atualização - garantir que começamos com um array válido
+    let stateStatuses = Array.isArray(currentLicense.stateStatuses) 
+      ? [...currentLicense.stateStatuses] 
+      : [];
+      
+    console.log("StateStatuses iniciais para processamento:", stateStatuses);
     
     // Incluir data de validade no status se fornecida
     let newStateStatus = `${data.state}:${data.status}`;
@@ -639,23 +656,44 @@ export class TransactionalStorage implements IStorage {
       newStateStatus = `${data.state}:${data.status}:${data.validUntil}`;
     }
     
-    // Verificar se o estado já existe na lista - lidando com diferentes formatos de dados
-    // Converter stateStatuses para array se não for
-    if (!Array.isArray(stateStatuses)) {
-      console.log("stateStatuses não é um array, convertendo:", stateStatuses);
-      stateStatuses = [];
-    }
+    // IMPORTANTE: Inicializar status para todos os estados se não estiverem presentes
+    // Isso garante que todos os estados tenham um status, mesmo que seja o padrão
+    const allStates = license.states || [];
+    let missingStates = [...allStates];
     
-    // Verificar o formato dos elementos (alguns podem vir como objetos em vez de strings)
-    stateStatuses = stateStatuses.map(entry => {
+    // Normalizar o formato para garantir consistência
+    stateStatuses = stateStatuses.filter(Boolean).map(entry => {
+      // Se for objeto, converter para string
       if (typeof entry === 'object' && entry !== null) {
-        console.log("Convertendo objeto para string:", entry);
-        return `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
+        const stateStr = `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
+        const stateParts = stateStr.split(':');
+        // Remover da lista de estados faltantes
+        missingStates = missingStates.filter(s => s !== stateParts[0]);
+        return stateStr;
       }
-      return entry;
+      
+      // Se for string, verificar formato e remover da lista de estados faltantes
+      if (typeof entry === 'string') {
+        const stateParts = entry.split(':');
+        missingStates = missingStates.filter(s => s !== stateParts[0]);
+        return entry;
+      }
+      
+      return null;
+    }).filter(Boolean);
+    
+    console.log("States missing statuses:", missingStates);
+    
+    // Adicionar status padrão para estados faltantes
+    missingStates.forEach(state => {
+      // Não adicionar para o estado que estamos atualizando
+      if (state !== data.state) {
+        stateStatuses.push(`${state}:pending_registration`);
+        console.log(`Adicionando status padrão para estado ${state}`);
+      }
     });
     
-    // Buscar o status existente
+    // Buscar o status existente para o estado que queremos atualizar
     const existingIndex = stateStatuses.findIndex(s => {
       if (typeof s === 'string') {
         return s.startsWith(`${data.state}:`);
@@ -665,6 +703,7 @@ export class TransactionalStorage implements IStorage {
     
     console.log(`Atualizando status do estado ${data.state} para ${data.status}. Índice encontrado: ${existingIndex}`);
     
+    // Atualizar ou adicionar o novo status
     if (existingIndex >= 0) {
       stateStatuses[existingIndex] = newStateStatus;
       console.log(`Status atualizado para: ${newStateStatus}`);
@@ -672,6 +711,8 @@ export class TransactionalStorage implements IStorage {
       stateStatuses.push(newStateStatus);
       console.log(`Novo status adicionado: ${newStateStatus}`);
     }
+    
+    console.log("StateStatuses após processamento:", stateStatuses);
     
     // Atualizar arquivo do estado se fornecido
     let stateFiles = [...(license.stateFiles || [])];
@@ -758,6 +799,18 @@ export class TransactionalStorage implements IStorage {
       throw new Error("Pedido de licença não encontrado");
     }
     
+    // Buscar do banco para garantir dados mais recentes
+    const refreshedLicense = await db
+      .select()
+      .from(licenseRequests)
+      .where(eq(licenseRequests.id, id))
+      .limit(1);
+    
+    const currentLicense = refreshedLicense.length > 0 ? refreshedLicense[0] : license;
+    
+    console.log("=== ATUALIZANDO STATUS GERAL DA LICENÇA ===");
+    console.log(`Licença ID: ${id}, Novo Status: ${statusData.status}`);
+    
     // Prepare os dados de atualização
     const updateData: Partial<LicenseRequest> = {
       status: statusData.status as LicenseStatus,
@@ -779,22 +832,55 @@ export class TransactionalStorage implements IStorage {
     
     // Atualizar status de um estado específico, se fornecido
     if (statusData.state && statusData.stateStatus) {
+      console.log(`Atualizando estado específico: ${statusData.state} para ${statusData.stateStatus}`);
+      
       // Incluir data de validade no status se disponível
       let newStateStatus = `${statusData.state}:${statusData.stateStatus}`;
       if (statusData.validUntil) {
         newStateStatus = `${statusData.state}:${statusData.stateStatus}:${statusData.validUntil}`;
       }
       
-      // Garantir que stateStatuses seja um array
-      let stateStatuses = Array.isArray(license.stateStatuses) ? [...license.stateStatuses] : [];
+      // Garantir que stateStatuses seja um array atualizado do banco
+      let stateStatuses = Array.isArray(currentLicense.stateStatuses) 
+        ? [...currentLicense.stateStatuses] 
+        : [];
       
-      // Normalizar o formato dos elementos (alguns podem vir como objetos)
-      stateStatuses = stateStatuses.map(entry => {
+      console.log("StateStatuses antes da normalização:", stateStatuses);
+      
+      // IMPORTANTE: Inicializar status para todos os estados se não estiverem presentes
+      const allStates = currentLicense.states || [];
+      let missingStates = [...allStates];
+      
+      // Normalizar o formato para garantir consistência
+      stateStatuses = stateStatuses.filter(Boolean).map(entry => {
+        // Se for objeto, converter para string
         if (typeof entry === 'object' && entry !== null) {
-          console.log("Convertendo objeto para string em updateLicenseStatus:", entry);
-          return `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
+          const stateStr = `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
+          const stateParts = stateStr.split(':');
+          // Remover da lista de estados faltantes
+          missingStates = missingStates.filter(s => s !== stateParts[0]);
+          return stateStr;
         }
-        return entry;
+        
+        // Se for string, verificar formato e remover da lista de estados faltantes
+        if (typeof entry === 'string') {
+          const stateParts = entry.split(':');
+          missingStates = missingStates.filter(s => s !== stateParts[0]);
+          return entry;
+        }
+        
+        return null;
+      }).filter(Boolean);
+      
+      console.log("States missing statuses:", missingStates);
+      
+      // Adicionar status padrão para estados faltantes
+      missingStates.forEach(state => {
+        // Não adicionar para o estado que estamos atualizando
+        if (state !== statusData.state) {
+          stateStatuses.push(`${state}:pending_registration`);
+          console.log(`Adicionando status padrão para estado ${state}`);
+        }
       });
       
       // Verificar se o estado já existe na lista
@@ -814,6 +900,8 @@ export class TransactionalStorage implements IStorage {
         stateStatuses.push(newStateStatus);
         console.log(`Novo status adicionado: ${newStateStatus}`);
       }
+      
+      console.log("StateStatuses após processamento:", stateStatuses);
       
       updateData.stateStatuses = stateStatuses;
       
