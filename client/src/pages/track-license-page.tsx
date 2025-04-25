@@ -35,10 +35,12 @@ export default function TrackLicensePage() {
   const { toast } = useToast();
   
   // Buscamos todas as licenças não finalizadas usando a rota /api/licenses
+  // Rascunhos de renovação não devem aparecer aqui
   const { data: licenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: ["/api/licenses"],
     queryFn: async () => {
-      const res = await fetch("/api/licenses", {
+      // O parâmetro includeRenewal=false é o padrão, mas explicitamos para clareza
+      const res = await fetch("/api/licenses?includeRenewal=false", {
         credentials: "include"
       });
       if (!res.ok) {
@@ -47,8 +49,13 @@ export default function TrackLicensePage() {
       
       const data = await res.json();
       
-      // Retornar todas as licenças, sem filtrar as aprovadas
-      return data;
+      // Filtrar para remover quaisquer rascunhos de renovação que possam ter passado pelo filtro do backend
+      const filteredData = data.filter((license) => {
+        // Exclui qualquer licença que seja rascunho E tenha 'Renovação' no campo comments
+        return !(license.isDraft && license.comments?.includes('Renovação'));
+      });
+      
+      return filteredData;
     },
     // Otimização: Mantém dados em cache por 5 minutos
     staleTime: 5 * 60 * 1000,

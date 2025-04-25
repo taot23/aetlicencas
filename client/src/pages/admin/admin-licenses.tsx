@@ -215,10 +215,28 @@ export default function AdminLicensesPage() {
     },
   });
 
-  // Buscar todas as licenças
+  // Buscar todas as licenças (excluindo rascunhos de renovação)
   const { data: licenses = [], isLoading, refetch } = useQuery<LicenseRequest[]>({
-    queryKey: [apiEndpoint],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryKey: [apiEndpoint, "excludeRenewal"],
+    queryFn: async () => {
+      const res = await fetch(`${apiEndpoint}?includeRenewal=false`, {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Não autorizado");
+        }
+        throw new Error("Erro ao buscar licenças");
+      }
+      
+      const data = await res.json();
+      
+      // Filtro adicional no cliente para garantir que não vamos mostrar
+      // rascunhos de renovação na página de gerenciamento
+      return data.filter((license: LicenseRequest) => {
+        return !(license.isDraft && license.comments?.includes('Renovação'));
+      });
+    },
   });
 
   // Mutação para atualização de status geral foi removida - agora só usamos atualização por estado
