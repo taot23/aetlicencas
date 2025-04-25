@@ -53,68 +53,65 @@ export async function getDashboardStatsCombined() {
  * Obtém licenças com informações do transportador em uma única consulta
  */
 export async function getLicensesWithTransporters(filters: LicenseFilters = {}) {
-  // Construindo a query de forma diferente para evitar problemas com os parâmetros
-  let queryStr = `
-    SELECT l.*, t.name as transporter_name, t.document_number as transporter_document, u.email as user_email
-    FROM "license_requests" l
-    LEFT JOIN "transporters" t ON l.transporter_id = t.id
-    LEFT JOIN "users" u ON l.user_id = u.id
-    WHERE 1=1
-  `;
-  
-  const params = [];
-  let paramCount = 1;
-  
-  if (filters.userId) {
-    queryStr += ` AND l.user_id = $${paramCount++}`;
-    params.push(filters.userId);
-  }
-  
-  if (filters.transporterId) {
-    queryStr += ` AND l.transporter_id = $${paramCount++}`;
-    params.push(filters.transporterId);
-  }
-  
-  if (filters.status) {
-    queryStr += ` AND l.status = $${paramCount++}`;
-    params.push(filters.status);
-  }
-  
-  if (filters.isDraft !== undefined) {
-    queryStr += ` AND l.is_draft = $${paramCount++}`;
-    params.push(filters.isDraft);
-  }
-  
-  if (filters.mainVehiclePlate) {
-    queryStr += ` AND l.main_vehicle_plate ILIKE $${paramCount++}`;
-    params.push(`%${filters.mainVehiclePlate}%`);
-  }
-  
-  if (filters.startDate) {
-    queryStr += ` AND l.created_at >= $${paramCount++}`;
-    params.push(filters.startDate);
-  }
-  
-  if (filters.endDate) {
-    queryStr += ` AND l.created_at <= $${paramCount++}`;
-    params.push(filters.endDate);
-  }
-  
-  // Adicione ordenação
-  queryStr += ` ORDER BY l.created_at DESC`;
-  
-  // Adicione limit e offset se fornecidos
-  if (filters.limit) {
-    queryStr += ` LIMIT $${paramCount++}`;
-    params.push(filters.limit);
+  try {
+    // Construindo uma query dinâmica com sql-template-strings
+    let query = sql`
+      SELECT l.*, t.name as transporter_name, t.document_number as transporter_document, u.email as user_email
+      FROM ${licenseRequests} l
+      LEFT JOIN ${transporters} t ON l.transporter_id = t.id
+      LEFT JOIN ${users} u ON l.user_id = u.id
+      WHERE 1=1
+    `;
     
-    if (filters.offset) {
-      queryStr += ` OFFSET $${paramCount++}`;
-      params.push(filters.offset);
+    // Adicionar condições de filtro
+    if (filters.userId) {
+      query = sql`${query} AND l.user_id = ${filters.userId}`;
     }
+    
+    if (filters.transporterId) {
+      query = sql`${query} AND l.transporter_id = ${filters.transporterId}`;
+    }
+    
+    if (filters.status) {
+      query = sql`${query} AND l.status = ${filters.status}`;
+    }
+    
+    if (filters.isDraft !== undefined) {
+      query = sql`${query} AND l.is_draft = ${filters.isDraft}`;
+    }
+    
+    if (filters.mainVehiclePlate) {
+      query = sql`${query} AND l.main_vehicle_plate ILIKE ${`%${filters.mainVehiclePlate}%`}`;
+    }
+    
+    if (filters.startDate) {
+      query = sql`${query} AND l.created_at >= ${filters.startDate}`;
+    }
+    
+    if (filters.endDate) {
+      query = sql`${query} AND l.created_at <= ${filters.endDate}`;
+    }
+    
+    // Adicionar ordenação
+    query = sql`${query} ORDER BY l.created_at DESC`;
+    
+    // Adicionar limit e offset
+    if (filters.limit) {
+      query = sql`${query} LIMIT ${filters.limit}`;
+      
+      if (filters.offset) {
+        query = sql`${query} OFFSET ${filters.offset}`;
+      }
+    }
+    
+    console.log("Executando consulta SQL com filtros aplicados");
+    
+    // Executar a consulta
+    return await db.execute(query);
+  } catch (error) {
+    console.error("Erro na consulta getLicensesWithTransporters:", error);
+    throw error;
   }
-  
-  return await db.execute(sql.raw(queryStr), params);
 }
 
 /**
