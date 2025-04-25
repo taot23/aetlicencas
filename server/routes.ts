@@ -419,11 +419,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para buscar transportadores vinculados ao usuário
   app.get('/api/user/transporters', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
-      // Buscar todos os transportadores
+      const user = req.user!;
+      const userId = user.id;
+      
+      // Se for um usuário administrativo, retornar todos os transportadores
+      if (isAdminUser(user)) {
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todos os transportadores.`);
+        const allTransporters = await storage.getAllTransporters();
+        return res.json(allTransporters);
+      }
+      
+      // Para usuários comuns, buscar todos os transportadores e filtrar
       const allTransporters = await storage.getAllTransporters();
       // Filtrar apenas os vinculados ao usuário atual
       const userTransporters = allTransporters.filter(t => t.userId === userId);
+      
+      console.log(`Usuário ${user.email} encontrou ${userTransporters.length} transportadores vinculados.`);
       res.json(userTransporters);
     } catch (error) {
       console.error('Error fetching user transporters:', error);
