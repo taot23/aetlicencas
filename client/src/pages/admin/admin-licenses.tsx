@@ -1155,10 +1155,13 @@ export default function AdminLicensesPage() {
               
               {/* A seção de Estados Solicitados foi movida para o componente LicenseDetailsCard */}
 
-              {/* Status por estado */}
-              <div>
-                <h3 className="font-medium text-sm text-gray-500 mb-2">Status por Estado</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+              {/* Status por estado - Layout melhorado */}
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 mt-4">
+                <h3 className="font-semibold text-base text-gray-700 mb-3 flex items-center">
+                  <MapPin className="h-4 w-4 mr-2 text-blue-600" />
+                  Status por Estado
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {selectedLicense.states.map((state) => {
                     // Encontrar o status atual deste estado
                     let stateStatus = "pending";
@@ -1172,22 +1175,37 @@ export default function AdminLicensesPage() {
                       }
                     }
                     
+                    // Definir cores baseadas no status
+                    let borderColor = "border-gray-200";
+                    if (stateStatus === "approved") {
+                      borderColor = "border-green-200";
+                    } else if (stateStatus === "rejected") {
+                      borderColor = "border-red-200";
+                    } else if (stateStatus === "pending_approval") {
+                      borderColor = "border-yellow-200";
+                    }
+                    
                     return (
-                      <div key={state} className="border rounded-md p-4 flex flex-col gap-2 bg-white shadow-sm">
+                      <div 
+                        key={state} 
+                        className={`border-l-4 ${borderColor} rounded-md p-3 flex flex-col gap-2 bg-white shadow-sm hover:shadow-md transition-all duration-200`}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-lg">{state}</span>
+                            <div className="bg-blue-50 text-blue-800 font-bold px-2 py-1 rounded text-sm min-w-[40px] text-center">
+                              {state}
+                            </div>
                             <StatusBadge 
                               status={stateStatus} 
                               licenseId={selectedLicense.id}
                               state={state}
                             />
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              className="rounded-full h-8 w-8 p-0"
+                              className="rounded-full h-8 w-8 p-0 hover:bg-blue-50"
                               onClick={() => {
                                 // Encontrar o estado no array de estados visíveis e alternar
                                 const stateFlowVisible = visibleStateFlows.includes(state);
@@ -1197,6 +1215,7 @@ export default function AdminLicensesPage() {
                                   setVisibleStateFlows([...visibleStateFlows, state]);
                                 }
                               }}
+                              title={visibleStateFlows.includes(state) ? "Ocultar progresso" : "Mostrar progresso"}
                             >
                               {visibleStateFlows.includes(state) ? 
                                 <Eye className="h-4 w-4 text-blue-600" /> : 
@@ -1206,8 +1225,9 @@ export default function AdminLicensesPage() {
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              className="rounded-full h-8 w-8 p-0"
+                              className="rounded-full h-8 w-8 p-0 hover:bg-green-50"
                               onClick={() => handleStateStatusUpdate(selectedLicense, state)}
+                              title="Atualizar status"
                             >
                               <Pencil className="h-4 w-4 text-green-600" />
                             </Button>
@@ -1216,7 +1236,7 @@ export default function AdminLicensesPage() {
                         
                         {/* Fluxo de Progresso do Estado */}
                         {visibleStateFlows.includes(state) && (
-                          <div className="mt-2 pt-2 overflow-x-auto">
+                          <div className="mt-2 pt-2 overflow-x-auto bg-gray-50 rounded-md p-2 border border-gray-100">
                             <StateProgressFlow 
                               stateStatus={stateStatus} 
                               size="sm" 
