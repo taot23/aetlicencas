@@ -1469,14 +1469,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       let result;
       
-      // Se for usuário administrativo, buscar todas as licenças
+      // Se for usuário administrativo, buscar todas as licenças não rascunho
       if (isAdminUser(user)) {
-        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
-        // Primeiro pegar todas as licenças não rascunho
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças potencialmente emitidas.`);
+        // Pegar todas as licenças não rascunho (sem filtro de status)
         result = await getLicensesWithTransporters({ isDraft: false });
       } else {
-        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
-        // Primeiro pegar todas as licenças do usuário não rascunho
+        console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças potencialmente emitidas.`);
+        // Pegar todas as licenças do usuário não rascunho (sem filtro de status)
         result = await getLicensesWithTransporters({ userId: user.id, isDraft: false });
       }
       
