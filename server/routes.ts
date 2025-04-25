@@ -660,18 +660,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/vehicles/:id', requireAuth, upload.single('crlvFile'), processVehicleData, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user!;
+      const userId = user.id;
       const vehicleId = parseInt(req.params.id);
       
-      // Check if vehicle exists and belongs to the user
+      // Check if vehicle exists
       const existingVehicle = await storage.getVehicleById(vehicleId);
       if (!existingVehicle) {
         return res.status(404).json({ message: 'Veículo não encontrado' });
       }
       
-      if (existingVehicle.userId !== userId) {
+      // Verificar se o usuário tem permissão para editar o veículo
+      // Usuários comuns podem editar apenas seus próprios veículos
+      // Administradores, Operacionais e Supervisores podem editar qualquer veículo
+      const isStaff = isAdminUser(user) || user.role === 'operational' || user.role === 'supervisor';
+      
+      if (!isStaff && existingVehicle.userId !== userId) {
+        console.log(`Usuário ${userId} (${user.role}) tentou editar veículo ${vehicleId} do usuário ${existingVehicle.userId}`);
         return res.status(403).json({ message: 'Acesso negado' });
       }
+      
+      console.log(`Usuário ${userId} (${user.role}) autorizado a editar veículo ${vehicleId}`);
+      
       
       // Extrair dados do campo vehicleData (JSON string)
       let vehicleData;
@@ -706,18 +716,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/vehicles/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user!;
+      const userId = user.id;
       const vehicleId = parseInt(req.params.id);
       
-      // Check if vehicle exists and belongs to the user
+      // Check if vehicle exists
       const existingVehicle = await storage.getVehicleById(vehicleId);
       if (!existingVehicle) {
         return res.status(404).json({ message: 'Veículo não encontrado' });
       }
       
-      if (existingVehicle.userId !== userId) {
+      // Verificar se o usuário tem permissão para excluir o veículo
+      // Usuários comuns podem excluir apenas seus próprios veículos
+      // Administradores, Operacionais e Supervisores podem excluir qualquer veículo
+      const isStaff = isAdminUser(user) || user.role === 'operational' || user.role === 'supervisor';
+      
+      if (!isStaff && existingVehicle.userId !== userId) {
+        console.log(`Usuário ${userId} (${user.role}) tentou excluir veículo ${vehicleId} do usuário ${existingVehicle.userId}`);
         return res.status(403).json({ message: 'Acesso negado' });
       }
+      
+      console.log(`Usuário ${userId} (${user.role}) autorizado a excluir veículo ${vehicleId}`);
+      
       
       await storage.deleteVehicle(vehicleId);
       
@@ -880,10 +900,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Rascunho não encontrado' });
       }
       
-      // Verificar acesso - usuários admin podem editar qualquer rascunho
-      if (existingDraft.userId !== user.id && !isAdminUser(user)) {
+      // Verificar acesso - usuários staff (admin, operacional, supervisor) podem editar qualquer rascunho
+      const isStaff = isAdminUser(user) || user.role === 'operational' || user.role === 'supervisor';
+      
+      if (!isStaff && existingDraft.userId !== user.id) {
+        console.log(`Usuário ${user.id} (${user.role}) tentou editar rascunho ${draftId} do usuário ${existingDraft.userId}`);
         return res.status(403).json({ message: 'Acesso negado' });
       }
+      
+      console.log(`Usuário ${user.id} (${user.role}) autorizado a editar rascunho ${draftId}`);
+      
       
       const draftData = { ...req.body };
       
@@ -947,10 +973,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Este item não é um rascunho' });
       }
       
-      // Verificar acesso - usuários admin podem excluir qualquer rascunho
-      if (existingDraft.userId !== user.id && !isAdminUser(user)) {
+      // Verificar acesso - usuários staff (admin, operacional, supervisor) podem excluir qualquer rascunho
+      const isStaff = isAdminUser(user) || user.role === 'operational' || user.role === 'supervisor';
+      
+      if (!isStaff && existingDraft.userId !== user.id) {
+        console.log(`Usuário ${user.id} (${user.role}) tentou excluir rascunho ${draftId} do usuário ${existingDraft.userId}`);
         return res.status(403).json({ message: 'Acesso negado' });
       }
+      
+      console.log(`Usuário ${user.id} (${user.role}) autorizado a excluir rascunho ${draftId}`);
+      
       
       await storage.deleteLicenseRequest(draftId);
       
@@ -977,10 +1009,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Este item não é um rascunho ou já foi submetido' });
       }
       
-      // Verificar acesso - usuários admin podem submeter qualquer rascunho
-      if (existingDraft.userId !== user.id && !isAdminUser(user)) {
+      // Verificar acesso - usuários staff (admin, operacional, supervisor) podem submeter qualquer rascunho
+      const isStaff = isAdminUser(user) || user.role === 'operational' || user.role === 'supervisor';
+      
+      if (!isStaff && existingDraft.userId !== user.id) {
+        console.log(`Usuário ${user.id} (${user.role}) tentou submeter rascunho ${draftId} do usuário ${existingDraft.userId}`);
         return res.status(403).json({ message: 'Acesso negado' });
       }
+      
+      console.log(`Usuário ${user.id} (${user.role}) autorizado a submeter rascunho ${draftId}`);
+      
       
       // Garantir que todos os campos obrigatórios não sejam nulos antes de submeter
       const draftData = { ...existingDraft };
@@ -1044,10 +1082,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: 'Este item não é um rascunho ou já foi submetido' });
         }
         
-        // Verificar acesso - usuários admin podem submeter qualquer rascunho
-        if (existingDraft.userId !== user.id && !isAdminUser(user)) {
+        // Verificar acesso - usuários staff (admin, operacional, supervisor) podem submeter qualquer rascunho
+        const isStaff = isAdminUser(user) || user.role === 'operational' || user.role === 'supervisor';
+        
+        if (!isStaff && existingDraft.userId !== user.id) {
+          console.log(`Usuário ${user.id} (${user.role}) tentou submeter rascunho ${draftId} do usuário ${existingDraft.userId}`);
           return res.status(403).json({ message: 'Acesso negado' });
         }
+        
+        console.log(`Usuário ${user.id} (${user.role}) autorizado a submeter rascunho ${draftId}`);
         
         // Generate a real request number
         const requestNumber = `AET-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
