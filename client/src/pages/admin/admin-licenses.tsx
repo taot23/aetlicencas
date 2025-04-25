@@ -1046,17 +1046,17 @@ export default function AdminLicensesPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Número da AET <span className="text-red-500">*</span>
+                            Número da AET para {selectedState} <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Digite o número da AET"
+                              placeholder={`Digite o número da AET para ${selectedState}`}
                               {...field}
                               className="w-full"
                             />
                           </FormControl>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Número único que será vinculado ao número da licença
+                            Número único para este estado específico
                           </p>
                           <FormMessage />
                         </FormItem>
@@ -1104,7 +1104,7 @@ export default function AdminLicensesPage() {
                       render={({ field: { value, onChange, ...field } }) => (
                         <FormItem>
                           <FormLabel>
-                            Upload Licença <span className="text-red-500">*</span>
+                            Upload Licença para {selectedState} <span className="text-red-500">*</span>
                           </FormLabel>
                           <div className="mt-1 flex justify-center px-4 pt-4 pb-5 border-2 border-gray-300 border-dashed rounded-md">
                             <div className="space-y-1 text-center">
@@ -1140,7 +1140,7 @@ export default function AdminLicensesPage() {
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Arquivo PDF obrigatório
+                            Arquivo PDF específico para o estado {selectedState}
                           </p>
                           <FormMessage />
                         </FormItem>
