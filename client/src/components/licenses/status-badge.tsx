@@ -7,16 +7,57 @@ import {
   XCircle, 
   FileText, 
   File, 
-  X 
+  X, 
+  Wifi 
 } from "lucide-react";
+import { useWebSocketContext } from "@/hooks/use-websocket-context";
+import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface StatusBadgeProps {
   status: string;
+  licenseId?: number;  // ID opcional da licença para atualização em tempo real
+  state?: string;      // Estado opcional para atualização em tempo real
   className?: string;
   showIcon?: boolean;
 }
 
-export function StatusBadge({ status, className, showIcon = true }: StatusBadgeProps) {
+export function StatusBadge({ status: initialStatus, licenseId, state, className, showIcon = true }: StatusBadgeProps) {
+  const [status, setStatus] = useState(initialStatus);
+  const [recentUpdate, setRecentUpdate] = useState(false);
+  const { lastMessage, isConnected } = useWebSocketContext();
+  
+  // Efeito para resetar o indicador de atualização recente após 3 segundos
+  useEffect(() => {
+    if (recentUpdate) {
+      const timer = setTimeout(() => setRecentUpdate(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [recentUpdate]);
+  
+  // Efeito para atualizar o status quando receber mensagem de atualização
+  useEffect(() => {
+    if (
+      lastMessage?.type === 'STATUS_UPDATE' && 
+      lastMessage.data && 
+      licenseId && 
+      lastMessage.data.licenseId === licenseId
+    ) {
+      // Se estamos exibindo o status para um estado específico, verificar se a mensagem é para este estado
+      if (state && lastMessage.data.state === state) {
+        setStatus(lastMessage.data.status);
+        setRecentUpdate(true);
+        console.log(`Status atualizado para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
+      }
+      // Se estamos mostrando o status geral da licença (sem estado específico)
+      else if (!state) {
+        setStatus(lastMessage.data.license.status);
+        setRecentUpdate(true);
+        console.log(`Status geral atualizado para licença ${licenseId}: ${lastMessage.data.license.status}`);
+      }
+    }
+  }, [lastMessage, licenseId, state]);
+  
   const getStatusStyles = () => {
     switch (status) {
       case "pending":
@@ -95,24 +136,53 @@ export function StatusBadge({ status, className, showIcon = true }: StatusBadgeP
     }
   };
 
+  // Verificar se há uma indicação visual de conexão WebSocket
+  const shouldShowConnectionIndicator = licenseId !== undefined; // Só mostrar se o componente estiver monitorando uma licença
+  
   return (
-    <span
-      className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-        getStatusStyles(),
-        className
+    <div className="inline-flex items-center">
+      <span
+        className={cn(
+          "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+          getStatusStyles(),
+          recentUpdate ? "ring-2 ring-offset-1 ring-blue-400 transition-all duration-300" : "",
+          className
+        )}
+      >
+        {showIcon && getStatusIcon()}
+        {getStatusLabel()}
+      </span>
+      
+      {/* Indicador de conexão WebSocket (opcional, apenas para diagnóstico) */}
+      {shouldShowConnectionIndicator && (
+        <div className="ml-1 text-xs" title={isConnected ? "Atualizações em tempo real ativas" : "Atualizações em tempo real desconectadas"}>
+          <Wifi className={cn(
+            "h-3 w-3", 
+            isConnected ? "text-green-500" : "text-gray-300",
+            recentUpdate ? "animate-pulse" : ""
+          )} />
+        </div>
       )}
-    >
-      {showIcon && getStatusIcon()}
-      {getStatusLabel()}
-    </span>
+    </div>
   );
 }
 
-export function Status({ status }: { status: string }) {
+export function Status({ 
+  status, 
+  licenseId, 
+  state 
+}: { 
+  status: string;
+  licenseId?: number;
+  state?: string;
+}) {
   return (
     <div className="flex items-center">
-      <StatusBadge status={status} />
+      <StatusBadge 
+        status={status} 
+        licenseId={licenseId} 
+        state={state} 
+      />
     </div>
   );
 }

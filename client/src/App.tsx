@@ -18,6 +18,7 @@ import AdminVehiclesPage from "@/pages/admin/admin-vehicles";
 import RedirectPage from "@/pages/redirect-page";
 import { ProtectedRoute, AdminRoute, StaffRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
+import { WebSocketProvider } from "./hooks/use-websocket-context";
 import { useEffect } from "react";
 
 function Router() {
@@ -66,9 +67,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppInitializer />
-        <Router />
-        <Toaster />
+        <WebSocketProvider>
+          <AppInitializer />
+          <Router />
+          <Toaster />
+        </WebSocketProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
