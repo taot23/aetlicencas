@@ -413,15 +413,16 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
 
   return (
     <div className="space-y-6 mt-4">
-      {/* Cabeçalho do pedido com status */}
+      {/* Cabeçalho do pedido com status atualizado em tempo real */}
       <div className="bg-slate-700 text-white p-4 rounded-md shadow-sm">
         <div className="flex flex-wrap justify-between items-center">
           <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
           <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-            <StatusBadge
-              status={license.status}
+            <div className="hidden sm:block text-slate-300 text-sm mr-2">Status:</div>
+            <StatusBadge 
+              status={currentStatus} 
               licenseId={license.id}
-              className="py-1"
+              className="text-sm py-1 px-3"
             />
           </div>
         </div>
@@ -461,16 +462,16 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       </div>
       
       {/* Status por Estado - Com atualizações em tempo real */}
-      {license.stateStatuses && license.stateStatuses.length > 0 && (
+      {stateStatuses.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Status por Estado</h3>
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {license.states.map((state) => {
-                // Encontrar o status atual deste estado
+                // Encontrar o status atual deste estado usando o estado local
                 let stateStatus = "pending_registration";
-                if (license.stateStatuses && license.stateStatuses.length > 0) {
-                  const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                if (stateStatuses.length > 0) {
+                  const stateStatusEntry = stateStatuses.find(entry => entry.startsWith(`${state}:`));
                   if (stateStatusEntry) {
                     const [_, status] = stateStatusEntry.split(':');
                     if (status) {

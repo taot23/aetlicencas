@@ -1137,7 +1137,15 @@ export default function AdminLicensesPage() {
             <div className="space-y-4">
               <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200 overflow-x-auto">
                 <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença:</h4>
-                <ProgressFlow currentStatus={selectedLicense.status} size="md" />
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-gray-500">Status atual:</div>
+                  <StatusBadge status={selectedLicense.status} licenseId={selectedLicense.id} />
+                </div>
+                <ProgressFlow 
+                  currentStatus={selectedLicense.status} 
+                  size="md" 
+                  licenseId={selectedLicense.id}
+                />
               </div>
               
               {/* Removido seção do transportador para evitar duplicidade, pois já está no LicenseDetailsCard */}
