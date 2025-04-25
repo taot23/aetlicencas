@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { SearchIcon, X, FileText, ArrowUpRight, CalendarIcon, AlertCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/licenses/status-badge";
 import { getLicenseTypeLabel, formatShortDate, getStateLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -199,14 +199,14 @@ export default function MobileIssuedLicensesPage() {
                   setIsDialogOpen(open);
                 }}
               >
-                <Dialog.Trigger asChild>
+                <DialogTrigger asChild>
                   <div>
                     <MobileIssuedLicenseCard 
                       license={license} 
                       onRenew={handleRenew} 
                     />
                   </div>
-                </Dialog.Trigger>
+                </DialogTrigger>
                 
                 <DialogContent className="sm:max-w-[425px] p-0 h-[90vh] overflow-y-auto mobile-form-dialog">
                   <DialogHeader className="sticky top-0 z-10 bg-background p-4 border-b">
@@ -412,10 +412,8 @@ export default function MobileIssuedLicensesPage() {
       {/* Diálogo de renovação */}
       {renewInfo && (
         <RenewLicenseDialog
-          open={!!renewInfo}
-          onOpenChange={(open) => {
-            if (!open) setRenewInfo(null);
-          }}
+          isOpen={!!renewInfo}
+          onClose={() => setRenewInfo(null)}
           licenseId={renewInfo.license.id}
           state={renewInfo.state}
         />
