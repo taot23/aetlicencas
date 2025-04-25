@@ -57,12 +57,12 @@ export const TransporterInfo = ({
 
   if (compact) {
     return (
-      <div className={`text-sm ${className}`}>
+      <span className={`inline-block ${className}`}>
         {isLoading ? (
-          <div className="flex items-center space-x-1">
+          <span className="inline-flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
             <span className="text-gray-500">Carregando...</span>
-          </div>
+          </span>
         ) : transporter ? (
           <span className="font-medium">
             {transporter.name}
@@ -70,7 +70,7 @@ export const TransporterInfo = ({
         ) : (
           <span className="text-gray-500 italic">Transportador não encontrado</span>
         )}
-      </div>
+      </span>
     );
   }
 

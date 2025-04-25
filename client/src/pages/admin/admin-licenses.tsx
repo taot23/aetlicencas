@@ -767,7 +767,7 @@ export default function AdminLicensesPage() {
                       <TableBody>
                         {filteredLicenses.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-6">
+                            <TableCell colSpan={8} className="text-center py-6">
                               Nenhuma licença encontrada
                             </TableCell>
                           </TableRow>
@@ -869,10 +869,10 @@ export default function AdminLicensesPage() {
                               
                               <div className="mt-2">
                                 <p className="text-sm"><span className="font-medium">Veículo:</span> {license.mainVehiclePlate}</p>
-                                <p className="text-sm">
+                                <div className="text-sm">
                                   <span className="font-medium">Transportador:</span>{" "}
                                   <TransporterInfo transporterId={license.transporterId} compact={true} />
-                                </p>
+                                </div>
                                 <p className="text-sm"><span className="font-medium">Data:</span> {formatDate(license.createdAt)}</p>
                                 <div className="mt-1">
                                   <span className="text-sm font-medium">Estados:</span>
