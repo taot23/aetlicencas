@@ -344,7 +344,14 @@ export default function TrackLicensePage() {
                       return (
                         <div key={state} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
                           <h4 className="font-medium text-sm mb-2">Fluxo de Progresso da Licença: {state}</h4>
-                          <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
+                          <StateProgressFlow 
+                            stateStatus={stateStatus} 
+                            size="sm" 
+                            className="py-1" 
+                            licenseId={selectedLicense.id}
+                            state={state}
+                            key={`${state}-${stateStatus}`}
+                          />
                         </div>
                       );
                     })}
