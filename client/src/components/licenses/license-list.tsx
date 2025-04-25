@@ -502,7 +502,15 @@ export function LicenseList({
             ) : licenses.length > 0 ? (
               licenses.map((license) => (
                 <TableRow key={(license as any).uniqueId || license.id}>
-                  <TableCell className="font-medium">{license.requestNumber}</TableCell>
+                  <TableCell className="font-medium">
+                    {license.requestNumber}
+                    {/* Indicador visual para rascunhos de renovação */}
+                    {isDraftList && license.comments?.includes('Renovação') && (
+                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Renovação
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
                   <TableCell>{license.mainVehiclePlate}</TableCell>
                   <TableCell>

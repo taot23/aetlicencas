@@ -44,9 +44,10 @@ export default function RequestLicensePage() {
   }, []);
 
   const { data: draftLicenses, isLoading, refetch } = useQuery<LicenseRequest[]>({
-    queryKey: ["/api/licenses/drafts"],
+    queryKey: ["/api/licenses/drafts", "includeRenewal"],
     queryFn: async () => {
-      const res = await fetch("/api/licenses/drafts", {
+      // Adicionamos o parâmetro includeRenewal=true para incluir rascunhos de renovação
+      const res = await fetch("/api/licenses/drafts?includeRenewal=true", {
         credentials: "include"
       });
       if (!res.ok) {
