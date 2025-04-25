@@ -278,7 +278,7 @@ export default function IssuedLicensesPage() {
   // Mutação para renovar licença
   const renewLicenseMutation = useMutation({
     mutationFn: async ({ licenseId, state }: { licenseId: number, state: string }) => {
-      const response = await apiRequest("POST", "/api/licenses/renew", { licenseId, state });
+      const response = await apiRequest("POST", `/api/licenses/renew/${licenseId}/state/${state}`);
       return await response.json();
     },
     onSuccess: (data) => {
