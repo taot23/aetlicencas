@@ -1469,13 +1469,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       let result;
       
-      // Se for usuário administrativo, buscar todas as licenças emitidas
+      // Se for usuário administrativo, buscar todas as licenças
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
-        result = await getLicensesWithTransporters({ status: 'approved' });
+        // Primeiro pegar todas as licenças não rascunho
+        result = await getLicensesWithTransporters({ isDraft: false });
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
-        result = await getLicensesWithTransporters({ userId: user.id, status: 'approved' });
+        // Primeiro pegar todas as licenças do usuário não rascunho
+        result = await getLicensesWithTransporters({ userId: user.id, isDraft: false });
       }
       
       console.log("Estrutura do resultado:", Object.keys(result));
@@ -1491,13 +1493,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Exemplo de licença emitida:", JSON.stringify(result.rows[0], null, 2));
       }
       
-      // Transformar os resultados para incluir o nome do transportador
-      const issuedLicenses = result.rows.map(license => ({
+      // Filtrar apenas licenças que têm status geral 'approved' OU pelo menos um estado com 'approved'
+      const issuedLicenses = result.rows.filter(license => {
+        // Verificar se a licença tem status geral 'approved'
+        if (license.status === 'approved') return true;
+        
+        // Verificar se a licença tem state_statuses
+        if (!license.state_statuses || !Array.isArray(license.state_statuses)) return false;
+        
+        // Verificar se pelo menos um estado tem status 'approved'
+        return license.state_statuses.some(stateStatus => {
+          if (typeof stateStatus !== 'string') return false;
+          return stateStatus.includes(':approved');
+        });
+      }).map(license => ({
         ...license,
         transporterName: license.transporter_name,
         transporterDocument: license.transporter_document,
         userEmail: license.user_email
       }));
+      
+      console.log(`Total de licenças emitidas após filtro: ${issuedLicenses.length}`);
+      if (issuedLicenses.length > 0) {
+        console.log("Exemplo de licença emitida após filtro:", JSON.stringify(issuedLicenses[0], null, 2));
+      }
       
       res.json(issuedLicenses);
     } catch (error) {
