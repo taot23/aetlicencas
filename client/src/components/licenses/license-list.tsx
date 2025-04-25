@@ -246,7 +246,29 @@ export function LicenseList({
               <div key={(license as any).uniqueId || license.id} className="bg-white shadow rounded-lg p-4 border border-gray-100">
                 <div className="flex justify-between mb-2">
                   <div className="font-medium text-lg">{license.requestNumber}</div>
-                  {!isDraftList && <StatusBadge status={(license as any).specificStateStatus || license.status} />}
+                  {!isDraftList && (
+                    ((license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) || 
+                      ((license as any).state_statuses && Array.isArray((license as any).state_statuses) && (license as any).state_statuses.length > 0)) && 
+                    license.states && Array.isArray(license.states) && license.states.length > 0 ? (
+                      <div className="flex flex-col gap-1 mt-1">
+                        {license.states.map((state: string) => {
+                          // Procura o status para este estado (verifica tanto stateStatuses quanto state_statuses)
+                          const stateStatusesArray = license.stateStatuses || (license as any).state_statuses || [];
+                          const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
+                          const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
+                          
+                          return (
+                            <div key={`${state}-${stateStatus}`} className="flex items-center">
+                              <span className="text-xs font-medium text-gray-500 min-w-[30px] mr-1">{state}:</span>
+                              <StatusBadge status={stateStatus} showIcon={false} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <StatusBadge status={(license as any).specificStateStatus || license.status} />
+                    )
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -569,7 +591,28 @@ export function LicenseList({
                   {/* Coluna de status sempre presente para licenças não-rascunho */}
                   {!isDraftList && (
                     <TableCell>
-                      <StatusBadge status={(license as any).specificStateStatus || license.status} />
+                      {/* Exibir status específico por estado de forma compacta */}
+                      {((license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) || 
+                        ((license as any).state_statuses && Array.isArray((license as any).state_statuses) && (license as any).state_statuses.length > 0)) && 
+                       license.states && Array.isArray(license.states) && license.states.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {license.states.map((state: string) => {
+                            // Procura o status para este estado (verifica tanto stateStatuses quanto state_statuses)
+                            const stateStatusesArray = license.stateStatuses || (license as any).state_statuses || [];
+                            const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
+                            const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
+                            
+                            return (
+                              <div key={`${state}-${stateStatus}`} className="flex items-center">
+                                <span className="text-xs font-medium text-gray-500 min-w-[30px] mr-1">{state}:</span>
+                                <StatusBadge status={stateStatus} showIcon={false} />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <StatusBadge status={(license as any).specificStateStatus || license.status} />
+                      )}
                     </TableCell>
                   )}
                   <TableCell className="text-right">
