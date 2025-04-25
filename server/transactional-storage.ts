@@ -645,13 +645,21 @@ export class TransactionalStorage implements IStorage {
     // Atualizar arquivo do estado se fornecido
     let stateFiles = [...(license.stateFiles || [])];
     if (data.file && typeof data.file !== 'string') {
-      const newStateFile = `${data.state}:${data.file.path}`;
+      // Extrair o nome do arquivo do caminho completo
+      const filename = data.file.filename;
+      const fileUrl = `/uploads/${filename}`;
+      const newStateFile = `${data.state}:${fileUrl}`;
       
       const existingFileIndex = stateFiles.findIndex(s => s.startsWith(`${data.state}:`));
       if (existingFileIndex >= 0) {
         stateFiles[existingFileIndex] = newStateFile;
       } else {
         stateFiles.push(newStateFile);
+      }
+      
+      // Se o estado for aprovado, atualizar também o licenseFileUrl
+      if (data.status === "approved") {
+        license.licenseFileUrl = fileUrl;
       }
     }
     
@@ -661,7 +669,8 @@ export class TransactionalStorage implements IStorage {
       .set({
         stateStatuses,
         stateFiles,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        licenseFileUrl: license.licenseFileUrl // Incluir o licenseFileUrl se estiver definido
       })
       .where(eq(licenseRequests.id, data.licenseId))
       .returning();
@@ -690,7 +699,9 @@ export class TransactionalStorage implements IStorage {
     
     // Se houver licenseFileUrl, atualizá-la
     if (statusData.licenseFile && typeof statusData.licenseFile !== 'string') {
-      updateData.licenseFileUrl = statusData.licenseFile.path;
+      const filename = statusData.licenseFile.filename;
+      const fileUrl = `/uploads/${filename}`;
+      updateData.licenseFileUrl = fileUrl;
     }
     
     // Atualizar status de um estado específico, se fornecido
@@ -710,7 +721,9 @@ export class TransactionalStorage implements IStorage {
       
       // Se houver um arquivo para o estado, atualizá-lo
       if (statusData.stateFile && typeof statusData.stateFile !== 'string') {
-        const newStateFile = `${statusData.state}:${statusData.stateFile.path}`;
+        const filename = statusData.stateFile.filename;
+        const fileUrl = `/uploads/${filename}`;
+        const newStateFile = `${statusData.state}:${fileUrl}`;
         let stateFiles = [...(license.stateFiles || [])];
         
         const existingFileIndex = stateFiles.findIndex(s => s.startsWith(`${statusData.state}:`));
@@ -721,6 +734,11 @@ export class TransactionalStorage implements IStorage {
         }
         
         updateData.stateFiles = stateFiles;
+        
+        // Se o status for aprovado, também atualizamos o licenseFileUrl
+        if (statusData.stateStatus === "approved") {
+          updateData.licenseFileUrl = fileUrl;
+        }
       }
     }
     
