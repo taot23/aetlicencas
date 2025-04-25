@@ -29,13 +29,26 @@ interface LicenseDetailsCardProps {
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   // Estado para armazenar o status atual (será atualizado pelo WebSocket)
   const [currentStatus, setCurrentStatus] = useState(license.status);
+  
+  // Logging para diagnóstico dos status de estado recebidos
+  console.log("LicenseDetailsCard - license original:", {
+    id: license.id, 
+    stateStatuses: license.stateStatuses,
+    hasArray: Array.isArray(license.stateStatuses),
+    stateStatusesLength: Array.isArray(license.stateStatuses) ? license.stateStatuses.length : 0
+  });
+  
   // Estado para armazenar os status por estado (será atualizado pelo WebSocket)
-  const [stateStatuses, setStateStatuses] = useState<string[]>(
+  const [stateStatuses, setStateStatuses] = useState<string[]>(() => {
     // Garantir que temos um array válido e eliminar entradas inválidas
-    Array.isArray(license.stateStatuses) 
-      ? license.stateStatuses.filter(entry => typeof entry === 'string' && entry.length > 0)
-      : []
-  );
+    if (Array.isArray(license.stateStatuses)) {
+      const validEntries = license.stateStatuses.filter(entry => typeof entry === 'string' && entry.length > 0);
+      console.log("LicenseDetailsCard - entradas válidas de stateStatuses:", validEntries);
+      return validEntries;
+    }
+    console.log("LicenseDetailsCard - stateStatuses não é um array, usando array vazio");
+    return [];
+  });
   
   console.log("LicenseDetailsCard inicializado com:", {
     licenseId: license.id,

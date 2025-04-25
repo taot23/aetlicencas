@@ -246,7 +246,22 @@ export default function AdminLicensesPage() {
   // Buscar todas as licenças
   const { data: licenses = [], isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: [apiEndpoint],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: async (context) => {
+      // Usar o queryFn padrão
+      const defaultFn = getQueryFn({ on401: "throw" });
+      const result = await defaultFn(context);
+      
+      // Log para depuração da resposta
+      console.log("Resposta de licenças recebida do servidor:", result);
+      if (result && result.length > 0) {
+        console.log("Exemplo de stateStatuses na resposta:", 
+          result[0].stateStatuses,
+          "para licença:", result[0].id
+        );
+      }
+      
+      return result;
+    },
   });
 
   // Mutação para atualização de status geral foi removida - agora só usamos atualização por estado
@@ -441,15 +456,23 @@ export default function AdminLicensesPage() {
     setSelectedState(state);
     
     // Determinar o status atual deste estado
-    let currentStateStatus = "pending";
+    let currentStateStatus = "pending_registration";
+    
+    console.log(`Verificando status para o estado ${state} na licença, stateStatuses:`, license.stateStatuses);
     
     // Parse dos stateStatuses (que são armazenados como "ESTADO:STATUS")
-    if (license.stateStatuses && license.stateStatuses.length > 0) {
-      const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+    if (license.stateStatuses && Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
+      // Filtrar apenas entradas válidas
+      const validEntries = license.stateStatuses.filter(entry => 
+        typeof entry === 'string' && entry.includes(':')
+      );
+      
+      const stateStatusEntry = validEntries.find(entry => entry.startsWith(`${state}:`));
       if (stateStatusEntry) {
         const [_, status] = stateStatusEntry.split(':');
         if (status) {
           currentStateStatus = status;
+          console.log(`Status definido da licença original para ${state}: ${status}`);
         }
       }
     }
