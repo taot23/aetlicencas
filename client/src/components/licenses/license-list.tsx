@@ -151,18 +151,41 @@ export function LicenseList({
         </>
       );
     } else {
-      if (license.status === "approved" && license.licenseFileUrl) {
+      if (license.status === "approved") {
+        // Sempre mostrar botão de download para licenças aprovadas/liberadas, mesmo se o arquivo ainda não estiver disponível
         return (
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-          >
-            <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
-              <Download className="h-4 w-4" />
-            </a>
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 mr-1"
+              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+            >
+              <a 
+                href={license.licenseFileUrl || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (!license.licenseFileUrl) {
+                    e.preventDefault();
+                    alert('Arquivo da licença não disponível no momento.');
+                  }
+                }}
+                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+              >
+                <Download className="h-4 w-4" />
+              </a>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onView && onView(license)}
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </>
         );
       } else if (license.status === "rejected") {
         return (
