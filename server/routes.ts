@@ -1443,16 +1443,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
+      console.log("[DEBUG LICENÇAS EMITIDAS] Início da rota");
+      
       const user = req.user!;
       let issuedLicenses;
       
       // Se for usuário administrativo, buscar todas as licenças emitidas
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
-        issuedLicenses = await storage.getIssuedLicensesByUserId(0); // 0 = all users
+        
+        // Verificar diretamente no banco se há licenças com estado aprovado
+        const licencasNoBanco = await db.select().from(licenseRequests).where(eq(licenseRequests.isDraft, false));
+        console.log(`[DEBUG LICENÇAS EMITIDAS] Total de licenças não-rascunho no banco: ${licencasNoBanco.length}`);
+        
+        // Verificar quais licenças têm estados aprovados
+        for (const lic of licencasNoBanco) {
+          console.log(`[DEBUG LICENÇAS EMITIDAS] Licença #${lic.id} - stateStatuses: ${JSON.stringify(lic.stateStatuses)}`);
+          
+          // Verificar estados aprovados
+          const temEstadoAprovado = lic.stateStatuses && 
+                                 Array.isArray(lic.stateStatuses) && 
+                                 lic.stateStatuses.some(ss => ss.includes(':approved'));
+          
+          console.log(`[DEBUG LICENÇAS EMITIDAS] Licença #${lic.id} - Tem estado aprovado: ${temEstadoAprovado ? 'SIM' : 'NÃO'}`);
+        }
+        
+        // Usar a função de repositório
+        issuedLicenses = await storage.getAllIssuedLicenses();
+        console.log(`[DEBUG LICENÇAS EMITIDAS] Total retornado por getAllIssuedLicenses: ${issuedLicenses.length}`);
+        
+        // Log do resultado
+        console.log(`[DEBUG LICENÇAS EMITIDAS] Resultado: ${JSON.stringify(issuedLicenses.map(l => ({
+          id: l.id, 
+          requestNumber: l.requestNumber,
+          stateStatuses: l.stateStatuses
+        })))}`);
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
         issuedLicenses = await storage.getIssuedLicensesByUserId(user.id);
+        console.log(`[DEBUG LICENÇAS EMITIDAS] Total retornado para usuário ${user.id}: ${issuedLicenses.length}`);
       }
       
       res.json(issuedLicenses);
