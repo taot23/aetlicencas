@@ -75,6 +75,7 @@ export default function TrackLicensePage() {
     specificState?: string;
     specificStateStatus?: string;
     specificStateFileUrl?: string;
+    stateValidUntil?: string;
   }
 
   // Função para ordenar licenças
@@ -131,6 +132,8 @@ export default function TrackLicensePage() {
             specificStateStatus: stateStatus,
             // URL do arquivo deste estado específico
             specificStateFileUrl: stateFileUrl,
+            // Incluir data de validade específica para este estado
+            stateValidUntil: stateValidUntil,
             // ID único para esta licença expandida
             uniqueId: `${license.id}-${state}`
           };
@@ -195,6 +198,10 @@ export default function TrackLicensePage() {
         return license.createdAt ? new Date(license.createdAt).getTime() : 0;
       } else if (column === 'updatedAt') {
         return license.updatedAt ? new Date(license.updatedAt).getTime() : 0;
+      } else if (column === 'validUntil') {
+        // Ordenar por data de validade, priorizando a do estado específico
+        const dateStr = license.stateValidUntil || license.validUntil;
+        return dateStr ? new Date(dateStr).getTime() : 0;
       } else {
         return license[column as keyof typeof license];
       }

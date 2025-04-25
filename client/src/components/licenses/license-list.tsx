@@ -452,6 +452,21 @@ export function LicenseList({
               ) : (
                 <TableHead>{isDraftList ? "Última Modificação" : "Data Solicitação"}</TableHead>
               )}
+
+              {/* Coluna de validade apenas para licenças emitidas */}
+              {!isDraftList && (
+                onSort ? (
+                  <SortableHeader
+                    column="validUntil"
+                    label="Validade"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={onSort}
+                  />
+                ) : (
+                  <TableHead>Validade</TableHead>
+                )
+              )}
               
               {!isDraftList && (
                 onSort ? (
@@ -473,7 +488,7 @@ export function LicenseList({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={isDraftList ? 6 : 7} className="text-center py-10">
+                <TableCell colSpan={isDraftList ? 6 : 8} className="text-center py-10">
                   Carregando...
                 </TableCell>
               </TableRow>
@@ -492,9 +507,21 @@ export function LicenseList({
                       : (license.createdAt && format(new Date(license.createdAt), "dd/MM/yyyy"))}
                   </TableCell>
                   {!isDraftList && (
-                    <TableCell>
-                      <StatusBadge status={(license as any).specificStateStatus || license.status} />
-                    </TableCell>
+                    <>
+                      <TableCell>
+                        {/* Exibir data de validade se disponível */}
+                        {((license as any).stateValidUntil || license.validUntil) ? (
+                          <span className="text-green-600 font-medium">
+                            {format(new Date((license as any).stateValidUntil || license.validUntil), "dd/MM/yyyy")}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={(license as any).specificStateStatus || license.status} />
+                      </TableCell>
+                    </>
                   )}
                   <TableCell className="text-right">
                     {renderActions(license)}
@@ -503,7 +530,7 @@ export function LicenseList({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={isDraftList ? 6 : 7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={isDraftList ? 6 : 8} className="text-center py-10 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                   <p>
                     {isDraftList 
