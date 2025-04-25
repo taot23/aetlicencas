@@ -278,8 +278,19 @@ export default function IssuedLicensesPage() {
   // Mutação para renovar licença
   const renewLicenseMutation = useMutation({
     mutationFn: async ({ licenseId, state }: { licenseId: number, state: string }) => {
-      const response = await apiRequest("POST", `/api/licenses/renew/${licenseId}/state/${state}`);
-      return await response.json();
+      try {
+        // Usar o endpoint que aceita o corpo da requisição
+        const response = await apiRequest("POST", "/api/licenses/renew", { licenseId, state });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro ao renovar licença: ${errorText}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Erro na renovação:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       // Invalidar a cache para garantir que os dados são atualizados
