@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Input } from "@/components/ui/input";
-import { FileDown, CheckCircle, Search } from "lucide-react";
+import { FileDown, CheckCircle, Search, Download } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -110,7 +110,12 @@ export default function TrackLicensePage() {
       if (license.states && license.states.length > 0) {
         license.states.forEach((state, index) => {
           // Verificar o status para este estado específico
-          const stateStatus = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1];
+          const stateStatusEntry = license.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
+          const stateStatus = stateStatusEntry?.split(':')[1];
+          
+          // Verificar se temos uma data de validade no formato estado:status:data
+          const stateValidUntil = stateStatusEntry && stateStatusEntry.split(':').length > 2 ? 
+            stateStatusEntry.split(':')[2] : undefined;
           
           // Verificar se existe um arquivo específico para este estado
           const stateFileEntry = license.stateFiles?.find(sf => sf.startsWith(`${state}:`));
@@ -322,7 +327,12 @@ export default function TrackLicensePage() {
                   <div className="grid grid-cols-1 gap-4">
                     {selectedLicense.states.map(state => {
                       // Procura o status para este estado
-                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
+                      const stateStatusEntry = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
+                      const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
+                      
+                      // Extrair data de validade
+                      const stateValidUntil = stateStatusEntry && stateStatusEntry.split(':').length > 2 ? 
+                        stateStatusEntry.split(':')[2] : undefined;
                       
                       return (
                         <div key={state} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
@@ -356,7 +366,12 @@ export default function TrackLicensePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedLicense.states.map(state => {
                       // Verificar o status para este estado específico
-                      const stateStatus = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`))?.split(':')[1] || "pending_registration";
+                      const stateStatusEntry = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
+                      const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
+                      
+                      // Extrair data de validade se existir
+                      const stateValidUntil = stateStatusEntry && stateStatusEntry.split(':').length > 2 ? 
+                        stateStatusEntry.split(':')[2] : undefined;
                       
                       // Verificar se existe um arquivo específico para este estado
                       const stateFileEntry = selectedLicense.stateFiles?.find(sf => sf.startsWith(`${state}:`));
@@ -379,7 +394,9 @@ export default function TrackLicensePage() {
                               </div>
                               <p className="text-xs text-gray-600">
                                 {stateStatus === "approved" 
-                                  ? "Licença liberada para download" 
+                                  ? stateValidUntil 
+                                    ? `Licença liberada para download - Válida até ${new Date(stateValidUntil).toLocaleDateString('pt-BR')}` 
+                                    : "Licença liberada para download" 
                                   : "Status em processamento"}
                               </p>
                             </div>

@@ -246,11 +246,11 @@ export function LicenseList({
                     <span className="text-sm text-gray-500 block">Placa Principal:</span>
                     <span>{license.mainVehiclePlate}</span>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <span className="text-sm text-gray-500 block">Estado:</span>
                     <span>{(license as any).specificState || license.states.join(", ")}</span>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <span className="text-sm text-gray-500 block">
                       {isDraftList ? "Última Modificação:" : "Data Solicitação:"}
                     </span>
@@ -260,6 +260,17 @@ export function LicenseList({
                         : (license.createdAt && format(new Date(license.createdAt), "dd/MM/yyyy"))}
                     </span>
                   </div>
+                  
+                  {/* Adicionar data de validade para licenças aprovadas */}
+                  {((license as any).specificStateStatus === "approved" || license.status === "approved") && 
+                   (license.validUntil || (license as any).stateValidUntil) && (
+                    <div className="col-span-2">
+                      <span className="text-sm text-gray-500 block">Validade:</span>
+                      <span className="text-green-600 font-medium">
+                        {format(new Date((license as any).stateValidUntil || license.validUntil), "dd/MM/yyyy")}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-end space-x-2 mt-4 border-t pt-4">

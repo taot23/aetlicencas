@@ -106,8 +106,12 @@ export default function IssuedLicensesPage() {
         if (stateStatus === 'approved') {
           // Obter data de validade específica para este estado, se disponível
           let stateValidUntil = license.validUntil ? license.validUntil.toString() : null;
+          
+          // Novo formato: "estado:status:data_validade"
           if (stateStatusEntry && stateStatusEntry.split(':').length > 2) {
+            // Extrair data de validade do formato estado:status:data
             stateValidUntil = stateStatusEntry.split(':')[2];
+            console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
           }
           
           result.push({
