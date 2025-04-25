@@ -14,9 +14,10 @@ import {
   updateLicenseStateSchema,
   LicenseStatus,
   userRoleEnum,
-  licenseRequests
+  licenseRequests,
+  transporters
 } from "@shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, or, inArray } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
 import path from "path";
@@ -1505,11 +1506,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
         
         // Para usuários comuns, buscar também diretamente do banco
-        const licencasNoBanco = await db.select()
-          .from(licenseRequests)
-          .where(eq(licenseRequests.isDraft, false))
-          .where(eq(licenseRequests.userId, user.id));
+        // Primeiro, obter os transportadores associados ao usuário
+        const userTransporters = await db.select()
+          .from(transporters)
+          .where(eq(transporters.userId, user.id));
           
+        const transporterIds = userTransporters.map(t => t.id);
+        console.log(`[DEBUG LICENÇAS EMITIDAS] Transportadores associados ao usuário ${user.id}: ${transporterIds.join(', ')}`);
+        
+        // Buscar licenças onde o usuário é o dono OU o transportador está associado ao usuário
+        let licencasNoBanco = [];
+        
+        // Se houver transportadores associados, buscar licenças por transporterId também
+        if (transporterIds.length > 0) {
+          licencasNoBanco = await db.select()
+            .from(licenseRequests)
+            .where(eq(licenseRequests.isDraft, false))
+            .where(
+              or(
+                eq(licenseRequests.userId, user.id),
+                inArray(licenseRequests.transporterId, transporterIds)
+              )
+            );
+            
+          console.log(`[DEBUG LICENÇAS EMITIDAS] Encontradas ${licencasNoBanco.length} licenças para usuário ${user.id} ou transportadores ${transporterIds.join(', ')}`);
+        } else {
+          // Se não houver transportadores, buscar apenas por userId
+          licencasNoBanco = await db.select()
+            .from(licenseRequests)
+            .where(eq(licenseRequests.isDraft, false))
+            .where(eq(licenseRequests.userId, user.id));
+            
+          console.log(`[DEBUG LICENÇAS EMITIDAS] Encontradas ${licencasNoBanco.length} licenças para usuário ${user.id} sem transportadores associados`);
+        }
+        
         // Filtrar licenças com estado aprovado manualmente
         issuedLicenses = licencasNoBanco.filter(lic => {
           // Verificar estados aprovados
