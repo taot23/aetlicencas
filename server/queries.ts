@@ -54,60 +54,67 @@ export async function getDashboardStatsCombined() {
  */
 export async function getLicensesWithTransporters(filters: LicenseFilters = {}) {
   try {
-    // Construindo uma query dinâmica com sql-template-strings
+    console.log("Executando consulta com filtros:", JSON.stringify(filters));
+
+    // Usando SQL bruto para maior controle
     let query = sql`
-      SELECT l.*, t.name as transporter_name, t.document_number as transporter_document, u.email as user_email
+      SELECT 
+        l.*,
+        t.name as transporter_name,
+        t.document_number as transporter_document,
+        u.email as user_email
       FROM ${licenseRequests} l
       LEFT JOIN ${transporters} t ON l.transporter_id = t.id
       LEFT JOIN ${users} u ON l.user_id = u.id
       WHERE 1=1
     `;
     
+    let conditions = sql``;
+    
     // Adicionar condições de filtro
     if (filters.userId) {
-      query = sql`${query} AND l.user_id = ${filters.userId}`;
+      conditions = sql`${conditions} AND l.user_id = ${filters.userId}`;
     }
     
     if (filters.transporterId) {
-      query = sql`${query} AND l.transporter_id = ${filters.transporterId}`;
+      conditions = sql`${conditions} AND l.transporter_id = ${filters.transporterId}`;
     }
     
     if (filters.status) {
-      query = sql`${query} AND l.status = ${filters.status}`;
+      conditions = sql`${conditions} AND l.status = ${filters.status}`;
     }
     
     if (filters.isDraft !== undefined) {
-      query = sql`${query} AND l.is_draft = ${filters.isDraft}`;
+      conditions = sql`${conditions} AND l.is_draft = ${filters.isDraft}`;
     }
     
     if (filters.mainVehiclePlate) {
-      query = sql`${query} AND l.main_vehicle_plate ILIKE ${`%${filters.mainVehiclePlate}%`}`;
+      conditions = sql`${conditions} AND l.main_vehicle_plate ILIKE ${'%' + filters.mainVehiclePlate + '%'}`;
     }
     
     if (filters.startDate) {
-      query = sql`${query} AND l.created_at >= ${filters.startDate}`;
+      conditions = sql`${conditions} AND l.created_at >= ${filters.startDate}`;
     }
     
     if (filters.endDate) {
-      query = sql`${query} AND l.created_at <= ${filters.endDate}`;
+      conditions = sql`${conditions} AND l.created_at <= ${filters.endDate}`;
     }
     
-    // Adicionar ordenação
-    query = sql`${query} ORDER BY l.created_at DESC`;
+    // Adicionar ordenação e finalização
+    const finalQuery = sql`
+      ${query} ${conditions}
+      ORDER BY l.created_at DESC
+      ${filters.limit ? sql`LIMIT ${filters.limit}` : sql``}
+      ${filters.offset && filters.limit ? sql`OFFSET ${filters.offset}` : sql``}
+    `;
     
-    // Adicionar limit e offset
-    if (filters.limit) {
-      query = sql`${query} LIMIT ${filters.limit}`;
-      
-      if (filters.offset) {
-        query = sql`${query} OFFSET ${filters.offset}`;
-      }
-    }
+    console.log("Executando consulta SQL");
+    const result = await db.execute(finalQuery);
     
-    console.log("Executando consulta SQL com filtros aplicados");
-    
-    // Executar a consulta
-    return await db.execute(query);
+    // Retornar no formato esperado
+    return {
+      rows: result
+    };
   } catch (error) {
     console.error("Erro na consulta getLicensesWithTransporters:", error);
     throw error;
