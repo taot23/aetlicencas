@@ -7,8 +7,7 @@ import {
   XCircle, 
   FileText, 
   File, 
-  X, 
-  Wifi 
+  X
 } from "lucide-react";
 import { useWebSocketContext } from "@/hooks/use-websocket-context";
 import { useState, useEffect } from "react";
@@ -25,7 +24,7 @@ interface StatusBadgeProps {
 export function StatusBadge({ status: initialStatus, licenseId, state, className, showIcon = true }: StatusBadgeProps) {
   const [status, setStatus] = useState(initialStatus);
   const [recentUpdate, setRecentUpdate] = useState(false);
-  const { lastMessage, isConnected } = useWebSocketContext();
+  const { lastMessage } = useWebSocketContext();
   
   // Efeito para resetar o indicador de atualização recente após 3 segundos
   useEffect(() => {
@@ -136,9 +135,6 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
     }
   };
 
-  // Verificar se há uma indicação visual de conexão WebSocket
-  const shouldShowConnectionIndicator = licenseId !== undefined; // Só mostrar se o componente estiver monitorando uma licença
-  
   return (
     <div className="inline-flex items-center">
       <span
@@ -152,17 +148,6 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
         {showIcon && getStatusIcon()}
         {getStatusLabel()}
       </span>
-      
-      {/* Indicador de conexão WebSocket (opcional, apenas para diagnóstico) */}
-      {shouldShowConnectionIndicator && (
-        <div className="ml-1 text-xs" title={isConnected ? "Atualizações em tempo real ativas" : "Atualizações em tempo real desconectadas"}>
-          <Wifi className={cn(
-            "h-3 w-3", 
-            isConnected ? "text-green-500" : "text-gray-300",
-            recentUpdate ? "animate-pulse" : ""
-          )} />
-        </div>
-      )}
     </div>
   );
 }
