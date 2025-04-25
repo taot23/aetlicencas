@@ -22,6 +22,7 @@ import multer from "multer";
 import path from "path";
 import * as fs from "fs";
 import { promisify } from "util";
+import { WebSocketServer, WebSocket } from "ws";
 
 // Set up file storage for uploads
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -178,12 +179,60 @@ const requireOwnerOrStaff = (req: any, res: any, next: any) => {
   next();
 };
 
+// Tipo para as mensagens WebSocket
+interface WSMessage {
+  type: 'STATUS_UPDATE' | 'LICENSE_UPDATE';
+  data: any;
+}
+
+// Armazenamento de clientes WebSocket
+const wsClients: Set<WebSocket> = new Set();
+
+// Função para transmitir mensagens a todos os clientes conectados
+const broadcastMessage = (message: WSMessage) => {
+  console.log(`Enviando atualização por WebSocket: ${message.type}`);
+  
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
   // Servir arquivos estáticos da pasta uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
+  // Criar o servidor HTTP (definido apenas uma vez)
+  const httpServer = createServer(app);
+  
+  // Configurar o WebSocketServer
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('Novo cliente WebSocket conectado');
+    wsClients.add(ws);
+    
+    ws.on('message', (message) => {
+      console.log('Mensagem recebida:', message.toString());
+    });
+    
+    ws.on('close', () => {
+      console.log('Cliente WebSocket desconectado');
+      wsClients.delete(ws);
+    });
+    
+    ws.on('error', (error) => {
+      console.error('Erro na conexão WebSocket:', error);
+      wsClients.delete(ws);
+    });
+    
+    // Enviar mensagem inicial para confirmar conexão
+    ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Conectado ao servidor' }));
+  });
 
   // Cache para armazenar tokens de acesso
   let accessToken: string | undefined = undefined;
@@ -2176,6 +2225,20 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         file,
       });
       
+      // Enviar notificação em tempo real via WebSocket
+      broadcastMessage({
+        type: 'STATUS_UPDATE',
+        data: {
+          licenseId: updatedLicense.id,
+          state: stateStatusData.state,
+          status: stateStatusData.status,
+          updatedAt: new Date().toISOString(),
+          license: updatedLicense
+        }
+      });
+      
+      console.log(`Status da licença ${licenseId} para o estado ${stateStatusData.state} atualizado para ${stateStatusData.status}. Notificação enviada.`);
+      
       res.json(updatedLicense);
     } catch (error) {
       console.error('Error updating license state status:', error);
@@ -2236,6 +2299,5 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
     }
   });
 
-  const httpServer = createServer(app);
   return httpServer;
 }
