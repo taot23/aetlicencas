@@ -355,7 +355,7 @@ export default function AdminLicensesPage() {
         }
       }
       
-      return matchesSearch && matchesStatus && matchesTransporter && matchesDate;
+      return matchesSearch && matchesStatus && matchesDate;
     })
     // Aplicar ordenação
     .sort((a, b) => {
