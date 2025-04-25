@@ -155,7 +155,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
     }
   });
   
-  // Buscar dados do transportador
+  // Buscar dados do transportador (mantido para compatibilidade)
   const { data: transporter } = useQuery<Transporter>({
     queryKey: ['/api/public/transporters', license.transporterId],
     queryFn: async () => {
@@ -444,24 +444,7 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Dados do Transportador */}
-      {transporter && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Transportador</h3>
-          <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-gray-600 text-sm">Nome/Razão Social:</div>
-                <div className="font-medium">{transporter.name}</div>
-              </div>
-              <div>
-                <div className="text-gray-600 text-sm">CNPJ:</div>
-                <div className="font-medium">{transporter.documentNumber}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Seção de transportador removida */}
       
       {/* Estados Solicitados */}
       <div className="space-y-2">
