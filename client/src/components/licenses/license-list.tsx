@@ -441,6 +441,19 @@ export function LicenseList({
                 <TableHead>Estado</TableHead>
               )}
               
+              {/* Coluna de Transportador */}
+              {onSort ? (
+                <SortableHeader
+                  column="transporterName"
+                  label="Transportador"
+                  currentSort={sortColumn}
+                  currentDirection={sortDirection}
+                  onSort={onSort}
+                />
+              ) : (
+                <TableHead>Transportador</TableHead>
+              )}
+              
               {onSort ? (
                 <SortableHeader
                   column={isDraftList ? "updatedAt" : "createdAt"}
@@ -490,10 +503,10 @@ export function LicenseList({
               <TableRow>
                 <TableCell 
                   colSpan={isDraftList 
-                    ? 6 // Rascunhos
+                    ? 7 // Rascunhos (agora com coluna de transportador)
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 8 // Licenças emitidas (com coluna de validade)
-                      : 7 // Outras páginas de licenças (sem coluna de validade)
+                      ? 9 // Licenças emitidas (com coluna de validade e transportador)
+                      : 8 // Outras páginas de licenças (com transportador, sem validade)
                   } 
                   className="text-center py-10">
                   Carregando...
@@ -507,6 +520,10 @@ export function LicenseList({
                   <TableCell>{license.mainVehiclePlate}</TableCell>
                   <TableCell>
                     {(license as any).specificState || license.states.join(", ")}
+                  </TableCell>
+                  <TableCell>
+                    {/* Exibir nome do transportador */}
+                    {(license as any).transporterName || (license.transporterId ? `ID: ${license.transporterId}` : "-")}
                   </TableCell>
                   <TableCell>
                     {isDraftList 
@@ -542,10 +559,10 @@ export function LicenseList({
               <TableRow>
                 <TableCell 
                   colSpan={isDraftList 
-                    ? 6 // Rascunhos
+                    ? 7 // Rascunhos (agora com coluna de transportador)
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 8 // Licenças emitidas (com coluna de validade)
-                      : 7 // Outras páginas de licenças (sem coluna de validade)
+                      ? 9 // Licenças emitidas (com coluna de validade e transportador)
+                      : 8 // Outras páginas de licenças (com transportador, sem validade)
                   } 
                   className="text-center py-10 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
