@@ -216,7 +216,7 @@ export default function AdminLicensesPage() {
   });
 
   // Buscar todas as licenças
-  const { data: licenses = [], isLoading } = useQuery<LicenseRequest[]>({
+  const { data: licenses = [], isLoading, refetch } = useQuery<LicenseRequest[]>({
     queryKey: [apiEndpoint],
     queryFn: getQueryFn({ on401: "throw" }),
   });
@@ -251,31 +251,43 @@ export default function AdminLicensesPage() {
       const response = await apiRequest("PATCH", `/api/admin/licenses/${id}/state-status`, formData);
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedLicense) => {
+      // Primeiro, mostrar a notificação de sucesso
       toast({
         title: "Status do estado atualizado",
         description: "Status do estado atualizado com sucesso!",
       });
       
-      // Primeiro, fechar o diálogo
-      setStateStatusDialogOpen(false);
-      
-      // Depois, limpar o formulário completamente
-      stateStatusForm.reset({
-        state: "",
-        status: "",
-        comments: "",
-        aetNumber: "",
-        licenseFile: undefined,
-        validUntil: "",
-      });
-      
-      // Invalidar as queries para manter a consistência
-      queryClient.invalidateQueries({ queryKey: [apiEndpoint] });
-      
-      // Forçar um pequeno atraso para permitir que os estados dos componentes sejam atualizados
+      // Limpar o formulário e fechar o diálogo com um pequeno atraso
+      // para garantir que o DOM tenha tempo de processar as mudanças
       setTimeout(() => {
+        // Limpar o formulário completamente
+        stateStatusForm.reset({
+          state: "",
+          status: "",
+          comments: "",
+          aetNumber: "",
+          licenseFile: undefined,
+          validUntil: "",
+        });
+        
+        // Fechar o diálogo
+        setStateStatusDialogOpen(false);
+        
+        // Redefinir estado selecionado
+        setSelectedState("");
+      }, 100);
+      
+      // Invalidar todas as queries relacionadas para garantir dados atualizados
+      setTimeout(() => {
+        // Invalidar as consultas específicas
+        queryClient.invalidateQueries({ queryKey: [apiEndpoint] });
+        queryClient.invalidateQueries({ queryKey: [`${apiEndpoint}/${updatedLicense.id}`] });
         queryClient.invalidateQueries({ queryKey: ['/api/licenses/issued'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/licenses'] });
+        
+        // Forçar uma nova busca dos dados (opcional, mas pode ajudar)
+        refetch();
       }, 300);
     },
     onError: (error: Error) => {
@@ -481,6 +493,17 @@ export default function AdminLicensesPage() {
   const handleConfirmDelete = () => {
     if (!selectedLicense) return;
     deleteLicenseMutation.mutate(selectedLicense.id);
+  };
+  
+  // Função para fechar o diálogo de detalhes e limpar o estado
+  const handleCloseLicenseDetails = () => {
+    // Primeiro fechar o diálogo
+    setLicenseDetailsOpen(false);
+    // Depois de um pequeno atraso, limpar o estado selecionado
+    setTimeout(() => {
+      setSelectedLicense(null);
+      setVisibleStateFlows([]);
+    }, 100);
   };
 
   // Formatar data com tratamento de erros
