@@ -204,6 +204,8 @@ export function StateProgressFlow({
   licenseId?: number,
   state?: string
 }) {
+  console.log(`StateProgressFlow inicializado com estado ${state}, status inicial ${initialStateStatus}, licenseId ${licenseId}`);
+  
   const [stateStatus, setStateStatus] = useState(initialStateStatus);
   const { lastMessage } = useWebSocketContext();
   
@@ -222,11 +224,34 @@ export function StateProgressFlow({
     }
   }, [lastMessage, licenseId, state]);
   
+  // Normalizar o status para garantir compatibilidade
+  const normalizedStatus = (() => {
+    // Se o formato já é um status válido, use-o diretamente
+    if (['pending_registration', 'registration_in_progress', 'rejected', 
+         'under_review', 'pending_approval', 'approved', 'canceled'].includes(stateStatus)) {
+      return stateStatus;
+    }
+    
+    // Verificar se é um formato "ESTADO:STATUS" e extrair o status
+    if (typeof stateStatus === 'string' && stateStatus.includes(':')) {
+      const parts = stateStatus.split(':');
+      if (parts.length >= 2) {
+        console.log(`StateProgressFlow: extraindo status do formato ${stateStatus} -> ${parts[1]}`);
+        return parts[1];
+      }
+    }
+    
+    // Fallback para o valor original
+    return stateStatus;
+  })();
+  
+  console.log(`StateProgressFlow: status normalizado para ${normalizedStatus}`);
+  
   // No fluxo por estado, usamos o mesmo modelo horizontal do fluxo principal
   // mas com um tamanho específico menor
   return (
     <ProgressFlow 
-      currentStatus={stateStatus} 
+      currentStatus={normalizedStatus} 
       className={cn("max-w-full min-w-full", className)} 
       size={size}
       licenseId={licenseId}
