@@ -1453,16 +1453,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses/issued', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let issuedLicenses;
+      let licensesResult;
       
       // Se for usuário administrativo, buscar todas as licenças emitidas
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças emitidas.`);
-        issuedLicenses = await storage.getIssuedLicensesByUserId(0); // 0 = all users
+        licensesResult = await getLicensesWithTransporters({ status: 'approved' });
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças emitidas.`);
-        issuedLicenses = await storage.getIssuedLicensesByUserId(user.id);
+        licensesResult = await getLicensesWithTransporters({ userId: user.id, status: 'approved' });
       }
+      
+      // Transformar os resultados para incluir o nome do transportador
+      const issuedLicenses = licensesResult.rows.map(license => ({
+        ...license,
+        transporterName: license.transporter_name,
+        transporterDocument: license.transporter_document,
+        userEmail: license.user_email
+      }));
       
       res.json(issuedLicenses);
     } catch (error) {
@@ -1476,16 +1484,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para admin/operational obter todas as licenças
   app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
-      const licenses = await storage.getAllLicenseRequests();
+      // Usar a função que inclui informações do transportador
+      const licensesResult = await getLicensesWithTransporters();
+      
+      // Transformar os resultados para incluir o nome do transportador
+      const licenses = licensesResult.rows.map(license => ({
+        ...license,
+        transporterName: license.transporter_name,
+        transporterDocument: license.transporter_document,
+        userEmail: license.user_email
+      }));
       
       // Log para diagnóstico
       if (licenses.length > 0) {
-        // Get direct database row of last license for comparison
-        const lastLicenseId = licenses[licenses.length - 1].id;
-        const dbResult = await db.select().from(licenseRequests).where(eq(licenseRequests.id, lastLicenseId));
-        
-        console.log("Licença exemplo recuperada:", JSON.stringify(licenses[licenses.length - 1], null, 2));
-        console.log("Mesma licença diretamente do banco de dados:", JSON.stringify(dbResult[0], null, 2));
+        // As licenças já foram transformadas, então podemos ter uma estrutura diferente
+        // Vamos mostrar apenas um exemplo para diagnóstico
+        console.log("Licença exemplo recuperada com transportador:", JSON.stringify(licenses[0], null, 2));
       }
       
       res.json(licenses);
@@ -1519,7 +1533,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para staff (operational/supervisor) obter todas as licenças
   app.get('/api/staff/licenses', requireOperational, async (req, res) => {
     try {
-      const licenses = await storage.getAllLicenseRequests();
+      // Usar a função que inclui informações do transportador
+      const licensesResult = await getLicensesWithTransporters();
+      
+      // Transformar os resultados para incluir o nome do transportador
+      const licenses = licensesResult.rows.map(license => ({
+        ...license,
+        transporterName: license.transporter_name,
+        transporterDocument: license.transporter_document,
+        userEmail: license.user_email
+      }));
+      
       res.json(licenses);
     } catch (error) {
       console.error('Error fetching all license requests for staff:', error);
