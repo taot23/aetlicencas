@@ -22,17 +22,56 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status: initialStatus, licenseId, state, className, showIcon = true }: StatusBadgeProps) {
-  const [status, setStatus] = useState(initialStatus);
+  // Normalizar o status inicial para garantir compatibilidade com o formato do banco
+  const normalizedInitialStatus = (() => {
+    // Se o formato já é um status válido, use-o diretamente
+    if (['pending_registration', 'registration_in_progress', 'rejected', 
+         'under_review', 'pending_approval', 'approved', 'canceled'].includes(initialStatus)) {
+      return initialStatus;
+    }
+    
+    // Verificar se é um formato "ESTADO:STATUS" e extrair o status
+    if (typeof initialStatus === 'string' && initialStatus.includes(':')) {
+      const parts = initialStatus.split(':');
+      if (parts.length >= 2) {
+        console.log(`StatusBadge: extraindo status do formato ${initialStatus} -> ${parts[1]}`);
+        return parts[1];
+      }
+    }
+    
+    // Fallback para o valor original
+    return initialStatus;
+  })();
+  
+  const [status, setStatus] = useState(normalizedInitialStatus);
   const [recentUpdate, setRecentUpdate] = useState(false);
   const { lastMessage } = useWebSocketContext();
   
   // Log quando o componente é renderizado para diagnóstico
-  console.log(`StatusBadge renderizado para ${state || 'geral'}, status inicial: ${initialStatus}, id: ${licenseId}`);
+  console.log(`StatusBadge renderizado para ${state || 'geral'}, status inicial: ${initialStatus}, normalizado para: ${normalizedInitialStatus}, id: ${licenseId}`);
   
   // Atualizar o status sempre que o initialStatus mudar (por exemplo, quando a licença é recarregada do banco)
   useEffect(() => {
-    console.log(`StatusBadge: initialStatus alterado para ${initialStatus}`);
-    setStatus(initialStatus);
+    // Normalizar novamente quando o initialStatus mudar
+    const normalizedStatus = (() => {
+      if (['pending_registration', 'registration_in_progress', 'rejected', 
+           'under_review', 'pending_approval', 'approved', 'canceled'].includes(initialStatus)) {
+        return initialStatus;
+      }
+      
+      if (typeof initialStatus === 'string' && initialStatus.includes(':')) {
+        const parts = initialStatus.split(':');
+        if (parts.length >= 2) {
+          console.log(`StatusBadge: initialStatus alterado, extraindo de ${initialStatus} -> ${parts[1]}`);
+          return parts[1];
+        }
+      }
+      
+      return initialStatus;
+    })();
+    
+    console.log(`StatusBadge: initialStatus alterado para ${initialStatus}, normalizado para ${normalizedStatus}`);
+    setStatus(normalizedStatus);
   }, [initialStatus]);
   
   // Efeito para resetar o indicador de atualização recente após 3 segundos

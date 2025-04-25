@@ -1542,6 +1542,7 @@ export default function AdminLicensesPage() {
                               className="py-1"
                               licenseId={selectedLicense.id}
                               state={state}
+                              key={`${state}-${stateStatus}`} // Adiciona key para forçar re-render quando status mudar
                             />
                           </div>
                         )}
