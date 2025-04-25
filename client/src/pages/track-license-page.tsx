@@ -340,23 +340,6 @@ export default function TrackLicensePage() {
               
               {/* O bloco de status específico por estado foi removido conforme solicitado */}
               
-              {/* Informações do Transportador */}
-              <TransporterInfo transporterId={selectedLicense.transporterId} />
-              
-              {/* Estados Solicitados */}
-              {selectedLicense.states && selectedLicense.states.length > 0 && (
-                <>
-                  <h3 className="text-lg font-semibold mt-4 mb-2">Estados Solicitados</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedLicense.states.map((state, index) => (
-                      <Badge key={index} variant="outline" className="bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100">
-                        {state}
-                      </Badge>
-                    ))}
-                  </div>
-                </>
-              )}
-              
               {selectedLicense.comments && (
                 <div>
                   <h3 className="font-medium text-sm text-gray-500">Comentários</h3>
