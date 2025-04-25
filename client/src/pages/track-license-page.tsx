@@ -86,6 +86,14 @@ export default function TrackLicensePage() {
       });
     }
   }, [licenses, toast]);
+  
+  // Log para debug de rascunhos de renovação
+  useEffect(() => {
+    console.log("Rascunhos de renovação carregados:", renewalDrafts);
+    if (renewalDrafts && renewalDrafts.length > 0) {
+      console.log(`Encontrados ${renewalDrafts.length} rascunhos de renovação`);
+    }
+  }, [renewalDrafts]);
 
   // Otimizado usando useMemo para evitar recálculos desnecessários
   // Criar interface estendida para a licença com estado específico
