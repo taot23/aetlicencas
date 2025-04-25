@@ -701,6 +701,7 @@ export default function AdminLicensesPage() {
                               )}
                             </div>
                           </TableHead>
+                          <TableHead>Transportador</TableHead>
                           <TableHead>Estados</TableHead>
                           <TableHead
                             className="cursor-pointer hover:bg-gray-50"
@@ -755,11 +756,15 @@ export default function AdminLicensesPage() {
                         ) : (
                           filteredLicenses.map((license) => (
                             <TableRow key={license.id}>
-                              <TableCell className="font-medium">{license.requestNumber}</TableCell>
+                              <TableCell className="font-medium">
+                                {license.requestNumber || (license as any).request_number || "N/A"}
+                              </TableCell>
                               <TableCell>
                                 {getLicenseTypeLabel(license.type)}
                               </TableCell>
-                              <TableCell>{license.mainVehiclePlate}</TableCell>
+                              <TableCell>
+                                {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}
+                              </TableCell>
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
                                   {license.states.map((state, idx) => {
@@ -800,7 +805,7 @@ export default function AdminLicensesPage() {
                                   <StatusBadge status={license.status} />
                                 </div>
                               </TableCell>
-                              <TableCell>{formatDate(license.createdAt)}</TableCell>
+                              <TableCell>{formatDate(license.createdAt || (license as any).created_at)}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
                                   <Button
