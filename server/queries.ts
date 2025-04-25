@@ -111,10 +111,8 @@ export async function getLicensesWithTransporters(filters: LicenseFilters = {}) 
     console.log("Executando consulta SQL");
     const result = await db.execute(finalQuery);
     
-    // Retornar no formato esperado
-    return {
-      rows: result
-    };
+    // Retornar no formato esperado para manter compatibilidade
+    return result;
   } catch (error) {
     console.error("Erro na consulta getLicensesWithTransporters:", error);
     throw error;

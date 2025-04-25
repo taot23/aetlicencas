@@ -1464,6 +1464,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         licensesResult = await getLicensesWithTransporters({ userId: user.id, status: 'approved' });
       }
       
+      // Verificar formato dos resultados
+      console.log("Licença exemplo recuperada com transportador:", licensesResult.rows && licensesResult.rows.length > 0 ? JSON.stringify(licensesResult.rows[0], null, 2) : "Nenhuma licença encontrada");
+      
       // Transformar os resultados para incluir o nome do transportador
       const issuedLicenses = licensesResult.rows.map(license => ({
         ...license,
@@ -1484,8 +1487,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para admin/operational obter todas as licenças
   app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
+      console.log("Executando consulta com filtros aplicados");
+      
       // Usar a função que inclui informações do transportador
       const licensesResult = await getLicensesWithTransporters();
+      
+      // Verificar formato dos resultados
+      console.log("Licença exemplo recuperada com transportador:", licensesResult.rows && licensesResult.rows.length > 0 ? JSON.stringify(licensesResult.rows[0], null, 2) : "Nenhuma licença encontrada");
       
       // Transformar os resultados para incluir o nome do transportador
       const licenses = licensesResult.rows.map(license => ({
@@ -1494,13 +1502,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transporterDocument: license.transporter_document,
         userEmail: license.user_email
       }));
-      
-      // Log para diagnóstico
-      if (licenses.length > 0) {
-        // As licenças já foram transformadas, então podemos ter uma estrutura diferente
-        // Vamos mostrar apenas um exemplo para diagnóstico
-        console.log("Licença exemplo recuperada com transportador:", JSON.stringify(licenses[0], null, 2));
-      }
       
       res.json(licenses);
     } catch (error) {
@@ -1533,8 +1534,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para staff (operational/supervisor) obter todas as licenças
   app.get('/api/staff/licenses', requireOperational, async (req, res) => {
     try {
+      console.log("Executando consulta com filtros aplicados");
+      
       // Usar a função que inclui informações do transportador
       const licensesResult = await getLicensesWithTransporters();
+      
+      // Verificar formato dos resultados e adicionar log
+      console.log("Formato do resultado recebido:", Object.keys(licensesResult));
       
       // Transformar os resultados para incluir o nome do transportador
       const licenses = licensesResult.rows.map(license => ({
