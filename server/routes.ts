@@ -731,16 +731,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses/drafts', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let drafts;
+      let allDrafts;
       
       // Se for usuário administrativo, buscar todos os rascunhos
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todos os rascunhos.`);
-        drafts = await storage.getLicenseDraftsByUserId(0); // 0 = todos os rascunhos
+        allDrafts = await storage.getLicenseDraftsByUserId(0); // 0 = todos os rascunhos
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas seus rascunhos.`);
-        drafts = await storage.getLicenseDraftsByUserId(user.id);
+        allDrafts = await storage.getLicenseDraftsByUserId(user.id);
       }
+      
+      // Verificar se deve incluir rascunhos de renovação
+      const shouldIncludeRenewalDrafts = req.query.includeRenewal === 'true';
+      
+      // Se não deve incluir rascunhos de renovação, filtrar aqueles que têm comentários sobre renovação
+      const drafts = shouldIncludeRenewalDrafts 
+        ? allDrafts 
+        : allDrafts.filter(draft => {
+            // Se o comentário menciona "Renovação", é um rascunho de renovação
+            return !(draft.comments && draft.comments.includes('Renovação'));
+          });
+      
+      console.log(`Total de rascunhos: ${allDrafts.length}, filtrados: ${drafts.length}, incluindo renovação: ${shouldIncludeRenewalDrafts}`);
       
       res.json(drafts);
     } catch (error) {
@@ -1088,16 +1101,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let licenses;
+      let allLicenses;
       
       // Se for usuário administrativo, buscar todas as licenças
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças.`);
-        licenses = await storage.getAllLicenseRequests();
+        allLicenses = await storage.getAllLicenseRequests();
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
-        licenses = await storage.getLicenseRequestsByUserId(user.id);
+        allLicenses = await storage.getLicenseRequestsByUserId(user.id);
       }
+      
+      // Verificar se deve incluir rascunhos de renovação
+      const shouldIncludeRenewalDrafts = req.query.includeRenewal === 'true';
+      
+      // Filtrar rascunhos de renovação, a menos que solicitado explicitamente para incluí-los
+      const licenses = shouldIncludeRenewalDrafts 
+        ? allLicenses 
+        : allLicenses.filter(license => {
+            // Se é um rascunho e o comentário menciona "Renovação", é um rascunho de renovação
+            if (license.isDraft && license.comments && license.comments.includes('Renovação')) {
+              return false; // excluir rascunhos de renovação
+            }
+            return true; // manter todos os outros
+          });
+      
+      console.log(`Total de licenças: ${allLicenses.length}, filtradas: ${licenses.length}, incluindo renovação: ${shouldIncludeRenewalDrafts}`);
       
       res.json(licenses);
     } catch (error) {
@@ -1478,10 +1507,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Para usuários comuns, buscar também diretamente do banco
         const licencasNoBanco = await db.select()
           .from(licenseRequests)
-          .where(and(
-            eq(licenseRequests.isDraft, false),
-            eq(licenseRequests.userId, user.id)
-          ));
+          .where(eq(licenseRequests.isDraft, false))
+          .where(eq(licenseRequests.userId, user.id));
           
         // Filtrar licenças com estado aprovado manualmente
         issuedLicenses = licencasNoBanco.filter(lic => {
