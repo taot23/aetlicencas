@@ -85,6 +85,7 @@ export default function IssuedLicensesPage() {
     licenseFileUrl: string | null;
     stateFileUrl: string | null;
     transporterId: number;
+    transporterName: string | null; // Nome do transportador
     aetNumber: string | null; // Número da AET
   }
   
@@ -129,7 +130,8 @@ export default function IssuedLicensesPage() {
             licenseFileUrl: license.licenseFileUrl,
             stateFileUrl,
             transporterId: license.transporterId || 0,
-            aetNumber: license.aetNumber || null // Incluir número da AET
+            aetNumber: license.aetNumber || null, // Incluir número da AET
+            transporterName: license.transporter_name || (license as any).transporterName || null // Incluir nome do transportador
           });
         }
       });
