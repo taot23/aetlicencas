@@ -749,7 +749,7 @@ export default function AdminLicensesPage() {
                       <TableBody>
                         {filteredLicenses.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-6">
+                            <TableCell colSpan={8} className="text-center py-6">
                               Nenhuma licença encontrada
                             </TableCell>
                           </TableRow>
@@ -764,6 +764,9 @@ export default function AdminLicensesPage() {
                               </TableCell>
                               <TableCell>
                                 {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}
+                              </TableCell>
+                              <TableCell>
+                                {license.transporterName || (license as any).transporter_name || "N/A"}
                               </TableCell>
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
@@ -848,8 +851,9 @@ export default function AdminLicensesPage() {
                               </div>
                               
                               <div className="mt-2">
-                                <p className="text-sm"><span className="font-medium">Veículo:</span> {license.mainVehiclePlate}</p>
-                                <p className="text-sm"><span className="font-medium">Data:</span> {formatDate(license.createdAt)}</p>
+                                <p className="text-sm"><span className="font-medium">Veículo:</span> {license.mainVehiclePlate || (license as any).main_vehicle_plate || "N/A"}</p>
+                                <p className="text-sm"><span className="font-medium">Transportador:</span> {license.transporterName || (license as any).transporter_name || "N/A"}</p>
+                                <p className="text-sm"><span className="font-medium">Data:</span> {formatDate(license.createdAt || (license as any).created_at)}</p>
                                 <div className="mt-1">
                                   <span className="text-sm font-medium">Estados:</span>
                                   <div className="flex flex-wrap gap-1 mt-1">
