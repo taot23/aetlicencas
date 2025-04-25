@@ -115,6 +115,25 @@ export default function IssuedLicensesPage() {
             console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
           }
           
+          // Obter número AET específico para este estado, se disponível
+          let stateAETNumber = null;
+          
+          // Verificar primeiro no array stateAETNumbers (formato "SP:123456")
+          if (license.stateAETNumbers && Array.isArray(license.stateAETNumbers)) {
+            const aetEntry = license.stateAETNumbers.find(entry => entry.startsWith(`${state}:`));
+            if (aetEntry) {
+              const parts = aetEntry.split(':');
+              if (parts.length >= 2) {
+                stateAETNumber = parts[1];
+              }
+            }
+          }
+          
+          // Se não encontrou no stateAETNumbers, tentar no campo aetNumber (legado)
+          if (!stateAETNumber && license.aetNumber) {
+            stateAETNumber = license.aetNumber;
+          }
+          
           result.push({
             id: license.id * 100 + index, // Gerar ID único para a linha
             licenseId: license.id,
@@ -129,7 +148,7 @@ export default function IssuedLicensesPage() {
             licenseFileUrl: license.licenseFileUrl,
             stateFileUrl,
             transporterId: license.transporterId || 0,
-            aetNumber: license.aetNumber || null // Incluir número da AET
+            aetNumber: stateAETNumber // Usar o número AET específico do estado
           });
         }
       });
