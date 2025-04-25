@@ -24,6 +24,7 @@ import path from "path";
 import * as fs from "fs";
 import { promisify } from "util";
 import { WebSocketServer, WebSocket } from "ws";
+import { setupDebugRoutes } from "./debug";
 
 // Set up file storage for uploads
 const uploadDir = path.join(process.cwd(), "uploads");
