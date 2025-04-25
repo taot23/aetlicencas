@@ -338,24 +338,7 @@ export default function TrackLicensePage() {
               {/* Componente LicenseDetailsCard para exibição dos detalhes */}
               <LicenseDetailsCard license={selectedLicense} />
               
-              {/* Status específico por estado */}
-              {(selectedLicense as any).specificState && (
-                <div className="p-3 bg-gray-50 rounded-md">
-                  <h3 className="font-medium text-sm text-gray-500">Status: {(selectedLicense as any).specificState}</h3>
-                  <div className="flex items-center mt-1">
-                    <StatusBadge status={(selectedLicense as any).specificStateStatus || selectedLicense.status} />
-                    {/* Botão de download após status liberada */}
-                    {((selectedLicense as any).specificStateStatus === "approved" || selectedLicense.status === "approved") && (selectedLicense as any).specificStateFileUrl && (
-                      <Button variant="outline" size="sm" className="ml-2" asChild>
-                        <a href={(selectedLicense as any).specificStateFileUrl} target="_blank" rel="noopener noreferrer">
-                          <FileDown className="h-4 w-4 mr-1" />
-                          Download
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* O bloco de status específico por estado foi removido conforme solicitado */}
               
               {/* Informações do Transportador */}
               <TransporterInfo transporterId={selectedLicense.transporterId} />
