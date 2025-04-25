@@ -57,6 +57,23 @@ export default function TrackLicensePage() {
     // Permite uma tentativa adicional em caso de falha
     retry: 1
   });
+  
+  // Buscar rascunhos específicos de renovação
+  const { data: renewalDrafts, isLoading: isLoadingRenewalDrafts } = useQuery<LicenseRequest[]>({
+    queryKey: ["/api/licenses/drafts", { renewalOnly: true }],
+    queryFn: async () => {
+      // Adicionar parâmetro renewalOnly=true para buscar apenas os rascunhos de renovação
+      const res = await fetch("/api/licenses/drafts?renewalOnly=true", {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Erro ao buscar rascunhos de renovação");
+      }
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true
+  });
 
   // Usado para notificar o usuário sobre a disponibilidade de dados em cache
   useEffect(() => {
@@ -106,7 +123,13 @@ export default function TrackLicensePage() {
     
     const result: ExtendedLicenseWithId[] = [];
     
-    licenses.forEach(license => {
+    // Combinar licenças regulares com os rascunhos de renovação
+    const allLicenses = [
+      ...(licenses || []),
+      ...(renewalDrafts || [])
+    ];
+    
+    allLicenses.forEach(license => {
       // Para cada estado na licença, crie uma entrada específica
       if (license.states && license.states.length > 0) {
         license.states.forEach((state, index) => {
@@ -150,7 +173,7 @@ export default function TrackLicensePage() {
     });
     
     return result;
-  }, [licenses]);
+  }, [licenses, renewalDrafts]);
   
   // Aplicar filtros à lista expandida
   const filteredLicenses = useMemo(() => {
@@ -241,6 +264,15 @@ export default function TrackLicensePage() {
 
   const handleViewLicense = (license: LicenseRequest) => {
     setSelectedLicense(license);
+  };
+  
+  // Função para recarregar ambos os dados ao clicar em atualizar
+  const handleRefresh = () => {
+    refetch();
+    // Também recarregar os rascunhos de renovação
+    if (renewalDrafts) {
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts", { renewalOnly: true }] });
+    }
   };
 
   return (
