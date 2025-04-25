@@ -2308,10 +2308,24 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         status: LicenseStatus;
         comments: string;
         validUntil?: string;
+        state?: string; // Agora exigimos um estado específico
+        aetNumber?: string; // Número AET específico do estado
       } = {
         status: req.body.status as LicenseStatus,
         comments: req.body.comments,
       };
+      
+      // Add state if provided (agora é obrigatório)
+      if (req.body.state) {
+        statusData.state = req.body.state;
+      } else {
+        return res.status(400).json({ message: 'É obrigatório informar o estado para atualizar o status' });
+      }
+      
+      // Add aetNumber if provided
+      if (req.body.aetNumber) {
+        statusData.aetNumber = req.body.aetNumber;
+      }
       
       // Add validUntil if provided
       if (req.body.validUntil) {
@@ -2332,17 +2346,27 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         return res.status(404).json({ message: 'Licença não encontrada' });
       }
       
-      // Add file URL if provided
-      // Corrigir a tipagem para evitar conflito entre null e undefined
-      let licenseFileUrl: string | undefined = existingLicense.licenseFileUrl || undefined;
-      if (req.file) {
-        licenseFileUrl = `/uploads/${req.file.filename}`;
+      // Verifica se o estado está incluído na lista de estados da licença
+      if (!existingLicense.states.includes(statusData.state)) {
+        return res.status(400).json({ message: 'Estado não incluído na solicitação da licença' });
       }
       
-      // Update license status
-      const updatedLicense = await storage.updateLicenseStatus(licenseId, {
-        ...statusData,
-        licenseFileUrl,
+      // Add file se fornecido
+      let file: Express.Multer.File | undefined = undefined;
+      if (req.file) {
+        file = req.file;
+      }
+      
+      // Usar updateLicenseStateStatus para garantir que o arquivo e número AET 
+      // sejam específicos para o estado selecionado
+      const updatedLicense = await storage.updateLicenseStateStatus({
+        licenseId,
+        state: statusData.state,
+        status: statusData.status,
+        comments: statusData.comments,
+        validUntil: statusData.validUntil,
+        aetNumber: statusData.aetNumber,
+        file
       });
       
       res.json(updatedLicense);

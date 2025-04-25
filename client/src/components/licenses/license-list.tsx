@@ -114,8 +114,33 @@ export function LicenseList({
       case "bitrain_7_axles": return "Bitrem 7 eixos";
       case "bitrain_6_axles": return "Bitrem 6 eixos";
       case "flatbed": return "Prancha";
+      case "truck_and_trailer": return "Romeu e Julieta";
       default: return type;
     }
+  };
+  
+  // Função para obter a URL do arquivo para um estado específico da licença
+  const getStateFileUrl = (license: LicenseRequest): string | undefined => {
+    // Se a licença tiver apenas um estado, ou se estivermos em uma visualização específica por estado
+    if ((license as any).specificState && license.stateFiles && Array.isArray(license.stateFiles)) {
+      const stateFile = license.stateFiles.find(sf => sf.startsWith(`${(license as any).specificState}:`));
+      if (stateFile) {
+        // Retorna a parte da string após o primeiro ":"
+        return stateFile.split(':', 2)[1];
+      }
+    } 
+    // Se tiver licenseFileUrl diretamente (para compatibilidade com código legado)
+    else if ((license as any).licenseFileUrl) {
+      return (license as any).licenseFileUrl;
+    }
+    // Para licenças com múltiplos estados sem estado específico selecionado
+    else if (license.stateFiles && Array.isArray(license.stateFiles) && license.stateFiles.length > 0) {
+      // Pegamos o primeiro arquivo disponível
+      const firstStateFile = license.stateFiles[0];
+      return firstStateFile.split(':', 2)[1];
+    }
+    
+    return undefined;
   };
 
   // Function to render actions based on list type and license status
@@ -324,19 +349,19 @@ export function LicenseList({
                               size="sm"
                               asChild
                               className="text-green-600 border-green-200 mr-1"
-                              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                              title={getStateFileUrl(license) ? "Baixar licença" : "Arquivo não disponível"}
                             >
                               <a 
-                                href={license.licenseFileUrl || '#'} 
+                                href={getStateFileUrl(license) || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
-                                  if (!license.licenseFileUrl) {
+                                  if (!getStateFileUrl(license)) {
                                     e.preventDefault();
                                     alert('Arquivo da licença não disponível no momento.');
                                   }
                                 }}
-                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                                className={!getStateFileUrl(license) ? "opacity-40 cursor-not-allowed" : ""}
                               >
                                 <Download className="h-4 w-4 mr-1" /> Download
                               </a>
