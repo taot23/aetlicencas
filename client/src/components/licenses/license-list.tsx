@@ -142,6 +142,104 @@ export function LicenseList({
     
     return undefined;
   };
+  
+  // Função para obter a data de validade de um estado específico
+  const getStateValidUntil = (license: LicenseRequest): string | undefined => {
+    // Se a licença tiver um estado específico
+    if ((license as any).specificState && license.stateStatuses && Array.isArray(license.stateStatuses)) {
+      // Buscar status que comece com o estado específico e contenha "approved"
+      const stateStatus = license.stateStatuses.find(ss => 
+        ss.startsWith(`${(license as any).specificState}:approved:`)
+      );
+      
+      if (stateStatus) {
+        // O formato é "estado:approved:data:numeroAET", extrair a data
+        const parts = stateStatus.split(':');
+        if (parts.length >= 3) {
+          return parts[2]; // Retorna a data
+        }
+      }
+    }
+    // Se tiver validUntil diretamente (para compatibilidade)
+    else if (license.validUntil) {
+      return license.validUntil.toString();
+    }
+    // Para licenças com múltiplos estados sem estado específico
+    else if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
+      // Procurar pelo primeiro estado com status "approved" e data
+      const approvedState = license.stateStatuses.find(ss => ss.includes(':approved:'));
+      if (approvedState) {
+        const parts = approvedState.split(':');
+        if (parts.length >= 3) {
+          return parts[2]; // Retorna a data
+        }
+      }
+    }
+    
+    return undefined;
+  };
+  
+  // Função para obter o número AET de um estado específico
+  const getStateAETNumber = (license: LicenseRequest): string | undefined => {
+    // Se a licença tiver um estado específico
+    if ((license as any).specificState && license.stateStatuses && Array.isArray(license.stateStatuses)) {
+      // Verificar nos status aprovados que têm o formato "estado:approved:data:numeroAET"
+      const approvedStatus = license.stateStatuses.find(ss => 
+        ss.startsWith(`${(license as any).specificState}:approved:`) && ss.split(':').length >= 4
+      );
+      
+      if (approvedStatus) {
+        const parts = approvedStatus.split(':');
+        if (parts.length >= 4) {
+          return parts[3]; // Retorna o número AET
+        }
+      }
+      
+      // Verificar nos status pendentes que têm o formato "estado:status:numeroAET"
+      const pendingStatus = license.stateStatuses.find(ss => 
+        ss.startsWith(`${(license as any).specificState}:`) && 
+        (ss.includes(':under_review:') || ss.includes(':pending_approval:'))
+      );
+      
+      if (pendingStatus) {
+        const parts = pendingStatus.split(':');
+        if (parts.length >= 3) {
+          return parts[2]; // Retorna o número AET
+        }
+      }
+    }
+    // Se tiver aetNumber diretamente (para compatibilidade)
+    else if ((license as any).aetNumber) {
+      return (license as any).aetNumber;
+    }
+    // Para licenças com múltiplos estados sem estado específico
+    else if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
+      // Buscar primeiro número AET de qualquer estado aprovado
+      const approvedWithAET = license.stateStatuses.find(ss => {
+        const parts = ss.split(':');
+        return parts.length >= 4 && parts[1] === 'approved';
+      });
+      
+      if (approvedWithAET) {
+        const parts = approvedWithAET.split(':');
+        return parts[3];
+      }
+      
+      // Buscar primeiro número AET de qualquer estado pendente
+      const pendingWithAET = license.stateStatuses.find(ss => {
+        const parts = ss.split(':');
+        return parts.length >= 3 && 
+               (parts[1] === 'under_review' || parts[1] === 'pending_approval');
+      });
+      
+      if (pendingWithAET) {
+        const parts = pendingWithAET.split(':');
+        return parts[2];
+      }
+    }
+    
+    return undefined;
+  };
 
   // Function to render actions based on list type and license status
   const renderActions = (license: LicenseRequest) => {
@@ -190,19 +288,19 @@ export function LicenseList({
               size="icon"
               asChild
               className="text-green-600 hover:text-green-800 hover:bg-green-50"
-              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+              title={getStateFileUrl(license) ? "Baixar licença" : "Arquivo não disponível"}
             >
               <a 
-                href={license.licenseFileUrl || '#'} 
+                href={getStateFileUrl(license) || '#'} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={(e) => {
-                  if (!license.licenseFileUrl) {
+                  if (!getStateFileUrl(license)) {
                     e.preventDefault();
                     alert('Arquivo da licença não disponível no momento.');
                   }
                 }}
-                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                className={!getStateFileUrl(license) ? "opacity-40 cursor-not-allowed" : ""}
               >
                 <Download className="h-4 w-4" />
               </a>
@@ -296,11 +394,21 @@ export function LicenseList({
                   
                   {/* Adicionar data de validade para licenças aprovadas */}
                   {((license as any).specificStateStatus === "approved" || license.status === "approved") && 
-                   (license.validUntil || (license as any).stateValidUntil) && (
+                   getStateValidUntil(license) && (
                     <div className="col-span-2">
                       <span className="text-sm text-gray-500 block">Validade:</span>
                       <span className="text-green-600 font-medium">
-                        {format(new Date((license as any).stateValidUntil || license.validUntil), "dd/MM/yyyy")}
+                        {format(new Date(getStateValidUntil(license)!), "dd/MM/yyyy")}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Adicionar número AET para licenças aprovadas ou em análise */}
+                  {getStateAETNumber(license) && (
+                    <div className="col-span-2">
+                      <span className="text-sm text-gray-500 block">Nº AET:</span>
+                      <span className="font-medium">
+                        {getStateAETNumber(license)}
                       </span>
                     </div>
                   )}
@@ -504,6 +612,21 @@ export function LicenseList({
                 )
               )}
               
+              {/* Coluna de número AET SOMENTE para página de licenças emitidas (/licenses/issued) */}
+              {!isDraftList && window.location.pathname.includes('/licenses/issued') && (
+                onSort ? (
+                  <SortableHeader
+                    column="aetNumber"
+                    label="Nº Licença"
+                    currentSort={sortColumn}
+                    currentDirection={sortDirection}
+                    onSort={onSort}
+                  />
+                ) : (
+                  <TableHead>Nº Licença</TableHead>
+                )
+              )}
+              
               {!isDraftList && (
                 onSort ? (
                   <SortableHeader
@@ -528,7 +651,7 @@ export function LicenseList({
                   colSpan={isDraftList 
                     ? 7 // Rascunhos (agora com transportador)
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 9 // Licenças emitidas (com transportador e validade)
+                      ? 10 // Licenças emitidas (com transportador, validade e número AET)
                       : 8 // Outras páginas de licenças (com transportador, sem validade)
                   } 
                   className="text-center py-10">
@@ -567,9 +690,22 @@ export function LicenseList({
                   {!isDraftList && window.location.pathname.includes('/licenses/issued') && (
                     <TableCell>
                       {/* Exibir data de validade se disponível */}
-                      {((license as any).stateValidUntil || license.validUntil) ? (
+                      {getStateValidUntil(license) ? (
                         <span className="text-green-600 font-medium">
-                          {format(new Date((license as any).stateValidUntil || license.validUntil), "dd/MM/yyyy")}
+                          {format(new Date(getStateValidUntil(license)!), "dd/MM/yyyy")}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                  )}
+                  
+                  {/* Coluna de número AET (licença) apenas na página de licenças emitidas */}
+                  {!isDraftList && window.location.pathname.includes('/licenses/issued') && (
+                    <TableCell>
+                      {getStateAETNumber(license) ? (
+                        <span className="font-medium">
+                          {getStateAETNumber(license)}
                         </span>
                       ) : (
                         <span className="text-gray-400">-</span>
@@ -594,7 +730,7 @@ export function LicenseList({
                   colSpan={isDraftList 
                     ? 7 // Rascunhos (agora com transportador)
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 9 // Licenças emitidas (com transportador e validade)
+                      ? 10 // Licenças emitidas (com transportador, validade e número AET)
                       : 8 // Outras páginas de licenças (com transportador, sem validade)
                   } 
                   className="text-center py-10 text-gray-500">
