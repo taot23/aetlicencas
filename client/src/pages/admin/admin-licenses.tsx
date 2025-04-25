@@ -1161,7 +1161,7 @@ export default function AdminLicensesPage() {
                   <MapPin className="h-4 w-4 mr-2 text-blue-600" />
                   Status por Estado
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {selectedLicense.states.map((state) => {
                     // Encontrar o status atual deste estado
                     let stateStatus = "pending";
