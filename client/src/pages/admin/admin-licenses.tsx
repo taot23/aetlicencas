@@ -1114,7 +1114,11 @@ export default function AdminLicensesPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-lg">{state}</span>
-                            <StatusBadge status={stateStatus} />
+                            <StatusBadge 
+                              status={stateStatus} 
+                              licenseId={selectedLicense.id}
+                              state={state}
+                            />
                           </div>
                           <div className="flex items-center gap-2">
                             <Button 
@@ -1150,7 +1154,13 @@ export default function AdminLicensesPage() {
                         {/* Fluxo de Progresso do Estado */}
                         {visibleStateFlows.includes(state) && (
                           <div className="mt-2 pt-2 overflow-x-auto">
-                            <StateProgressFlow stateStatus={stateStatus} size="sm" className="py-1" />
+                            <StateProgressFlow 
+                              stateStatus={stateStatus} 
+                              size="sm" 
+                              className="py-1"
+                              licenseId={selectedLicense.id}
+                              state={state}
+                            />
                           </div>
                         )}
                       </div>

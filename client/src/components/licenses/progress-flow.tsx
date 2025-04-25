@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 import { CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useWebSocketContext } from "@/hooks/use-websocket-context";
 
 interface ProgressFlowStep {
   label: string;
@@ -161,16 +163,38 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
   );
 }
 
-// Versão que mostra o progresso por estado
+// Versão que mostra o progresso por estado com suporte a atualizações em tempo real
 export function StateProgressFlow({ 
-  stateStatus, 
+  stateStatus: initialStateStatus, 
   className, 
-  size = "sm" 
+  size = "sm",
+  licenseId,
+  state
 }: { 
   stateStatus: string, 
   className?: string, 
-  size?: "sm" | "md" | "lg" | "xs" 
+  size?: "sm" | "md" | "lg" | "xs",
+  licenseId?: number,
+  state?: string
 }) {
+  const [stateStatus, setStateStatus] = useState(initialStateStatus);
+  const { lastMessage } = useWebSocketContext();
+  
+  // Efeito para atualizar o status quando receber mensagem de atualização
+  useEffect(() => {
+    if (
+      lastMessage?.type === 'STATUS_UPDATE' && 
+      lastMessage.data && 
+      licenseId && 
+      state &&
+      lastMessage.data.licenseId === licenseId &&
+      lastMessage.data.state === state
+    ) {
+      setStateStatus(lastMessage.data.status);
+      console.log(`StateProgressFlow: Status atualizado para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
+    }
+  }, [lastMessage, licenseId, state]);
+  
   // No fluxo por estado, usamos o mesmo modelo horizontal do fluxo principal
   // mas com um tamanho específico menor
   return (
