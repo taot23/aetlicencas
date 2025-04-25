@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X, RefreshCw } from 'lucide-react';
+import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X, RefreshCw, FileDown } from 'lucide-react';
 import { LicenseRequest, Transporter, Vehicle } from '@shared/schema';
 import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -927,6 +927,18 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Botão de download para licença aprovada/liberada */}
+      {currentStatus === "approved" && license.licenseFileUrl && (
+        <div className="mt-6 flex justify-center">
+          <Button asChild className="w-full sm:w-auto flex items-center gap-2" size="lg">
+            <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+              <FileDown className="h-5 w-5" />
+              Download da Licença Completa
+            </a>
+          </Button>
         </div>
       )}
 
