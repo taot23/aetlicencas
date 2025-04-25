@@ -1239,7 +1239,7 @@ export default function AdminLicensesPage() {
                 >
                   Cancelar
                 </Button>
-                <Button 
+                <button 
                   type="submit" 
                   disabled={
                     updateStateStatusMutation.isPending || 
@@ -1248,13 +1248,17 @@ export default function AdminLicensesPage() {
                       stateStatusForm.watch("status") === "approved") && 
                      !stateStatusForm.watch("aetNumber"))
                   }
-                  className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium text-sm w-full sm:w-auto flex items-center justify-center"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    stateStatusForm.handleSubmit(updateStateStatus)();
+                  }}
                 >
                   {updateStateStatusMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Salvar
-                </Button>
+                </button>
               </div>
             </form>
           </Form>

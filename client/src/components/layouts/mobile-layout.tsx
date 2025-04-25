@@ -15,6 +15,7 @@ import {
   Settings,
   Check
 } from "lucide-react";
+import { MobileNavigation } from "@/components/mobile/mobile-navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -206,37 +207,7 @@ export function MobileLayout({
       </main>
       
       {/* Navegação inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t p-2 flex items-center justify-between">
-        <Link href="/dashboard">
-          <Button variant={location === "/dashboard" ? "secondary" : "ghost"} size="icon" className="flex-1">
-            <Home className="h-5 w-5" />
-          </Button>
-        </Link>
-        
-        <Link href="/vehicles">
-          <Button variant={location === "/vehicles" ? "secondary" : "ghost"} size="icon" className="flex-1">
-            <Truck className="h-5 w-5" />
-          </Button>
-        </Link>
-        
-        <Link href="/track-license">
-          <Button variant={location === "/track-license" ? "secondary" : "ghost"} size="icon" className="flex-1">
-            <List className="h-5 w-5" />
-          </Button>
-        </Link>
-        
-        <Link href="/issued-licenses">
-          <Button variant={location === "/issued-licenses" ? "secondary" : "ghost"} size="icon" className="flex-1">
-            <FileText className="h-5 w-5" />
-          </Button>
-        </Link>
-        
-        <Link href="/my-companies">
-          <Button variant={location === "/my-companies" ? "secondary" : "ghost"} size="icon" className="flex-1">
-            <Building2 className="h-5 w-5" />
-          </Button>
-        </Link>
-      </nav>
+      <MobileNavigation />
     </div>
   );
 }
