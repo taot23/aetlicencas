@@ -737,6 +737,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const renewalOnly = req.query.renewalOnly === 'true';
       const excludeRenewal = req.query.excludeRenewal === 'true';
       
+      console.log(`Buscando rascunhos com filtros: renewalOnly=${renewalOnly}, excludeRenewal=${excludeRenewal}`);
+      
       // Se for usuário administrativo, buscar todos os rascunhos
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todos os rascunhos.`);

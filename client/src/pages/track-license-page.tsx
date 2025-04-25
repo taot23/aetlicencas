@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { LicenseDetailsCard } from "@/components/licenses/license-details-card";
+import { queryClient } from "@/lib/queryClient";
 
 export default function TrackLicensePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -341,9 +342,9 @@ export default function TrackLicensePage() {
 
       <LicenseList 
         licenses={sortedLicenses || []} 
-        isLoading={isLoading}
+        isLoading={isLoading || isLoadingRenewalDrafts}
         onView={handleViewLicense}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
