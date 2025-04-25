@@ -281,6 +281,7 @@ export const licenseRequests = pgTable("license_requests", {
   comments: text("comments"),
   licenseFileUrl: text("license_file_url").default(''),
   validUntil: timestamp("valid_until"),
+  aetNumber: text("aet_number"),
 }, (table) => {
   return {
     requestNumberIdx: uniqueIndex("idx_license_request_number").on(table.requestNumber),
@@ -301,7 +302,8 @@ export const insertLicenseRequestSchema = createInsertSchema(licenseRequests)
     createdAt: true, 
     updatedAt: true, 
     licenseFileUrl: true, 
-    validUntil: true 
+    validUntil: true,
+    aetNumber: true
   })
   .extend({
     transporterId: z.number().positive("Um transportador deve ser selecionado"),

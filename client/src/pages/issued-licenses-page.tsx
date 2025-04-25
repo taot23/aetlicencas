@@ -525,8 +525,11 @@ export default function IssuedLicensesPage() {
                         <TableCell className="font-medium">{license.requestNumber}</TableCell>
                         <TableCell>{license.mainVehiclePlate}</TableCell>
                         <TableCell>
-                          {/* Simular um número de licença baseado no ID e estado */}
-                          {license.state}/{license.licenseId}-{new Date().getFullYear()}
+                          {license.aetNumber ? (
+                            <span className="font-semibold text-blue-700">{license.aetNumber}</span>
+                          ) : (
+                            <span className="text-gray-500">Não atribuído</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           {license.emissionDate ? new Intl.DateTimeFormat('pt-BR').format(new Date(license.emissionDate)) : '-'}
@@ -738,7 +741,13 @@ export default function IssuedLicensesPage() {
                     <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
                       <div>
                         <span className="text-xs text-gray-500">Nº Licença:</span>
-                        <div>{license.state}/{license.licenseId}-{new Date().getFullYear()}</div>
+                        <div>
+                          {license.aetNumber ? (
+                            <span className="font-semibold text-blue-700">{license.aetNumber}</span>
+                          ) : (
+                            <span className="text-gray-500">Não atribuído</span>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <span className="text-xs text-gray-500">Placa:</span>
