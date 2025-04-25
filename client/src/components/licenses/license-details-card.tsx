@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X } from 'lucide-react';
+import { AlertCircle, Truck, ChevronsRight, Info, Building, MapPin, FileText, X, RefreshCw } from 'lucide-react';
 import { LicenseRequest, Transporter, Vehicle } from '@shared/schema';
 import { getLicenseTypeLabel, getCargoTypeLabel, getVehicleTypeLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { StatusBadge, Status } from "@/components/licenses/status-badge";
+import { useWebSocketContext } from "@/hooks/use-websocket-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -357,9 +359,18 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
 
   return (
     <div className="space-y-6 mt-4">
-      {/* Cabeçalho do pedido */}
+      {/* Cabeçalho do pedido com status */}
       <div className="bg-slate-700 text-white p-4 rounded-md shadow-sm">
-        <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
+        <div className="flex flex-wrap justify-between items-center">
+          <h2 className="text-xl font-bold">Pedido #{license.requestNumber}</h2>
+          <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+            <StatusBadge
+              status={license.status}
+              licenseId={license.id}
+              className="py-1"
+            />
+          </div>
+        </div>
       </div>
       
       {/* Dados do Transportador */}
@@ -394,6 +405,58 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
           </div>
         </div>
       </div>
+      
+      {/* Status por Estado - Com atualizações em tempo real */}
+      {license.stateStatuses && license.stateStatuses.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Status por Estado</h3>
+          <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {license.states.map((state) => {
+                // Encontrar o status atual deste estado
+                let stateStatus = "pending_registration";
+                if (license.stateStatuses && license.stateStatuses.length > 0) {
+                  const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                  if (stateStatusEntry) {
+                    const [_, status] = stateStatusEntry.split(':');
+                    if (status) {
+                      stateStatus = status;
+                    }
+                  }
+                }
+                
+                return (
+                  <div key={state} className="border rounded-md p-3 flex flex-col gap-2 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium flex items-center">
+                        <Badge variant="outline" className="mr-2">{state}</Badge>
+                      </div>
+                      <StatusBadge 
+                        status={stateStatus} 
+                        licenseId={license.id}
+                        state={state}
+                      />
+                    </div>
+                    
+                    {/* Link para documento do estado se disponível */}
+                    {license.stateFiles && license.stateFiles.some(sf => sf.startsWith(`${state}:`)) && (
+                      <a 
+                        href={`/uploads/${license.stateFiles.find(sf => sf.startsWith(`${state}:`))?.split(':')[1]}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                      >
+                        <FileText className="h-3 w-3 mr-1" />
+                        Ver documento
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Dados do Conjunto */}
       <div className="space-y-2">
