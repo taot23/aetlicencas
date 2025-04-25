@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useWebSocketContext } from "@/hooks/use-websocket-context";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { getLicenseTypeLabel, getCargoTypeLabel } from "@/lib/utils";
@@ -140,10 +141,64 @@ export default function AdminLicensesPage() {
   // Estado para ordenação
   const [sortField, setSortField] = useState<string>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const { lastMessage } = useWebSocketContext();
   
   // Verificar se estamos na rota de gerenciar-licencas (staff) ou admin
   const isStaffRoute = location.includes('gerenciar-licencas');
   const apiEndpoint = isStaffRoute ? '/api/staff/licenses' : '/api/admin/licenses';
+  
+  // Efeito para atualizar o objeto selectedLicense em tempo real quando receber mensagem WebSocket
+  useEffect(() => {
+    if (
+      lastMessage?.type === 'STATUS_UPDATE' && 
+      lastMessage.data && 
+      selectedLicense && 
+      lastMessage.data.licenseId === selectedLicense.id
+    ) {
+      // Se o evento é para um estado específico
+      if (lastMessage.data.state) {
+        // Atualização de status de um estado específico
+        const updatedStateStatuses = [...(selectedLicense.stateStatuses || [])];
+        const stateStatusIndex = updatedStateStatuses.findIndex(
+          entry => entry.startsWith(`${lastMessage.data.state}:`)
+        );
+        
+        // Se o estado já existe nos status, atualizar
+        if (stateStatusIndex >= 0) {
+          updatedStateStatuses[stateStatusIndex] = `${lastMessage.data.state}:${lastMessage.data.status}`;
+        } else {
+          // Se não existe, adicionar
+          updatedStateStatuses.push(`${lastMessage.data.state}:${lastMessage.data.status}`);
+        }
+        
+        // Criar uma cópia atualizada da licença selecionada
+        setSelectedLicense(prevLicense => {
+          if (!prevLicense) return null;
+          return {
+            ...prevLicense,
+            stateStatuses: updatedStateStatuses,
+            // Se também recebemos uma atualização para o status geral da licença
+            ...(lastMessage.data.license?.status && { status: lastMessage.data.license.status })
+          };
+        });
+        
+        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} estado ${lastMessage.data.state} => ${lastMessage.data.status}`);
+      } 
+      // Se o evento é para a licença inteira (sem estado específico)
+      else if (lastMessage.data.license) {
+        setSelectedLicense(prevLicense => {
+          if (!prevLicense) return null;
+          return {
+            ...prevLicense,
+            status: lastMessage.data.license.status,
+            ...(lastMessage.data.license.stateStatuses && { stateStatuses: lastMessage.data.license.stateStatuses })
+          };
+        });
+        
+        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} => ${lastMessage.data.license.status}`);
+      }
+    }
+  }, [lastMessage, selectedLicense]);
 
   // Form removido para atualização de status geral
   

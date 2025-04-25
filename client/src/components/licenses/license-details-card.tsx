@@ -18,6 +18,60 @@ interface LicenseDetailsCardProps {
 }
 
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
+  // Estado para armazenar o status atual (será atualizado pelo WebSocket)
+  const [currentStatus, setCurrentStatus] = useState(license.status);
+  // Estado para armazenar os status por estado (será atualizado pelo WebSocket)
+  const [stateStatuses, setStateStatuses] = useState(license.stateStatuses || []);
+  
+  // Hook para acesso ao WebSocket
+  const { lastMessage } = useWebSocketContext();
+  
+  // Efeito para atualizar o status quando receber mensagem WebSocket
+  useEffect(() => {
+    if (
+      lastMessage?.type === 'STATUS_UPDATE' && 
+      lastMessage.data && 
+      lastMessage.data.licenseId === license.id
+    ) {
+      // Se o evento é para um estado específico
+      if (lastMessage.data.state) {
+        // Atualização de status de um estado específico
+        setStateStatuses(prevStatuses => {
+          const updatedStatuses = [...prevStatuses];
+          const stateStatusIndex = updatedStatuses.findIndex(
+            entry => entry.startsWith(`${lastMessage.data.state}:`)
+          );
+          
+          // Se o estado já existe nos status, atualizar
+          if (stateStatusIndex >= 0) {
+            updatedStatuses[stateStatusIndex] = `${lastMessage.data.state}:${lastMessage.data.status}`;
+          } else {
+            // Se não existe, adicionar
+            updatedStatuses.push(`${lastMessage.data.state}:${lastMessage.data.status}`);
+          }
+          
+          return updatedStatuses;
+        });
+        
+        // Se também recebemos uma atualização para o status geral da licença
+        if (lastMessage.data.license?.status) {
+          setCurrentStatus(lastMessage.data.license.status);
+        }
+        
+        console.log(`StatusUpdate (card): Estado ${lastMessage.data.state} => ${lastMessage.data.status}`);
+      } 
+      // Se o evento é para a licença inteira (sem estado específico)
+      else if (lastMessage.data.license) {
+        setCurrentStatus(lastMessage.data.license.status);
+        if (lastMessage.data.license.stateStatuses) {
+          setStateStatuses(lastMessage.data.license.stateStatuses);
+        }
+        
+        console.log(`StatusUpdate (card): Licença => ${lastMessage.data.license.status}`);
+      }
+    }
+  }, [lastMessage, license.id]);
+  
   // Garantir valores padrão para dimensões e tipo de carga
   const licenseData = {
     ...license,
