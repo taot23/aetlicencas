@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { DimensionField } from "./dimension-field";
 import { 
   insertLicenseRequestSchema, 
@@ -120,9 +121,13 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
     queryKey: ["/api/vehicles"],
   });
   
-  // Fetch transporters linked to the user
+  // Verificar se o usuário é admin
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin" || user?.isAdmin;
+  
+  // Fetch transporters - se for admin, busca todos; caso contrário, busca apenas os do usuário
   const { data: transporters = [], isLoading: isLoadingTransporters } = useQuery<Transporter[]>({
-    queryKey: ["/api/user/transporters"],
+    queryKey: [isAdmin ? "/api/admin/transporters" : "/api/user/transporters"],
   });
 
   // Define filtered vehicle lists based on type
