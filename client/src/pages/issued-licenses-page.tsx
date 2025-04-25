@@ -173,8 +173,8 @@ export default function IssuedLicensesPage() {
             
             console.log(`Estado ${state} tem status: ${stateStatus}, licença geral tem status: ${normalizedLicense.status}`);
             
-            // SEMPRE incluir estados quando a licença tem status geral aprovado
-            if (normalizedLicense.status === 'approved') {
+            // Incluir estados quando a licença tem status geral aprovado OU quando o estado específico tem status aprovado
+            if (normalizedLicense.status === 'approved' || stateStatus === 'approved') {
               // Obter data de validade específica para este estado, se disponível
               let stateValidUntil = normalizedLicense.validUntil ? normalizedLicense.validUntil.toString() : null;
               
@@ -195,7 +195,7 @@ export default function IssuedLicensesPage() {
                 type: normalizedLicense.type,
                 mainVehiclePlate: normalizedLicense.mainVehiclePlate,
                 state,
-                status: normalizedLicense.status, // Use o status GERAL da licença, não o do estado
+                status: stateStatus === 'approved' ? 'approved' : normalizedLicense.status, // Priorizar o status do estado se aprovado
                 stateStatus,
                 emissionDate: normalizedLicense.emissionDate ? normalizedLicense.emissionDate.toString() : null,
                 validUntil: stateValidUntil,
@@ -663,25 +663,25 @@ export default function IssuedLicensesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-1">
-                            {/* Botão para baixar arquivo da licença completa */}
+                            {/* Botão para baixar arquivo da licença completa - sempre visível */}
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               asChild 
                               className="flex items-center justify-center" 
-                              title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
+                              title={license.licenseFileUrl || license.stateFileUrl ? "Baixar licença" : "Arquivo não disponível"}
                             >
                               <a 
-                                href={license.licenseFileUrl || '#'} 
+                                href={license.licenseFileUrl || license.stateFileUrl || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
-                                  if (!license.licenseFileUrl) {
+                                  if (!license.licenseFileUrl && !license.stateFileUrl) {
                                     e.preventDefault();
-                                    alert('Arquivo da licença completa não disponível no momento.');
+                                    alert('Arquivo da licença não disponível no momento.');
                                   }
                                 }}
-                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                                className={((!license.licenseFileUrl && !license.stateFileUrl) ? "opacity-40 cursor-not-allowed" : "")}
                               >
                                 <FileDown className="h-4 w-4 text-green-600" />
                               </a>
@@ -775,19 +775,19 @@ export default function IssuedLicensesPage() {
                           asChild 
                           className="h-8 w-8 p-0 flex items-center justify-center" 
                           aria-label="Download da licença" 
-                          title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
+                          title={license.licenseFileUrl || license.stateFileUrl ? "Baixar licença" : "Arquivo não disponível"}
                         >
                           <a 
-                            href={license.licenseFileUrl || '#'} 
+                            href={license.licenseFileUrl || license.stateFileUrl || '#'} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             onClick={(e) => {
-                              if (!license.licenseFileUrl) {
+                              if (!license.licenseFileUrl && !license.stateFileUrl) {
                                 e.preventDefault();
-                                alert('Arquivo da licença completa não disponível no momento.');
+                                alert('Arquivo da licença não disponível no momento.');
                               }
                             }}
-                            className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                            className={((!license.licenseFileUrl && !license.stateFileUrl) ? "opacity-40 cursor-not-allowed" : "")}
                           >
                             <FileDown className="h-4 w-4 text-green-600" />
                           </a>
