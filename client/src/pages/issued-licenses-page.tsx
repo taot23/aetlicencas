@@ -560,66 +560,65 @@ export default function IssuedLicensesPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          {/* Botão para baixar arquivo específico do estado - sempre disponível para licenças ativas */}
-
-                          
-                          {/* Botão para baixar arquivo da licença completa - sempre disponível para licenças ativas */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            asChild 
-                            className="mr-1 flex items-center justify-center" 
-                            title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
-                          >
-                            <a 
-                              href={license.licenseFileUrl || '#'} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                if (!license.licenseFileUrl) {
-                                  e.preventDefault();
-                                  alert('Arquivo da licença completa não disponível no momento.');
+                          <div className="flex justify-end items-center space-x-1">
+                            {/* Botão para baixar arquivo da licença completa */}
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              asChild 
+                              className="flex items-center justify-center" 
+                              title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
+                            >
+                              <a 
+                                href={license.licenseFileUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  if (!license.licenseFileUrl) {
+                                    e.preventDefault();
+                                    alert('Arquivo da licença completa não disponível no momento.');
+                                  }
+                                }}
+                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                              >
+                                <FileDown className="h-4 w-4 text-green-600" />
+                              </a>
+                            </Button>
+                            
+                            {/* Botão para visualizar detalhes */}
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="flex items-center justify-center"
+                              title="Ver detalhes"
+                              onClick={() => {
+                                // Buscar a licença original
+                                const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
+                                if (originalLicense) {
+                                  viewLicenseDetails(originalLicense);
                                 }
                               }}
-                              className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
                             >
-                              <FileDown className="h-4 w-4 text-green-600" />
-                            </a>
-                          </Button>
-                          
-                          {/* Botão para visualizar detalhes */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="flex items-center justify-center"
-                            title="Ver detalhes"
-                            onClick={() => {
-                              // Buscar a licença original
-                              const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
-                              if (originalLicense) {
-                                viewLicenseDetails(originalLicense);
-                              }
-                            }}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                          
-                          {/* Botão para renovar licença */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="flex items-center justify-center"
-                            title="Renovar licença para este estado"
-                            onClick={() => {
-                              setLicenseToRenew({
-                                licenseId: license.licenseId,
-                                state: license.state
-                              });
-                              setRenewDialogOpen(true);
-                            }}
-                          >
-                            <RefreshCcw className="h-4 w-4 text-blue-600" />
-                          </Button>
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            
+                            {/* Botão para renovar licença */}
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="flex items-center justify-center"
+                              title="Renovar licença para este estado"
+                              onClick={() => {
+                                setLicenseToRenew({
+                                  licenseId: license.licenseId,
+                                  state: license.state
+                                });
+                                setRenewDialogOpen(true);
+                              }}
+                            >
+                              <RefreshCcw className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
