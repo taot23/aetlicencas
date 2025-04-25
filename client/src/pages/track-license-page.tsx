@@ -333,9 +333,15 @@ export default function TrackLicensePage() {
                 <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
                   <div className="grid grid-cols-1 gap-4">
                     {selectedLicense.states.map(state => {
-                      // Procura o status para este estado
-                      const stateStatusEntry = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
+                      // Procura o status para este estado em qualquer um dos formatos disponíveis
+                      // Verificamos tanto stateStatuses quanto state_statuses para compatibilidade
+                      const stateStatusesArray = selectedLicense.stateStatuses || (selectedLicense as any).state_statuses || [];
+                      console.log(`Procurando status para ${state} em:`, stateStatusesArray);
+                      const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
+                      
+                      // Status encontrado ou fallback para pending_registration
                       const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
+                      console.log(`Status para ${state}: ${stateStatus}`);
                       
                       // Extrair data de validade
                       const stateValidUntil = stateStatusEntry && stateStatusEntry.split(':').length > 2 ? 
@@ -379,8 +385,10 @@ export default function TrackLicensePage() {
                   <h3 className="font-medium text-sm text-gray-500 mb-2">Licenças por Estado</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedLicense.states.map(state => {
-                      // Verificar o status para este estado específico
-                      const stateStatusEntry = selectedLicense.stateStatuses?.find(ss => ss.startsWith(`${state}:`));
+                      // Verificar o status para este estado específico 
+                      // usando tanto stateStatuses quanto state_statuses para compatibilidade
+                      const stateStatusesArray = selectedLicense.stateStatuses || (selectedLicense as any).state_statuses || [];
+                      const stateStatusEntry = stateStatusesArray.find((ss: string) => ss.startsWith(`${state}:`));
                       const stateStatus = stateStatusEntry?.split(':')[1] || "pending_registration";
                       
                       // Extrair data de validade se existir

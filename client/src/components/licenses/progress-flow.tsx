@@ -229,6 +229,7 @@ export function StateProgressFlow({
     // Se o formato já é um status válido, use-o diretamente
     if (['pending_registration', 'registration_in_progress', 'rejected', 
          'under_review', 'pending_approval', 'approved', 'canceled'].includes(stateStatus)) {
+      console.log(`StateProgressFlow: status já normalizado: ${stateStatus}`);
       return stateStatus;
     }
     
@@ -239,6 +240,11 @@ export function StateProgressFlow({
         console.log(`StateProgressFlow: extraindo status do formato ${stateStatus} -> ${parts[1]}`);
         return parts[1];
       }
+    }
+    
+    // Se for estado SP, buscar em state_statuses
+    if (state === 'SP' && licenseId) {
+      console.log(`StateProgressFlow: tentando encontrar status para ${state} na licença ${licenseId}`);
     }
     
     // Fallback para o valor original
