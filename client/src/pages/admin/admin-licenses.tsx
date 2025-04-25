@@ -1227,7 +1227,7 @@ export default function AdminLicensesPage() {
       </Dialog>
 
       {/* Diálogo para ver detalhes da licença */}
-      <Dialog open={licenseDetailsOpen} onOpenChange={setLicenseDetailsOpen}>
+      <Dialog open={licenseDetailsOpen} onOpenChange={handleCloseLicenseDetails}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="pb-2">
             <DialogTitle className="text-xl">Detalhes da Licença</DialogTitle>
@@ -1385,7 +1385,7 @@ export default function AdminLicensesPage() {
               <div className="flex justify-center items-center gap-4 mt-6 mb-2">
                 <div className="bg-gray-50 rounded-md px-8 py-3 shadow-sm mx-auto">
                   <Button 
-                    onClick={() => setLicenseDetailsOpen(false)}
+                    onClick={handleCloseLicenseDetails}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md"
                   >
                     <X className="h-4 w-4 mr-2" />
