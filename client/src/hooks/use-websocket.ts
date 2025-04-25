@@ -61,8 +61,39 @@ export function useWebSocket() {
       
       socket.onmessage = (event) => {
         try {
+          console.log('Dados WebSocket recebidos:', event.data);
           const message = JSON.parse(event.data) as WebSocketMessage;
-          console.log('Mensagem recebida:', message);
+          console.log('Mensagem processada:', message);
+          
+          // Verificações mais rigorosas da estrutura da mensagem
+          if (!message || typeof message !== 'object') {
+            console.error('Mensagem inválida recebida:', message);
+            return;
+          }
+          
+          // Log detalhado para mensagens de tipo STATUS_UPDATE
+          if (message.type === 'STATUS_UPDATE') {
+            console.log('STATUS_UPDATE detalhado:', {
+              licenseId: message.data?.licenseId,
+              state: message.data?.state,
+              status: message.data?.status,
+              hasStateStatuses: !!message.data?.stateStatuses,
+              stateStatusesLength: message.data?.stateStatuses?.length,
+              stateStatuses: message.data?.stateStatuses
+            });
+            
+            // Se a mensagem contém stateStatuses, fazer verificação adicional
+            if (message.data?.stateStatuses) {
+              // Verificar se é um array e tem elementos
+              if (Array.isArray(message.data.stateStatuses) && message.data.stateStatuses.length > 0) {
+                console.log('Dados de status válidos encontrados na mensagem');
+              } else {
+                console.warn('Array de stateStatuses está vazio ou inválido');
+              }
+            }
+          }
+          
+          // Atualizar último estado da mensagem
           setLastMessage(message);
           
           // Processar mensagem conforme o tipo
@@ -71,6 +102,7 @@ export function useWebSocket() {
           }
         } catch (error) {
           console.error('Erro ao processar mensagem WebSocket:', error);
+          console.error('Texto da mensagem:', event.data);
         }
       };
     };

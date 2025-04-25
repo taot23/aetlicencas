@@ -2399,18 +2399,37 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         console.log("ATENÇÃO: stateStatuses está vazio ou não definido na licença atualizada");
       }
       
+      // Verificar se stateStatuses é um array válido antes de enviar
+      const stateStatusesToSend = Array.isArray(updatedLicense.stateStatuses) && updatedLicense.stateStatuses.length > 0
+        ? updatedLicense.stateStatuses
+        : [];
+        
+      console.log("Preparando mensagem WebSocket com stateStatuses:", JSON.stringify(stateStatusesToSend));
+      
+      // Criar uma cópia limpa da licença para garantir serialização correta
+      const sanitizedLicense = {
+        ...updatedLicense,
+        stateStatuses: stateStatusesToSend,
+        createdAt: updatedLicense.createdAt ? new Date(updatedLicense.createdAt).toISOString() : null,
+        updatedAt: updatedLicense.updatedAt ? new Date(updatedLicense.updatedAt).toISOString() : null,
+        validUntil: updatedLicense.validUntil ? new Date(updatedLicense.validUntil).toISOString() : null
+      };
+      
       // Enviar notificação em tempo real via WebSocket com a lista completa de status
-      broadcastMessage({
+      const wsMessage = {
         type: 'STATUS_UPDATE',
         data: {
           licenseId: updatedLicense.id,
           state: stateStatusData.state,
           status: stateStatusData.status,
           updatedAt: new Date().toISOString(),
-          stateStatuses: updatedLicense.stateStatuses, // Enviar a lista completa
-          license: updatedLicense
+          stateStatuses: stateStatusesToSend, // Enviar a lista processada
+          license: sanitizedLicense
         }
-      });
+      };
+      
+      console.log("Enviando mensagem WebSocket:", JSON.stringify(wsMessage));
+      broadcastMessage(wsMessage);
       
       console.log(`Status da licença ${licenseId} para o estado ${stateStatusData.state} atualizado para ${stateStatusData.status}. Notificação enviada.`);
       

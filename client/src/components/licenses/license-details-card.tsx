@@ -40,15 +40,57 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
   
   // Estado para armazenar os status por estado (será atualizado pelo WebSocket)
   const [stateStatuses, setStateStatuses] = useState<string[]>(() => {
-    // Garantir que temos um array válido e eliminar entradas inválidas
-    if (Array.isArray(license.stateStatuses)) {
-      const validEntries = license.stateStatuses.filter(entry => typeof entry === 'string' && entry.length > 0);
-      console.log("LicenseDetailsCard - entradas válidas de stateStatuses:", validEntries);
+    // Processamento mais robusto dos status de estado
+    console.log("Inicializando stateStatuses para licença", license.id);
+    
+    // Verificar se temos stateStatuses como array e não está vazio
+    if (Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
+      console.log("license.stateStatuses é um array com", license.stateStatuses.length, "elementos");
+      
+      // Filtragem mais rigorosa das entradas
+      const validEntries = license.stateStatuses.filter(entry => {
+        // Verificar se a entrada é uma string, não está vazia e contém ':'
+        const isValid = typeof entry === 'string' && entry.length > 0 && entry.includes(':');
+        if (!isValid && entry) {
+          console.log("Entrada inválida encontrada:", entry, "tipo:", typeof entry);
+        }
+        return isValid;
+      });
+      
+      console.log("Após filtragem, temos", validEntries.length, "entradas válidas:", validEntries);
       return validEntries;
     }
-    console.log("LicenseDetailsCard - stateStatuses não é um array, usando array vazio");
+    
+    // Se não tivermos stateStatuses ou for um array vazio, gerar status padrão
+    console.log("Gerando status padrão para todos os estados da licença");
+    
+    // Criar status padrão para cada estado
+    if (license.states && Array.isArray(license.states) && license.states.length > 0) {
+      const defaultStatuses = license.states.map(state => `${state}:pending_registration`);
+      console.log("Status padrão gerados:", defaultStatuses);
+      return defaultStatuses;
+    }
+    
+    console.log("Não foi possível gerar status padrão. Usando array vazio.");
     return [];
   });
+  
+  // Função para atualizar status de estado
+  const refreshStateStatuses = useCallback(() => {
+    if (Array.isArray(license.stateStatuses) && license.stateStatuses.length > 0) {
+      const validEntries = license.stateStatuses.filter(entry => 
+        typeof entry === 'string' && entry.length > 0 && entry.includes(':')
+      );
+      
+      console.log("Atualizando stateStatuses com dados do servidor:", validEntries);
+      setStateStatuses(validEntries);
+    }
+  }, [license.stateStatuses]);
+  
+  // Efeito para atualizar sempre que license.stateStatuses mudar
+  useEffect(() => {
+    refreshStateStatuses();
+  }, [license.stateStatuses, refreshStateStatuses]);
   
   console.log("LicenseDetailsCard inicializado com:", {
     licenseId: license.id,
