@@ -639,12 +639,38 @@ export class TransactionalStorage implements IStorage {
       newStateStatus = `${data.state}:${data.status}:${data.validUntil}`;
     }
     
-    // Verificar se o estado já existe na lista
-    const existingIndex = stateStatuses.findIndex(s => s.startsWith(`${data.state}:`));
+    // Verificar se o estado já existe na lista - lidando com diferentes formatos de dados
+    // Converter stateStatuses para array se não for
+    if (!Array.isArray(stateStatuses)) {
+      console.log("stateStatuses não é um array, convertendo:", stateStatuses);
+      stateStatuses = [];
+    }
+    
+    // Verificar o formato dos elementos (alguns podem vir como objetos em vez de strings)
+    stateStatuses = stateStatuses.map(entry => {
+      if (typeof entry === 'object' && entry !== null) {
+        console.log("Convertendo objeto para string:", entry);
+        return `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
+      }
+      return entry;
+    });
+    
+    // Buscar o status existente
+    const existingIndex = stateStatuses.findIndex(s => {
+      if (typeof s === 'string') {
+        return s.startsWith(`${data.state}:`);
+      }
+      return false;
+    });
+    
+    console.log(`Atualizando status do estado ${data.state} para ${data.status}. Índice encontrado: ${existingIndex}`);
+    
     if (existingIndex >= 0) {
       stateStatuses[existingIndex] = newStateStatus;
+      console.log(`Status atualizado para: ${newStateStatus}`);
     } else {
       stateStatuses.push(newStateStatus);
+      console.log(`Novo status adicionado: ${newStateStatus}`);
     }
     
     // Atualizar arquivo do estado se fornecido
@@ -759,14 +785,34 @@ export class TransactionalStorage implements IStorage {
         newStateStatus = `${statusData.state}:${statusData.stateStatus}:${statusData.validUntil}`;
       }
       
-      let stateStatuses = [...(license.stateStatuses || [])];
+      // Garantir que stateStatuses seja um array
+      let stateStatuses = Array.isArray(license.stateStatuses) ? [...license.stateStatuses] : [];
+      
+      // Normalizar o formato dos elementos (alguns podem vir como objetos)
+      stateStatuses = stateStatuses.map(entry => {
+        if (typeof entry === 'object' && entry !== null) {
+          console.log("Convertendo objeto para string em updateLicenseStatus:", entry);
+          return `${entry.state || ''}:${entry.status || ''}:${entry.validUntil || ''}`.replace(/::$/, '');
+        }
+        return entry;
+      });
       
       // Verificar se o estado já existe na lista
-      const existingIndex = stateStatuses.findIndex(s => s.startsWith(`${statusData.state}:`));
+      const existingIndex = stateStatuses.findIndex(s => {
+        if (typeof s === 'string') {
+          return s.startsWith(`${statusData.state}:`);
+        }
+        return false;
+      });
+      
+      console.log(`UpdateLicenseStatus: Atualizando ${statusData.state} para ${statusData.stateStatus}. Índice: ${existingIndex}`);
+      
       if (existingIndex >= 0) {
         stateStatuses[existingIndex] = newStateStatus;
+        console.log(`Status atualizado para: ${newStateStatus}`);
       } else {
         stateStatuses.push(newStateStatus);
+        console.log(`Novo status adicionado: ${newStateStatus}`);
       }
       
       updateData.stateStatuses = stateStatuses;
