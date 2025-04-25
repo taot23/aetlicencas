@@ -644,8 +644,8 @@ export class TransactionalStorage implements IStorage {
     
     // Atualizar arquivo do estado se fornecido
     let stateFiles = [...(license.stateFiles || [])];
-    if (data.stateFile && typeof data.stateFile !== 'string') {
-      const newStateFile = `${data.state}:${data.stateFile.path}`;
+    if (data.file && typeof data.file !== 'string') {
+      const newStateFile = `${data.state}:${data.file.path}`;
       
       const existingFileIndex = stateFiles.findIndex(s => s.startsWith(`${data.state}:`));
       if (existingFileIndex >= 0) {
