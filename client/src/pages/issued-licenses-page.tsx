@@ -62,7 +62,9 @@ export default function IssuedLicensesPage() {
       if (!res.ok) {
         throw new Error("Erro ao buscar licenças emitidas");
       }
-      return res.json();
+      const data = await res.json();
+      console.log("Dados recebidos da API:", data);
+      return data;
     },
     // Desabilita o cache para garantir que sempre temos os dados mais recentes
     staleTime: 0,
@@ -93,9 +95,15 @@ export default function IssuedLicensesPage() {
   const expandedLicenses = useMemo(() => {
     if (!issuedLicenses) return [];
     
+    console.log("Processando licenças emitidas:", issuedLicenses);
+    
     const result: ExpandedLicense[] = [];
     
     issuedLicenses.forEach(license => {
+      // Debugging - exibir dados da licença
+      console.log("Processando licença:", license.id, "Transportador:", license.transporterId, 
+                 "Nome transportador:", license.transporter_name || (license as any).transporterName);
+      
       // Para cada licença, expandir para uma linha por estado que tenha sido aprovado
       license.states.forEach((state, index) => {
         // Verifica se este estado específico foi aprovado
@@ -116,6 +124,14 @@ export default function IssuedLicensesPage() {
             console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
           }
           
+          // Garantir que o nome do transportador seja obtido de qualquer formato disponível
+          const transporterName = license.transporter_name || 
+                                (license as any).transporterName || 
+                                (typeof license.transporterId === 'object' && 'name' in license.transporterId ? 
+                                 (license.transporterId as any).name : null);
+          
+          console.log(`Adicionando linha para licença ${license.id}, estado ${state}, transportador: ${transporterName}`);
+          
           result.push({
             id: license.id * 100 + index, // Gerar ID único para a linha
             licenseId: license.id,
@@ -131,12 +147,13 @@ export default function IssuedLicensesPage() {
             stateFileUrl,
             transporterId: license.transporterId || 0,
             aetNumber: license.aetNumber || null, // Incluir número da AET
-            transporterName: license.transporter_name || (license as any).transporterName || null // Incluir nome do transportador
+            transporterName // Incluir nome do transportador
           });
         }
       });
     });
     
+    console.log("Licenças expandidas:", result);
     return result;
   }, [issuedLicenses]);
 
@@ -534,7 +551,7 @@ export default function IssuedLicensesPage() {
                         <TableCell className="font-medium">{license.requestNumber}</TableCell>
                         <TableCell>{license.mainVehiclePlate}</TableCell>
                         <TableCell>
-                          {(license as any).transporterName || (
+                          {license.transporterName || (
                             <span className="text-gray-500">Não informado</span>
                           )}
                         </TableCell>
@@ -770,7 +787,7 @@ export default function IssuedLicensesPage() {
                       <div>
                         <span className="text-xs text-gray-500">Transportador:</span>
                         <div>
-                          {(license as any).transporterName || (
+                          {license.transporterName || (
                             <span className="text-gray-500">Não informado</span>
                           )}
                         </div>
