@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { LicenseStatus } from "@shared/schema";
+import { LicenseRequest, LicenseStatus } from "@shared/schema";
 import { 
   Clock, 
   Loader2, 

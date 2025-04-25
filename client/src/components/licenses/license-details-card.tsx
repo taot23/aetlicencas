@@ -23,7 +23,11 @@ const getLicenseFileUrl = (license: any): string | null => {
 };
 
 interface LicenseDetailsCardProps {
-  license: LicenseRequest;
+  license: LicenseRequest & {
+    state_statuses?: string[]; // Formato do banco de dados
+    transporterName?: string;
+    transporterDocument?: string;
+  };
 }
 
 export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
