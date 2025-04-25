@@ -18,6 +18,7 @@ import {
 import { Pencil, Trash, Send, ExternalLink, Download, FileText } from "lucide-react";
 import { StatusBadge } from "./status-badge";
 import { format } from "date-fns";
+import { TransporterInfo } from "@/components/transporters/transporter-info";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SortableHeader } from "@/components/ui/sortable-header";
 
@@ -247,6 +248,13 @@ export function LicenseList({
                     <span>{license.mainVehiclePlate}</span>
                   </div>
                   <div>
+                    <span className="text-sm text-gray-500 block">Transportador:</span>
+                    <TransporterInfo 
+                      transporterId={license.transporterId} 
+                      compact={true}
+                    />
+                  </div>
+                  <div>
                     <span className="text-sm text-gray-500 block">Estado:</span>
                     <span>{(license as any).specificState || license.states.join(", ")}</span>
                   </div>
@@ -429,6 +437,9 @@ export function LicenseList({
                 <TableHead>Placa Principal</TableHead>
               )}
               
+              {/* Coluna de Transportador, presente em todas as páginas que usam este componente */}
+              <TableHead>Transportador</TableHead>
+              
               {onSort ? (
                 <SortableHeader
                   column="state"
@@ -490,10 +501,10 @@ export function LicenseList({
               <TableRow>
                 <TableCell 
                   colSpan={isDraftList 
-                    ? 6 // Rascunhos
+                    ? 7 // Rascunhos (agora com transportador)
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 8 // Licenças emitidas (com coluna de validade)
-                      : 7 // Outras páginas de licenças (sem coluna de validade)
+                      ? 9 // Licenças emitidas (com transportador e validade)
+                      : 8 // Outras páginas de licenças (com transportador, sem validade)
                   } 
                   className="text-center py-10">
                   Carregando...
@@ -513,6 +524,12 @@ export function LicenseList({
                   </TableCell>
                   <TableCell>{getLicenseTypeLabel(license.type)}</TableCell>
                   <TableCell>{license.mainVehiclePlate}</TableCell>
+                  <TableCell>
+                    <TransporterInfo 
+                      transporterId={license.transporterId} 
+                      compact={true}
+                    />
+                  </TableCell>
                   <TableCell>
                     {(license as any).specificState || license.states.join(", ")}
                   </TableCell>
@@ -550,10 +567,10 @@ export function LicenseList({
               <TableRow>
                 <TableCell 
                   colSpan={isDraftList 
-                    ? 6 // Rascunhos
+                    ? 7 // Rascunhos (agora com transportador)
                     : window.location.pathname.includes('/licenses/issued')
-                      ? 8 // Licenças emitidas (com coluna de validade)
-                      : 7 // Outras páginas de licenças (sem coluna de validade)
+                      ? 9 // Licenças emitidas (com transportador e validade)
+                      : 8 // Outras páginas de licenças (com transportador, sem validade)
                   } 
                   className="text-center py-10 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />

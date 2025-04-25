@@ -78,11 +78,13 @@ export default function TrackLicensePage() {
 
   // Otimizado usando useMemo para evitar recálculos desnecessários
   // Criar interface estendida para a licença com estado específico
-  interface ExtendedLicense extends LicenseRequest {
+  interface ExtendedLicense extends Omit<LicenseRequest, 'transporterId'> {
     specificState?: string;
     specificStateStatus?: string;
     specificStateFileUrl?: string;
     stateValidUntil?: string;
+    // Sobrescrever transporterId para aceitar null também
+    transporterId: number | null;
   }
 
   // Função para ordenar licenças
