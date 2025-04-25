@@ -467,7 +467,65 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
         </div>
       </div>
       
-      {/* Seção de Status por Estado removida conforme solicitado */}
+      {/* Status por Estado */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Status por Estado</h3>
+        <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+          <div className="flex flex-wrap gap-2">
+            {license.states.map((state, idx) => {
+              // Determinar o status para este estado com lógica aprimorada
+              let stateStatus = 'pending_registration';
+              
+              // Verificar se temos stateStatuses e é um array válido com entradas
+              if (stateStatuses && Array.isArray(stateStatuses) && stateStatuses.length > 0) {
+                // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
+                const validEntries = stateStatuses.filter(
+                  entry => typeof entry === 'string' && entry.length > 0
+                );
+                
+                // Buscar a entrada específica para este estado
+                const stateStatusEntry = validEntries.find(entry => entry.startsWith(`${state}:`));
+                
+                // Se encontramos uma entrada válida para este estado
+                if (stateStatusEntry) {
+                  // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
+                  const parts = stateStatusEntry.split(':');
+                  if (parts.length >= 2) {
+                    stateStatus = parts[1];
+                  }
+                }
+              }
+              
+              // Determinar a classe CSS com base no status
+              const statusClass = 
+                stateStatus === 'approved' ? "bg-green-100 text-green-800 border-green-200" :
+                stateStatus === 'rejected' ? "bg-red-100 text-red-800 border-red-200" :
+                stateStatus === 'under_review' ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
+                stateStatus === 'pending_approval' ? "bg-purple-100 text-purple-800 border-purple-200" :
+                stateStatus === 'registration_in_progress' ? "bg-blue-100 text-blue-800 border-blue-200" :
+                "bg-gray-100 text-gray-800 border-gray-200";
+              
+              // Determinar o rótulo de status
+              const statusLabel =
+                stateStatus === 'approved' ? "Liberada" :
+                stateStatus === 'rejected' ? "Reprovada" :
+                stateStatus === 'under_review' ? "Em análise" :
+                stateStatus === 'pending_approval' ? "Pendente liberação" :
+                stateStatus === 'registration_in_progress' ? "Em cadastramento" :
+                "Cadastramento pendente";
+                
+              return (
+                <div key={idx} className={`border rounded-md px-3 py-2 ${statusClass}`}>
+                  <div className="flex items-center gap-2">
+                    <div className="font-bold">{state}</div>
+                    <div className="text-xs">{statusLabel}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
       
       {/* Dados do Conjunto */}
       <div className="space-y-2">
