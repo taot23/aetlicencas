@@ -16,6 +16,7 @@ import {
   userRoleEnum,
   licenseRequests
 } from "@shared/schema";
+import { getLicensesWithTransporters } from "./queries";
 import { eq } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
@@ -1088,16 +1089,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/licenses', requireAuth, async (req, res) => {
     try {
       const user = req.user!;
-      let licenses;
+      let licensesResult;
       
       // Se for usuário administrativo, buscar todas as licenças
       if (isAdminUser(user)) {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso administrativo. Buscando todas as licenças.`);
-        licenses = await storage.getAllLicenseRequests();
+        licensesResult = await getLicensesWithTransporters();
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas suas licenças.`);
-        licenses = await storage.getLicenseRequestsByUserId(user.id);
+        licensesResult = await getLicensesWithTransporters({ userId: user.id });
       }
+      
+      // Transformar os resultados para incluir o nome do transportador
+      const licenses = licensesResult.rows.map(license => ({
+        ...license,
+        transporterName: license.transporter_name,
+        transporterDocument: license.transporter_document,
+        userEmail: license.user_email
+      }));
       
       res.json(licenses);
     } catch (error) {
