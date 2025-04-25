@@ -99,12 +99,51 @@ export default function IssuedLicensesPage() {
     
     const result: ExpandedLicense[] = [];
     
+    // Verificação de segurança para garantir que temos dados
+    if (!Array.isArray(issuedLicenses) || issuedLicenses.length === 0) {
+      console.warn("Não há licenças para processar ou o formato é inválido");
+      return [];
+    }
+    
     issuedLicenses.forEach(license => {
       // Debugging - exibir dados da licença
       console.log("Processando licença:", license.id, "Transportador:", license.transporterId, 
                  "Nome transportador:", license.transporter_name || (license as any).transporterName);
       
-      // Para cada licença, expandir para uma linha por estado que tenha sido aprovado
+      // Verificar se license.states existe e é um array
+      if (!Array.isArray(license.states) || license.states.length === 0) {
+        console.log(`Licença ${license.id} não tem estados definidos ou é um array vazio`);
+        
+        // Se a licença está aprovada, mas não tem estados definidos, criar uma linha padrão
+        if (license.status === 'approved') {
+          const transporterName = license.transporter_name || 
+                                (license as any).transporterName || 
+                                (typeof license.transporterId === 'object' && license.transporterId && 'name' in license.transporterId ? 
+                                 (license.transporterId as any).name : null);
+          
+          result.push({
+            id: license.id * 100, // Gerar ID único para a linha
+            licenseId: license.id,
+            requestNumber: license.requestNumber,
+            type: license.type,
+            mainVehiclePlate: license.mainVehiclePlate,
+            state: 'N/A',
+            status: 'approved',
+            stateStatus: 'approved',
+            emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
+            validUntil: license.validUntil ? license.validUntil.toString() : null,
+            licenseFileUrl: license.licenseFileUrl,
+            stateFileUrl: null,
+            transporterId: license.transporterId || 0,
+            aetNumber: license.aetNumber || null,
+            transporterName
+          });
+        }
+        
+        return; // Pular para a próxima licença
+      }
+      
+      // Para cada licença, expandir para uma linha por estado
       license.states.forEach((state, index) => {
         // Verifica se este estado específico foi aprovado
         const stateStatusEntry = license.stateStatuses?.find(entry => entry.startsWith(`${state}:`));
@@ -112,8 +151,11 @@ export default function IssuedLicensesPage() {
         const stateFileEntry = license.stateFiles?.find(entry => entry.startsWith(`${state}:`));
         const stateFileUrl = stateFileEntry?.split(':')?.[1] || null;
         
-        // Só incluir estados com status "approved"
-        if (stateStatus === 'approved') {
+        console.log(`Estado ${state} tem status: ${stateStatus}, licença geral tem status: ${license.status}`);
+        
+        // SEMPRE incluir estados quando a licença tem status geral aprovado
+        // Esse é o ponto crítico que estava causando o problema!
+        if (license.status === 'approved') {
           // Obter data de validade específica para este estado, se disponível
           let stateValidUntil = license.validUntil ? license.validUntil.toString() : null;
           
