@@ -715,11 +715,37 @@ export default function AdminLicensesPage() {
                               <TableCell>{license.mainVehiclePlate}</TableCell>
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
-                                  {license.states.map((state, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-xs">
-                                      {state}
-                                    </Badge>
-                                  ))}
+                                  {license.states.map((state, idx) => {
+                                    // Encontrar o status atual deste estado
+                                    let stateStatus = "pending";
+                                    if (license.stateStatuses && license.stateStatuses.length > 0) {
+                                      const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                                      if (stateStatusEntry) {
+                                        const [_, status] = stateStatusEntry.split(':');
+                                        if (status) {
+                                          stateStatus = status;
+                                        }
+                                      }
+                                    }
+                                    
+                                    // Definir cores baseadas no status
+                                    let badgeClass = "bg-gray-100 border-gray-200 text-gray-800";
+                                    if (stateStatus === "approved") {
+                                      badgeClass = "bg-green-50 border-green-200 text-green-800";
+                                    } else if (stateStatus === "rejected") {
+                                      badgeClass = "bg-red-50 border-red-200 text-red-800";
+                                    } else if (stateStatus === "pending_approval") {
+                                      badgeClass = "bg-yellow-50 border-yellow-200 text-yellow-800";
+                                    } else if (stateStatus === "under_review") {
+                                      badgeClass = "bg-blue-50 border-blue-200 text-blue-800";
+                                    }
+                                    
+                                    return (
+                                      <Badge key={idx} variant="outline" className={`text-xs ${badgeClass}`}>
+                                        {state}
+                                      </Badge>
+                                    );
+                                  })}
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -775,11 +801,37 @@ export default function AdminLicensesPage() {
                                 <div className="mt-1">
                                   <span className="text-sm font-medium">Estados:</span>
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {license.states.map((state, idx) => (
-                                      <Badge key={idx} variant="outline" className="text-xs">
-                                        {state}
-                                      </Badge>
-                                    ))}
+                                    {license.states.map((state, idx) => {
+                                      // Encontrar o status atual deste estado
+                                      let stateStatus = "pending";
+                                      if (license.stateStatuses && license.stateStatuses.length > 0) {
+                                        const stateStatusEntry = license.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                                        if (stateStatusEntry) {
+                                          const [_, status] = stateStatusEntry.split(':');
+                                          if (status) {
+                                            stateStatus = status;
+                                          }
+                                        }
+                                      }
+                                      
+                                      // Definir cores baseadas no status
+                                      let badgeClass = "bg-gray-100 border-gray-200 text-gray-800";
+                                      if (stateStatus === "approved") {
+                                        badgeClass = "bg-green-50 border-green-200 text-green-800";
+                                      } else if (stateStatus === "rejected") {
+                                        badgeClass = "bg-red-50 border-red-200 text-red-800";
+                                      } else if (stateStatus === "pending_approval") {
+                                        badgeClass = "bg-yellow-50 border-yellow-200 text-yellow-800";
+                                      } else if (stateStatus === "under_review") {
+                                        badgeClass = "bg-blue-50 border-blue-200 text-blue-800";
+                                      }
+                                      
+                                      return (
+                                        <Badge key={idx} variant="outline" className={`text-xs ${badgeClass}`}>
+                                          {state}
+                                        </Badge>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               </div>
