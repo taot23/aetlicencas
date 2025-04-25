@@ -42,14 +42,54 @@ export function StatusBadge({ status: initialStatus, licenseId, state, className
       licenseId && 
       lastMessage.data.licenseId === licenseId
     ) {
-      // Se estamos exibindo o status para um estado específico, verificar se a mensagem é para este estado
-      if (state && lastMessage.data.state === state) {
-        setStatus(lastMessage.data.status);
-        setRecentUpdate(true);
-        console.log(`Status atualizado para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
+      // Diagnóstico para entender a estrutura da mensagem
+      console.log(`StatusBadge: Mensagem recebida para licença ${licenseId}${state ? ', estado ' + state : ''}:`, lastMessage.data);
+      
+      // Se estamos exibindo o status para um estado específico
+      if (state) {
+        // Verificar se a mensagem é diretamente para este estado
+        if (lastMessage.data.state === state) {
+          setStatus(lastMessage.data.status);
+          setRecentUpdate(true);
+          console.log(`Status atualizado (mensagem direta) para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
+        } 
+        // Ou se temos um array completo de stateStatuses na mensagem
+        else if (lastMessage.data.stateStatuses && Array.isArray(lastMessage.data.stateStatuses)) {
+          // Procurar pelo status deste estado específico
+          const stateStatusEntry = lastMessage.data.stateStatuses.find(
+            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
+          );
+          
+          if (stateStatusEntry) {
+            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
+            const [_, newStatus] = stateStatusEntry.split(':');
+            if (newStatus) {
+              setStatus(newStatus);
+              setRecentUpdate(true);
+              console.log(`Status atualizado (array stateStatuses) para licença ${licenseId}, estado ${state}: ${newStatus}`);
+            }
+          }
+        }
+        // Ou se a mensagem contém a licença completa com stateStatuses
+        else if (lastMessage.data.license?.stateStatuses && Array.isArray(lastMessage.data.license.stateStatuses)) {
+          // Procurar pelo status deste estado específico na licença
+          const stateStatusEntry = lastMessage.data.license.stateStatuses.find(
+            (entry: string) => typeof entry === 'string' && entry.startsWith(`${state}:`)
+          );
+          
+          if (stateStatusEntry) {
+            // Extrair o status do formato "ESTADO:STATUS[:DATA]"
+            const [_, newStatus] = stateStatusEntry.split(':');
+            if (newStatus) {
+              setStatus(newStatus);
+              setRecentUpdate(true);
+              console.log(`Status atualizado (licença completa) para licença ${licenseId}, estado ${state}: ${newStatus}`);
+            }
+          }
+        }
       }
       // Se estamos mostrando o status geral da licença (sem estado específico)
-      else if (!state) {
+      else if (!state && lastMessage.data.license?.status) {
         setStatus(lastMessage.data.license.status);
         setRecentUpdate(true);
         console.log(`Status geral atualizado para licença ${licenseId}: ${lastMessage.data.license.status}`);
