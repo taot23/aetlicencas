@@ -734,6 +734,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user!;
       let drafts;
+      const renewalOnly = req.query.renewalOnly === 'true';
+      const excludeRenewal = req.query.excludeRenewal === 'true';
       
       // Se for usuário administrativo, buscar todos os rascunhos
       if (isAdminUser(user)) {
@@ -742,6 +744,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         console.log(`Usuário ${user.email} (${user.role}) tem acesso comum. Buscando apenas seus rascunhos.`);
         drafts = await storage.getLicenseDraftsByUserId(user.id);
+      }
+      
+      // Filtragem de rascunhos de renovação se solicitado
+      if (renewalOnly) {
+        // Retorna apenas os rascunhos que são de renovação (contém "Renovação da licença" nos comentários)
+        drafts = drafts.filter(draft => draft.comments && draft.comments.startsWith('Renovação da licença'));
+        console.log(`Filtrando apenas rascunhos de renovação. Total: ${drafts.length}`);
+      } else if (excludeRenewal) {
+        // Retorna todos os rascunhos EXCETO os de renovação
+        drafts = drafts.filter(draft => !draft.comments || !draft.comments.startsWith('Renovação da licença'));
+        console.log(`Excluindo rascunhos de renovação. Total: ${drafts.length}`);
       }
       
       res.json(drafts);
