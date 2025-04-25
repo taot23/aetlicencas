@@ -289,17 +289,39 @@ export function LicenseList({
                       </Button>
                     </>
                   ) : (
-                    license.status === "approved" && license.licenseFileUrl ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="text-blue-600 border-blue-200"
-                      >
-                        <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
-                          <Download className="h-4 w-4 mr-1" /> Download
-                        </a>
-                      </Button>
+                    license.status === "approved" ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="text-blue-600 border-blue-200 mr-1"
+                          title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                        >
+                          <a 
+                            href={license.licenseFileUrl || '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              if (!license.licenseFileUrl) {
+                                e.preventDefault();
+                                alert('Arquivo da licença não disponível no momento.');
+                              }
+                            }}
+                            className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                          >
+                            <Download className="h-4 w-4 mr-1" /> Download
+                          </a>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onView && onView(license)}
+                          className="text-blue-600 border-blue-200"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" /> Detalhes
+                        </Button>
+                      </>
                     ) : (
                       <Button
                         variant="outline"
