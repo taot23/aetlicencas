@@ -1,137 +1,153 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useWebSocket } from "@/hooks/use-websocket";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useWebSocketContext } from "@/hooks/use-websocket-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { formatShortDate } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
 
 interface RenewLicenseDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   licenseId: number;
   state: string;
+  currentValidityDate?: string | null;
 }
 
 export function RenewLicenseDialog({
-  open,
-  onOpenChange,
+  isOpen,
+  onClose,
   licenseId,
   state,
+  currentValidityDate
 }: RenewLicenseDialogProps) {
   const { toast } = useToast();
-  const [, navigate] = useLocation();
-  const { sendMessage } = useWebSocket();
-  
-  // Mutação para renovar a licença
+  const { sendMessage } = useWebSocketContext();
+  const queryClient = useQueryClient();
+  const [date, setDate] = useState<Date | undefined>(
+    currentValidityDate ? new Date(currentValidityDate) : undefined
+  );
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   const renewMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest(
-        "POST",
-        `/api/licenses/${licenseId}/renew`,
-        { state }
-      );
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || "Erro ao renovar licença");
-      }
-      
-      return data;
+    mutationFn: async (newDate: string) => {
+      const res = await apiRequest("POST", `/api/licenses/${licenseId}/renew`, {
+        state,
+        validityDate: newDate
+      });
+      return await res.json();
     },
     onSuccess: (data) => {
       toast({
-        title: "Licença renovada com sucesso",
-        description: `Um rascunho de renovação foi criado para o estado ${state}`,
+        title: "Licença renovada",
+        description: `Licença #${licenseId} renovada para o estado ${state} até ${formatShortDate(date)}`,
+        variant: "default"
       });
       
-      // Invalidar consultas para atualizar dados
-      queryClient.invalidateQueries({ queryKey: ["/api/licenses/issued"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/licenses/track"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts"] });
-      
-      // Notificar via WebSocket
+      // Enviar atualização via WebSocket
       sendMessage({
-        type: "LICENSE_UPDATE",
-        data: { message: "Licença renovada" },
+        type: "STATUS_UPDATE",
+        data: {
+          licenseId,
+          state,
+          status: "approved",
+          license: data
+        }
       });
       
-      // Fechar o diálogo e redirecionar para edição do rascunho
-      onOpenChange(false);
+      // Invalidar consultas para forçar atualização dos dados
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/licenses/${licenseId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses/issued"] });
       
-      // Redirecionar para o rascunho criado
-      if (data.draft && data.draft.id) {
-        navigate(`/request-license?draft=${data.draft.id}`);
-      }
+      onClose();
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast({
         title: "Erro ao renovar licença",
-        description: error.message,
-        variant: "destructive",
+        description: error.message || "Ocorreu um erro ao renovar a licença",
+        variant: "destructive"
       });
-    },
+    }
   });
-  
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!date) {
+      toast({
+        title: "Data inválida",
+        description: "Por favor, selecione uma data de validade",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Formatar data para YYYY-MM-DD
+    const formattedDate = format(date, "yyyy-MM-dd");
+    renewMutation.mutate(formattedDate);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Renovar Licença</DialogTitle>
           <DialogDescription>
-            Você está prestes a renovar a licença para o estado {state}. 
-            Um novo rascunho será criado com base na licença atual.
+            Informe a nova data de validade para a licença #{licenseId} no estado {state}.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Estado</Label>
-            <div className="p-2 bg-muted rounded-md">
-              {state}
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="validityDate">Data de Validade</Label>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={`w-full justify-start text-left font-normal ${
+                    !date && "text-muted-foreground"
+                  }`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP", { locale: pt }) : "Selecione uma data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(date) => {
+                    setDate(date);
+                    setIsCalendarOpen(false);
+                  }}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Após a renovação, você será redirecionado para a tela de edição do rascunho, 
-              onde poderá revisar e atualizar as informações antes de submeter.
-            </p>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button 
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={renewMutation.isPending}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={() => renewMutation.mutate()}
-            disabled={renewMutation.isPending}
-          >
-            {renewMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Renovando...
-              </>
-            ) : (
-              "Renovar Licença"
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={renewMutation.isPending || !date}
+            >
+              {renewMutation.isPending ? "Processando..." : "Renovar"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

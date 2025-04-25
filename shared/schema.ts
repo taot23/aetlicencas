@@ -498,6 +498,19 @@ export const brazilianStates = [
   { code: "SE", name: "Sergipe" },
 ];
 
+// Enum para tipo de veículo
+export const vehicleTypeEnum = z.enum([
+  "tractor_unit", // Unidade Tratora (Cavalo)
+  "truck", // Caminhão
+  "semi_trailer", // Semirreboque
+  "trailer", // Reboque
+  "dolly", // Dolly
+  "flatbed", // Prancha
+]);
+
+export type VehicleType = z.infer<typeof vehicleTypeEnum>;
+
+// Opções de veículos para interface
 export const vehicleTypeOptions = [
   { value: "tractor_unit", label: "Unidade Tratora (Cavalo)" },
   { value: "truck", label: "Caminhão" },
@@ -507,8 +520,8 @@ export const vehicleTypeOptions = [
   { value: "flatbed", label: "Prancha" },
 ];
 
-// Novo enum para tipos de carroceria
-export const bodyTypeEnum = z.enum([
+// Enum para tipos de carroceria
+export const vehicleBodyTypeEnum = z.enum([
   "open", // ABERTA
   "dump", // BASCULANTE
   "container", // PORTA-CONTÊINER
@@ -516,7 +529,7 @@ export const bodyTypeEnum = z.enum([
   "tank", // TANQUE
 ]);
 
-export type BodyType = z.infer<typeof bodyTypeEnum>;
+export type VehicleBodyType = z.infer<typeof vehicleBodyTypeEnum>;
 
 export const bodyTypeOptions = [
   { value: "open", label: "ABERTA" },
