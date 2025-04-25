@@ -801,10 +801,8 @@ export class TransactionalStorage implements IStorage {
         
         updateData.stateFiles = stateFiles;
         
-        // Se o status for aprovado, também atualizamos o licenseFileUrl
-        if (statusData.stateStatus === "approved") {
-          updateData.licenseFileUrl = fileUrl;
-        }
+        // Nota: Não mais atualizamos o licenseFileUrl global, pois cada estado tem seu próprio arquivo
+        // Agora usamos apenas o array stateFiles para armazenar arquivos específicos por estado
       }
       
       // Se houver um número AET para o estado, atualizá-lo no array stateAETNumbers

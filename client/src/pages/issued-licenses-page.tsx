@@ -593,28 +593,41 @@ export default function IssuedLicensesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-1">
-                            {/* Botão para baixar arquivo da licença completa */}
+                            {/* Botão para baixar arquivo específico do estado */}
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               asChild 
                               className="flex items-center justify-center" 
-                              title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
+                              title="Baixar licença para o estado"
                             >
-                              <a 
-                                href={license.licenseFileUrl || '#'} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                onClick={(e) => {
-                                  if (!license.licenseFileUrl) {
-                                    e.preventDefault();
-                                    alert('Arquivo da licença completa não disponível no momento.');
-                                  }
-                                }}
-                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
-                              >
-                                <FileDown className="h-4 w-4 text-green-600" />
-                              </a>
+                              {(() => {
+                                // Encontrar o arquivo específico para este estado
+                                const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
+                                const stateFileEntry = originalLicense?.stateFiles?.find(file => file.startsWith(`${license.state}:`));
+                                const stateFileUrl = stateFileEntry ? stateFileEntry.split(':')[1] : null;
+                                
+                                return (
+                                  <a 
+                                    href={stateFileUrl || '#'} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      if (!stateFileUrl) {
+                                        e.preventDefault();
+                                        toast({
+                                          title: "Documento indisponível",
+                                          description: `Documento da licença para o estado ${license.state} não está disponível.`,
+                                          variant: "destructive"
+                                        });
+                                      }
+                                    }}
+                                    className={!stateFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                                  >
+                                    <FileDown className="h-4 w-4 text-green-600" />
+                                  </a>
+                                );
+                              })()}
                             </Button>
                             
                             {/* Botão para visualizar detalhes */}
@@ -698,29 +711,42 @@ export default function IssuedLicensesPage() {
                       <div className="flex space-x-1">
 
                         
-                        {/* Botão para baixar arquivo da licença completa - sempre visível */}
+                        {/* Botão para baixar arquivo específico do estado - versão mobile */}
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           asChild 
                           className="h-8 w-8 p-0 flex items-center justify-center" 
                           aria-label="Download da licença" 
-                          title={license.licenseFileUrl ? "Baixar licença completa" : "Licença completa não disponível"}
+                          title="Baixar licença para o estado"
                         >
-                          <a 
-                            href={license.licenseFileUrl || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              if (!license.licenseFileUrl) {
-                                e.preventDefault();
-                                alert('Arquivo da licença completa não disponível no momento.');
-                              }
-                            }}
-                            className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
-                          >
-                            <FileDown className="h-4 w-4 text-green-600" />
-                          </a>
+                          {(() => {
+                            // Encontrar o arquivo específico para este estado
+                            const originalLicense = issuedLicenses?.find(l => l.id === license.licenseId);
+                            const stateFileEntry = originalLicense?.stateFiles?.find(file => file.startsWith(`${license.state}:`));
+                            const stateFileUrl = stateFileEntry ? stateFileEntry.split(':')[1] : null;
+                            
+                            return (
+                              <a 
+                                href={stateFileUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  if (!stateFileUrl) {
+                                    e.preventDefault();
+                                    toast({
+                                      title: "Documento indisponível",
+                                      description: `Documento da licença para o estado ${license.state} não está disponível.`,
+                                      variant: "destructive"
+                                    });
+                                  }
+                                }}
+                                className={!stateFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                              >
+                                <FileDown className="h-4 w-4 text-green-600" />
+                              </a>
+                            );
+                          })()}
                         </Button>
                         
                         {/* Botão para visualizar detalhes */}
