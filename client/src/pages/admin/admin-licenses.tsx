@@ -1190,24 +1190,22 @@ export default function AdminLicensesPage() {
                         key={state} 
                         className={`border-l-4 ${borderColor} rounded-md p-3 flex flex-col gap-2 bg-white shadow-sm hover:shadow-md transition-all duration-200`}
                       >
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="bg-blue-50 text-blue-800 font-bold px-2 py-1 rounded text-sm min-w-[40px] text-center">
-                                {state}
-                              </div>
-                              <StatusBadge 
-                                status={stateStatus} 
-                                licenseId={selectedLicense.id}
-                                state={state}
-                              />
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-2 flex items-center gap-2">
+                            <div className="bg-blue-50 text-blue-800 font-bold px-2 py-1 rounded text-sm min-w-[40px] text-center">
+                              {state}
                             </div>
+                            <StatusBadge 
+                              status={stateStatus} 
+                              licenseId={selectedLicense.id}
+                              state={state}
+                            />
                           </div>
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="col-span-1 flex items-center justify-end gap-1">
                             <Button 
-                              size="sm" 
+                              size="icon"
                               variant="outline"
-                              className="h-8 px-2 text-xs flex items-center gap-1 border-blue-200 hover:bg-blue-50"
+                              className="h-8 w-8 rounded-full border-blue-200 hover:bg-blue-50"
                               onClick={() => {
                                 // Encontrar o estado no array de estados visíveis e alternar
                                 const stateFlowVisible = visibleStateFlows.includes(state);
@@ -1220,18 +1218,18 @@ export default function AdminLicensesPage() {
                               title={visibleStateFlows.includes(state) ? "Ocultar progresso" : "Mostrar progresso"}
                             >
                               {visibleStateFlows.includes(state) ? 
-                                <><Eye className="h-3.5 w-3.5 text-blue-600" /> Ocultar</> : 
-                                <><EyeOff className="h-3.5 w-3.5 text-gray-600" /> Mostrar</>
+                                <Eye className="h-4 w-4 text-blue-600" /> : 
+                                <EyeOff className="h-4 w-4 text-gray-600" />
                               }
                             </Button>
                             <Button 
-                              size="sm" 
+                              size="icon"
                               variant="outline"
-                              className="h-8 px-2 text-xs flex items-center gap-1 border-green-200 hover:bg-green-50"
+                              className="h-8 w-8 rounded-full border-green-200 hover:bg-green-50"
                               onClick={() => handleStateStatusUpdate(selectedLicense, state)}
                               title="Atualizar status"
                             >
-                              <Pencil className="h-3.5 w-3.5 text-green-600" /> Editar
+                              <Pencil className="h-4 w-4 text-green-600" />
                             </Button>
                           </div>
                         </div>
