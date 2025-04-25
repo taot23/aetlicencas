@@ -118,17 +118,22 @@ export default function TrackLicensePage() {
     uniqueId?: string;
   }
   
+  // Função para atualizar ambas as consultas (licenças e rascunhos de renovação)
+  const handleRefresh = () => {
+    console.log("Atualizando licenças e rascunhos de renovação...");
+    // Atualizar ambas as consultas
+    refetch();
+    // Também atualizar a consulta de rascunhos de renovação usando o queryClient
+    queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts", { renewalOnly: true }] });
+  };
+  
   // Criar uma lista expandida de licenças separadas por estado (sem duplicação quando ordenadas)
   const expandedLicenses = useMemo(() => {
-    if (!licenses) return [];
+    // Combinamos licenças regulares e rascunhos de renovação
+    const allLicenses = [...(licenses || []), ...(renewalDrafts || [])];
+    if (allLicenses.length === 0) return [];
     
     const result: ExtendedLicenseWithId[] = [];
-    
-    // Combinar licenças regulares com os rascunhos de renovação
-    const allLicenses = [
-      ...(licenses || []),
-      ...(renewalDrafts || [])
-    ];
     
     allLicenses.forEach(license => {
       // Para cada estado na licença, crie uma entrada específica
@@ -265,15 +270,6 @@ export default function TrackLicensePage() {
 
   const handleViewLicense = (license: LicenseRequest) => {
     setSelectedLicense(license);
-  };
-  
-  // Função para recarregar ambos os dados ao clicar em atualizar
-  const handleRefresh = () => {
-    refetch();
-    // Também recarregar os rascunhos de renovação
-    if (renewalDrafts) {
-      queryClient.invalidateQueries({ queryKey: ["/api/licenses/drafts", { renewalOnly: true }] });
-    }
   };
 
   return (
