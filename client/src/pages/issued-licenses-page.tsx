@@ -504,28 +504,7 @@ export default function IssuedLicensesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           {/* Botão para baixar arquivo específico do estado - sempre disponível para licenças ativas */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            asChild 
-                            className="mr-1 flex items-center justify-center" 
-                            title={license.stateFileUrl ? "Baixar arquivo do estado" : "Arquivo do estado não disponível"}
-                          >
-                            <a 
-                              href={license.stateFileUrl || '#'} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                if (!license.stateFileUrl) {
-                                  e.preventDefault();
-                                  alert('Arquivo do estado não disponível no momento.');
-                                }
-                              }}
-                              className={!license.stateFileUrl ? "opacity-40 cursor-not-allowed" : ""}
-                            >
-                              <FileDown className="h-4 w-4" />
-                            </a>
-                          </Button>
+
                           
                           {/* Botão para baixar arquivo da licença completa - sempre disponível para licenças ativas */}
                           <Button 
@@ -612,30 +591,7 @@ export default function IssuedLicensesPage() {
                         <span className="font-medium text-gray-900">{license.requestNumber}</span>
                       </div>
                       <div className="flex space-x-1">
-                        {/* Botão para baixar arquivo específico do estado - sempre visível */}
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          asChild 
-                          className="h-8 w-8 p-0 flex items-center justify-center" 
-                          aria-label="Download do estado" 
-                          title={license.stateFileUrl ? "Baixar arquivo do estado" : "Arquivo do estado não disponível"}
-                        >
-                          <a 
-                            href={license.stateFileUrl || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              if (!license.stateFileUrl) {
-                                e.preventDefault();
-                                alert('Arquivo do estado não disponível no momento.');
-                              }
-                            }}
-                            className={!license.stateFileUrl ? "opacity-40 cursor-not-allowed" : ""}
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </a>
-                        </Button>
+
                         
                         {/* Botão para baixar arquivo da licença completa - sempre visível */}
                         <Button 
