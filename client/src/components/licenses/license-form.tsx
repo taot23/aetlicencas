@@ -158,8 +158,9 @@ export function LicenseForm({ draft, onComplete, onCancel, preSelectedTransporte
       length: draft.length / 100, // Convert from cm to meters for display
       width: draft.width ? draft.width / 100 : undefined, // Convert from cm to meters for display
       height: draft.height ? draft.height / 100 : undefined, // Convert from cm to meters for display
-      additionalPlates: draft.additionalPlates || [],
-      additionalPlatesDocuments: draft.additionalPlatesDocuments || [],
+      // Suporte para ambos os formatos de dados (camelCase e snake_case)
+      additionalPlates: draft.additionalPlates || (draft as any).additional_plates || [],
+      additionalPlatesDocuments: draft.additionalPlatesDocuments || (draft as any).additional_plates_documents || [],
       states: draft.states,
       isDraft: draft.isDraft,
       comments: draft.comments || undefined,
