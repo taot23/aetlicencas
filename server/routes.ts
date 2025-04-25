@@ -2332,7 +2332,12 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
   // Endpoint específico para atualizar o status de um estado específico em uma licença
   app.patch('/api/admin/licenses/:id/state-status', requireOperational, upload.single('stateFile'), async (req, res) => {
     try {
+      console.log("[API] Recebendo requisição para atualizar status de estado de licença");
+      console.log("[API] Corpo da requisição:", req.body);
+      console.log("[API] Arquivo:", req.file);
+      
       const licenseId = parseInt(req.params.id);
+      console.log("[API] ID da licença:", licenseId);
       
       // Validar dados do status do estado
       const stateStatusData = {
@@ -2343,6 +2348,8 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
         validUntil: req.body.validUntil,
         aetNumber: req.body.aetNumber, // Incluir número da AET
       };
+      
+      console.log("[API] Dados validados para atualização:", stateStatusData);
       
       try {
         updateLicenseStateSchema.parse(stateStatusData);
