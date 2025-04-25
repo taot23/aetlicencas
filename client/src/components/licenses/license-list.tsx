@@ -181,14 +181,9 @@ export function LicenseList({
   
   // Função para obter o número AET de um estado específico
   const getStateAETNumber = (license: LicenseRequest): string | undefined => {
-    // Verificar logs para debug
-    console.log("Buscando AET para licença:", license.id, "License object:", license);
-    
     // Primeira prioridade: buscar no array stateAETNumbers (nova implementação)
     // (formato esperado "estado:numeroAET")
     if (license.stateAETNumbers && Array.isArray(license.stateAETNumbers)) {
-      console.log("stateAETNumbers disponível:", license.stateAETNumbers);
-      
       // Se temos um estado específico
       if ((license as any).specificState) {
         const stateAET = license.stateAETNumbers.find(aet => 
@@ -198,7 +193,6 @@ export function LicenseList({
         if (stateAET) {
           const parts = stateAET.split(':');
           if (parts.length >= 2) {
-            console.log("Encontrado AET específico em stateAETNumbers:", parts[1]);
             return parts[1]; // Retorna o número AET
           }
         }
@@ -208,7 +202,6 @@ export function LicenseList({
         const firstAET = license.stateAETNumbers[0];
         const parts = firstAET.split(':');
         if (parts.length >= 2) {
-          console.log("Usando primeiro AET em stateAETNumbers:", parts[1]);
           return parts[1];
         }
       }
@@ -216,14 +209,11 @@ export function LicenseList({
     
     // Segunda prioridade: verificar campo aetNumber (compatibilidade)
     if (license.aetNumber) {
-      console.log("Usando aetNumber do objeto:", license.aetNumber);
       return license.aetNumber;
     }
     
     // Se a licença tiver um estado específico, tente extrair do stateStatuses (terceira prioridade)
     if ((license as any).specificState && license.stateStatuses && Array.isArray(license.stateStatuses)) {
-      console.log("Buscando em stateStatuses para estado específico:", (license as any).specificState);
-      
       // Verificar nos status aprovados que têm o formato "estado:approved:data:numeroAET"
       const approvedStatus = license.stateStatuses.find(ss => 
         ss.startsWith(`${(license as any).specificState}:approved:`) && ss.split(':').length >= 4
@@ -232,7 +222,6 @@ export function LicenseList({
       if (approvedStatus) {
         const parts = approvedStatus.split(':');
         if (parts.length >= 4) {
-          console.log("Encontrado AET em status aprovado:", parts[3]);
           return parts[3]; // Retorna o número AET
         }
       }
@@ -246,7 +235,6 @@ export function LicenseList({
       if (pendingStatus) {
         const parts = pendingStatus.split(':');
         if (parts.length >= 3) {
-          console.log("Encontrado AET em status pendente:", parts[2]);
           return parts[2]; // Retorna o número AET
         }
       }
@@ -254,8 +242,6 @@ export function LicenseList({
     
     // Para licenças com múltiplos estados sem estado específico (quarta prioridade)
     else if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
-      console.log("Buscando em stateStatuses (múltiplos estados)");
-      
       // Buscar primeiro número AET de qualquer estado aprovado
       const approvedWithAET = license.stateStatuses.find(ss => {
         const parts = ss.split(':');
@@ -264,7 +250,6 @@ export function LicenseList({
       
       if (approvedWithAET) {
         const parts = approvedWithAET.split(':');
-        console.log("Encontrado AET em status aprovado (múltiplos estados):", parts[3]);
         return parts[3];
       }
       
@@ -277,12 +262,10 @@ export function LicenseList({
       
       if (pendingWithAET) {
         const parts = pendingWithAET.split(':');
-        console.log("Encontrado AET em status pendente (múltiplos estados):", parts[2]);
         return parts[2];
       }
     }
     
-    console.log("Nenhum número AET encontrado para a licença:", license.id);
     return undefined;
   };
 
