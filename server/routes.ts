@@ -1537,7 +1537,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para admin/operational obter todas as licenças
   app.get('/api/admin/licenses', requireOperational, async (req, res) => {
     try {
-      const licenses = await storage.getAllLicenseRequests();
+      // Obter todas as licenças
+      const allLicenses = await storage.getAllLicenseRequests();
+      
+      // Verificar se deve incluir rascunhos de renovação (por padrão não inclui)
+      const shouldIncludeRenewalDrafts = req.query.includeRenewal === 'true';
+      
+      // Filtrar rascunhos de renovação, a menos que solicitado explicitamente para incluí-los
+      const licenses = shouldIncludeRenewalDrafts 
+        ? allLicenses 
+        : allLicenses.filter(license => {
+            // Se é um rascunho e o comentário menciona "Renovação", é um rascunho de renovação
+            if (license.isDraft && license.comments && license.comments.includes('Renovação')) {
+              return false; // excluir rascunhos de renovação
+            }
+            return true; // manter todos os outros
+          });
       
       // Log para diagnóstico
       if (licenses.length > 0) {
@@ -1548,6 +1563,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Licença exemplo recuperada:", JSON.stringify(licenses[licenses.length - 1], null, 2));
         console.log("Mesma licença diretamente do banco de dados:", JSON.stringify(dbResult[0], null, 2));
       }
+      
+      console.log(`Total de licenças admin: ${allLicenses.length}, filtradas: ${licenses.length}, incluindo renovação: ${shouldIncludeRenewalDrafts}`);
       
       res.json(licenses);
     } catch (error) {
@@ -1580,7 +1597,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para staff (operational/supervisor) obter todas as licenças
   app.get('/api/staff/licenses', requireOperational, async (req, res) => {
     try {
-      const licenses = await storage.getAllLicenseRequests();
+      // Obter todas as licenças
+      const allLicenses = await storage.getAllLicenseRequests();
+      
+      // Verificar se deve incluir rascunhos de renovação (por padrão não inclui)
+      const shouldIncludeRenewalDrafts = req.query.includeRenewal === 'true';
+      
+      // Filtrar rascunhos de renovação, a menos que solicitado explicitamente para incluí-los
+      const licenses = shouldIncludeRenewalDrafts 
+        ? allLicenses 
+        : allLicenses.filter(license => {
+            // Se é um rascunho e o comentário menciona "Renovação", é um rascunho de renovação
+            if (license.isDraft && license.comments && license.comments.includes('Renovação')) {
+              return false; // excluir rascunhos de renovação
+            }
+            return true; // manter todos os outros
+          });
+      
+      console.log(`Total de licenças staff: ${allLicenses.length}, filtradas: ${licenses.length}, incluindo renovação: ${shouldIncludeRenewalDrafts}`);
+      
       res.json(licenses);
     } catch (error) {
       console.error('Error fetching all license requests for staff:', error);
