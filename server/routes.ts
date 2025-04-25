@@ -16,7 +16,7 @@ import {
   userRoleEnum,
   licenseRequests
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import multer from "multer";
 import path from "path";
@@ -2492,6 +2492,50 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
     } catch (error) {
       console.error('Erro ao atualizar dimensões da licença:', error);
       res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  // Endpoint temporário para migrar os dados de aetNumber para stateAETNumbers
+  app.post('/api/admin/migrate-aet-numbers', requireAdmin, async (req, res) => {
+    try {
+      console.log('Iniciando migração de números AET...');
+      
+      // Buscar todas as licenças que têm número AET mas não têm stateAETNumbers
+      const licenses = await db.select().from(licenseRequests)
+        .where(sql`aet_number IS NOT NULL AND 
+                   (state_aet_numbers IS NULL OR array_length(state_aet_numbers, 1) IS NULL)`);
+      
+      console.log(`Encontradas ${licenses.length} licenças para migração`);
+      
+      let migratedCount = 0;
+      
+      // Para cada licença, criar um array stateAETNumbers com os estados da licença
+      for (const license of licenses) {
+        if (!license.aetNumber || !license.states || license.states.length === 0) {
+          console.log(`Pulando licença ${license.id}: sem número AET ou estados definidos`);
+          continue;
+        }
+        
+        console.log(`Migrando licença ${license.id} com AET ${license.aetNumber}`);
+        
+        // Criar um array de stateAETNumbers
+        const stateAETNumbers = license.states.map(state => `${state}:${license.aetNumber}`);
+        
+        // Atualizar a licença
+        await db.update(licenseRequests)
+          .set({ stateAETNumbers })
+          .where(eq(licenseRequests.id, license.id));
+        
+        migratedCount++;
+        console.log(`Licença ${license.id} atualizada com stateAETNumbers:`, stateAETNumbers);
+      }
+      
+      res.json({ 
+        message: `Migração concluída. ${migratedCount} licenças atualizadas de ${licenses.length} encontradas.` 
+      });
+    } catch (error) {
+      console.error('Erro na migração de números AET:', error);
+      res.status(500).json({ message: 'Erro durante migração de números AET' });
     }
   });
 
