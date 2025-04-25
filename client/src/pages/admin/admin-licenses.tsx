@@ -1309,25 +1309,39 @@ export default function AdminLicensesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {selectedLicense.states.map((state) => {
                     // Encontrar o status atual deste estado
-                    let stateStatus = "pending";
-                    if (selectedLicense.stateStatuses && selectedLicense.stateStatuses.length > 0) {
-                      console.log(`Verificando status para o estado ${state}, stateStatuses:`, selectedLicense.stateStatuses);
+                    let stateStatus = "pending_registration";
+                    
+                    // Log para depuração
+                    console.log(`Verificando status para o estado ${state}, stateStatuses:`, selectedLicense.stateStatuses);
+                    
+                    // Verificar se temos stateStatuses e é um array
+                    if (selectedLicense.stateStatuses && Array.isArray(selectedLicense.stateStatuses) && selectedLicense.stateStatuses.length > 0) {
+                      // Filtrar apenas entradas válidas - precisamos garantir que estamos trabalhando com strings
+                      const validEntries = selectedLicense.stateStatuses.filter(
+                        entry => typeof entry === 'string' && entry.length > 0
+                      );
                       
-                      const stateStatusEntry = selectedLicense.stateStatuses.find(entry => {
-                        const matches = typeof entry === 'string' && entry.startsWith(`${state}:`);
+                      // Buscar a entrada específica para este estado
+                      const stateStatusEntry = validEntries.find(entry => {
+                        const matches = entry.startsWith(`${state}:`);
                         console.log(`Verificando entry '${entry}' para estado ${state}, matches: ${matches}`);
                         return matches;
                       });
                       
+                      // Se encontramos uma entrada válida para este estado
                       if (stateStatusEntry) {
                         console.log(`Encontrou entry para ${state}:`, stateStatusEntry);
-                        const [_, status] = stateStatusEntry.split(':');
-                        if (status) {
-                          stateStatus = status;
+                        
+                        // Extrair o status do formato "ESTADO:STATUS[:DATA][:NUMERO_AET]"
+                        const parts = stateStatusEntry.split(':');
+                        if (parts.length >= 2) {
+                          stateStatus = parts[1];
                           console.log(`Status definido para ${state}: ${stateStatus}`);
                         }
                       }
                     }
+                    
+                    console.log(`Status final para ${state}: ${stateStatus}`);
                     
                     // Definir cores baseadas no status
                     let borderColor = "border-gray-200";
