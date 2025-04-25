@@ -2383,7 +2383,16 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
       console.log("Licença após atualização:", JSON.stringify(updatedLicense, null, 2));
       console.log("==== FIM DO DIAGNÓSTICO ====");
       
-      // Enviar notificação em tempo real via WebSocket
+      // Garantir que estamos enviando a lista completa de status de estados
+      if (updatedLicense.stateStatuses) {
+        console.log("Enviando stateStatuses completo via WebSocket:", 
+          JSON.stringify(updatedLicense.stateStatuses)
+        );
+      } else {
+        console.log("ATENÇÃO: stateStatuses está vazio ou não definido na licença atualizada");
+      }
+      
+      // Enviar notificação em tempo real via WebSocket com a lista completa de status
       broadcastMessage({
         type: 'STATUS_UPDATE',
         data: {
@@ -2391,6 +2400,7 @@ app.patch('/api/admin/licenses/:id/status', requireOperational, upload.single('l
           state: stateStatusData.state,
           status: stateStatusData.status,
           updatedAt: new Date().toISOString(),
+          stateStatuses: updatedLicense.stateStatuses, // Enviar a lista completa
           license: updatedLicense
         }
       });

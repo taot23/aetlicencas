@@ -155,6 +155,8 @@ export default function AdminLicensesPage() {
       selectedLicense && 
       lastMessage.data.licenseId === selectedLicense.id
     ) {
+      console.log("Recebendo atualização de status via WebSocket:", lastMessage.data);
+      
       // Se recebemos a licença completa, usar todos os dados dela
       if (lastMessage.data.license && lastMessage.data.license.stateStatuses) {
         setSelectedLicense(prevLicense => {
@@ -167,7 +169,24 @@ export default function AdminLicensesPage() {
         
         console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} atualizada com dados completos`);
       }
-      // Se o evento é apenas para um estado específico
+      // Se recebemos o array de estados completo
+      else if (lastMessage.data.stateStatuses && Array.isArray(lastMessage.data.stateStatuses)) {
+        console.log("Recebendo array completo de stateStatuses:", lastMessage.data.stateStatuses);
+        
+        // Criar uma cópia atualizada da licença selecionada com a lista completa
+        setSelectedLicense(prevLicense => {
+          if (!prevLicense) return null;
+          return {
+            ...prevLicense,
+            stateStatuses: lastMessage.data.stateStatuses,
+            // Se também recebemos uma atualização para o status geral da licença
+            ...(lastMessage.data.license?.status && { status: lastMessage.data.license.status })
+          };
+        });
+        
+        console.log(`StatusUpdate em tempo real: Licença ${selectedLicense.id} -> estados atualizados com array completo`);
+      }
+      // Se o evento é apenas para um estado específico (caso de fallback)
       else if (lastMessage.data.state) {
         // Atualização de status de um estado específico
         // Garantir que temos um array de status existente para trabalhar
