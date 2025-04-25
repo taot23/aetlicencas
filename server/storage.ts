@@ -1019,24 +1019,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getIssuedLicensesByUserId(userId: number): Promise<LicenseRequest[]> {
-    // Caso especial para admin (userId=0)
-    if (userId === 0) {
-      // Esta consulta é aproximada, pois o PostgreSQL não tem uma maneira direta
-      // de verificar se todos os elementos de um array atendem a uma condição
-      return db.select()
-        .from(licenseRequests)
-        .where(eq(licenseRequests.status, "approved"))
-        .orderBy(desc(licenseRequests.createdAt));
+    // Obter todas as licenças não rascunho
+    let query = db.select().from(licenseRequests).where(eq(licenseRequests.isDraft, false));
+    
+    // Aplicar filtro de usuário, se não for admin (userId != 0)
+    if (userId !== 0) {
+      query = query.where(eq(licenseRequests.userId, userId));
     }
     
-    // Caso normal para usuários
-    return db.select()
-      .from(licenseRequests)
-      .where(and(
-        eq(licenseRequests.userId, userId),
-        eq(licenseRequests.status, "approved")
-      ))
-      .orderBy(desc(licenseRequests.createdAt));
+    // Executar a consulta e ordenar
+    const allLicenses = await query.orderBy(desc(licenseRequests.createdAt));
+    
+    // Filtrar em memória para encontrar licenças com pelo menos um estado aprovado
+    return allLicenses.filter(license => {
+      // Verificar se o status principal é 'approved'
+      if (license.status === 'approved') return true;
+      
+      // Verificar se pelo menos um estado tem status 'approved'
+      if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
+        return license.stateStatuses.some(stateStatus => 
+          stateStatus.includes(':approved') || 
+          stateStatus.includes(':approved:') // Formato com data de validade
+        );
+      }
+      
+      return false;
+    });
   }
 
   async getAllLicenseRequests(): Promise<LicenseRequest[]> {
@@ -1044,13 +1052,27 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAllIssuedLicenses(): Promise<LicenseRequest[]> {
-    // Busca todas as licenças com status 'approved' ou que tenham pelo menos um estado aprovado
-    // Essa consulta é uma aproximação, pois precisaríamos de uma verificação mais complexa
-    // para os status de cada estado dentro do array stateStatuses
-    return db.select()
+    // Obter todas as licenças não rascunho
+    const allLicenses = await db.select()
       .from(licenseRequests)
-      .where(eq(licenseRequests.status, "approved"))
+      .where(eq(licenseRequests.isDraft, false))
       .orderBy(desc(licenseRequests.createdAt));
+    
+    // Filtrar em memória para encontrar licenças com pelo menos um estado aprovado
+    return allLicenses.filter(license => {
+      // Verificar se o status principal é 'approved'
+      if (license.status === 'approved') return true;
+      
+      // Verificar se pelo menos um estado tem status 'approved'
+      if (license.stateStatuses && Array.isArray(license.stateStatuses)) {
+        return license.stateStatuses.some(stateStatus => 
+          stateStatus.includes(':approved') || 
+          stateStatus.includes(':approved:') // Formato com data de validade
+        );
+      }
+      
+      return false;
+    });
   }
 
   async createLicenseRequest(userId: number, licenseData: InsertLicenseRequest & { requestNumber: string, isDraft: boolean }): Promise<LicenseRequest> {
