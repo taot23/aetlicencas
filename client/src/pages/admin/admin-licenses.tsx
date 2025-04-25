@@ -210,6 +210,8 @@ export default function AdminLicensesPage() {
       status: "",
       comments: "",
       aetNumber: "", // Adicionar campo para número da AET
+      licenseFile: undefined, // Adicionar valor padrão para licenseFile
+      validUntil: undefined, // Adicionar valor padrão para validUntil
     },
   });
 
@@ -400,6 +402,8 @@ export default function AdminLicensesPage() {
       status: currentStateStatus,
       comments: "",
       aetNumber: "", // Resetar também o campo de número da AET
+      licenseFile: undefined, // Resetar o campo de arquivo
+      validUntil: undefined, // Resetar a data de validade
     });
     
     setStateStatusDialogOpen(true);
