@@ -1311,11 +1311,20 @@ export default function AdminLicensesPage() {
                     // Encontrar o status atual deste estado
                     let stateStatus = "pending";
                     if (selectedLicense.stateStatuses && selectedLicense.stateStatuses.length > 0) {
-                      const stateStatusEntry = selectedLicense.stateStatuses.find(entry => entry.startsWith(`${state}:`));
+                      console.log(`Verificando status para o estado ${state}, stateStatuses:`, selectedLicense.stateStatuses);
+                      
+                      const stateStatusEntry = selectedLicense.stateStatuses.find(entry => {
+                        const matches = typeof entry === 'string' && entry.startsWith(`${state}:`);
+                        console.log(`Verificando entry '${entry}' para estado ${state}, matches: ${matches}`);
+                        return matches;
+                      });
+                      
                       if (stateStatusEntry) {
+                        console.log(`Encontrou entry para ${state}:`, stateStatusEntry);
                         const [_, status] = stateStatusEntry.split(':');
                         if (status) {
                           stateStatus = status;
+                          console.log(`Status definido para ${state}: ${stateStatus}`);
                         }
                       }
                     }
