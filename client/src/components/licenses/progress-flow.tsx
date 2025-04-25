@@ -13,9 +13,36 @@ interface ProgressFlowProps {
   currentStatus: string;
   className?: string;
   size?: "xs" | "sm" | "md" | "lg";
+  licenseId?: number;
+  state?: string;
 }
 
-export function ProgressFlow({ currentStatus, className, size = "md" }: ProgressFlowProps) {
+export function ProgressFlow({ currentStatus: initialStatus, className, size = "md", licenseId, state }: ProgressFlowProps) {
+  // Estado local para o status, inicializado com o valor passado como prop
+  const [status, setStatus] = useState(initialStatus);
+  const { lastMessage } = useWebSocketContext();
+  
+  // Efeito para atualizar o status quando receber mensagem WebSocket
+  useEffect(() => {
+    if (
+      lastMessage?.type === 'STATUS_UPDATE' && 
+      lastMessage.data && 
+      licenseId && 
+      lastMessage.data.licenseId === licenseId
+    ) {
+      // Se o evento é específico para um estado e corresponde ao estado que estamos mostrando
+      if (state && lastMessage.data.state === state) {
+        setStatus(lastMessage.data.status);
+        console.log(`ProgressFlow: Status atualizado para licença ${licenseId}, estado ${state}: ${lastMessage.data.status}`);
+      }
+      // Se estamos mostrando o status geral da licença (sem estado específico) e o evento é para a licença geral
+      else if (!state && lastMessage.data.license?.status) {
+        setStatus(lastMessage.data.license.status);
+        console.log(`ProgressFlow: Status geral atualizado para licença ${licenseId}: ${lastMessage.data.license.status}`);
+      }
+    }
+  }, [lastMessage, licenseId, state]);
+  
   // Etapas padrão do fluxo normal (sem os estados terminais especiais)
   const normalSteps: ProgressFlowStep[] = [
     { label: "Pedido em Cadastramento", value: "pending_registration", number: 1 },
@@ -32,7 +59,7 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
   ];
   
   // Verificar se o status atual é um dos especiais
-  const isSpecialStatus = specialSteps.some(step => step.value === currentStatus);
+  const isSpecialStatus = specialSteps.some(step => step.value === status);
   
   // Definir quais passos mostrar com base no status atual
   let steps: ProgressFlowStep[];
@@ -40,15 +67,15 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
   if (isSpecialStatus) {
     // Se for um status especial, pegamos os passos normais até onde estamos
     // e adicionamos apenas o status especial atual
-    const currentSpecialStep = specialSteps.find(step => step.value === currentStatus)!;
+    const currentSpecialStep = specialSteps.find(step => step.value === status)!;
     
-    if (currentStatus === "rejected") {
+    if (status === "rejected") {
       // Para "Reprovado", mostramos os dois primeiros passos + Reprovado
       steps = [
         ...normalSteps.slice(0, 2),
         currentSpecialStep
       ];
-    } else if (currentStatus === "canceled") {
+    } else if (status === "canceled") {
       // Para "Cancelado", mostramos apenas ele, seguido pelos passos normais
       steps = [
         currentSpecialStep,
@@ -63,7 +90,7 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
   }
 
   // Encontrar o índice do status atual
-  const currentIndex = steps.findIndex(step => step.value === currentStatus);
+  const currentIndex = steps.findIndex(step => step.value === status);
   
   // Determinar tamanhos com base no parâmetro size
   const getSize = () => {
@@ -114,7 +141,7 @@ export function ProgressFlow({ currentStatus, className, size = "md" }: Progress
       {steps.map((step, index) => {
         // Determinando o estado visual do passo
         const isCompleted = currentIndex >= index;
-        const isCurrent = step.value === currentStatus;
+        const isCurrent = step.value === status;
         // Para o caso especial "Reprovado", sempre mostramos em vermelho se for o status atual
         const isRejected = step.value === "rejected" && isCurrent;
         // Para o caso de "Cancelado", mostramos em cinza se for o status atual
@@ -201,7 +228,9 @@ export function StateProgressFlow({
     <ProgressFlow 
       currentStatus={stateStatus} 
       className={cn("max-w-full min-w-full", className)} 
-      size={size} 
+      size={size}
+      licenseId={licenseId}
+      state={state}
     />
   );
 }
