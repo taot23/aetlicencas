@@ -106,9 +106,18 @@ export default function IssuedLicensesPage() {
     }
     
     issuedLicenses.forEach(license => {
+      // Preserva todos os campos originais da licença
+      const originalLicense = { ...license };
+      
       // Debugging - exibir dados da licença
       console.log("Processando licença:", license.id, "Transportador:", license.transporterId, 
-                 "Nome transportador:", license.transporter_name || (license as any).transporterName);
+                 "Nome transportador:", license.transporter_name || license.transporterName);
+      
+      // Garantir que temos um nome do transportador
+      const transporterName = license.transporter_name || 
+                            license.transporterName || 
+                            (typeof license.transporterId === 'object' && license.transporterId && 'name' in license.transporterId ? 
+                             (license.transporterId as any).name : "Não informado");
       
       // Verificar se license.states existe e é um array
       if (!Array.isArray(license.states) || license.states.length === 0) {
@@ -116,11 +125,6 @@ export default function IssuedLicensesPage() {
         
         // Se a licença está aprovada, mas não tem estados definidos, criar uma linha padrão
         if (license.status === 'approved') {
-          const transporterName = license.transporter_name || 
-                                (license as any).transporterName || 
-                                (typeof license.transporterId === 'object' && license.transporterId && 'name' in license.transporterId ? 
-                                 (license.transporterId as any).name : null);
-          
           result.push({
             id: license.id * 100, // Gerar ID único para a linha
             licenseId: license.id,
@@ -132,11 +136,12 @@ export default function IssuedLicensesPage() {
             stateStatus: 'approved',
             emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
             validUntil: license.validUntil ? license.validUntil.toString() : null,
-            licenseFileUrl: license.licenseFileUrl,
+            licenseFileUrl: license.licenseFileUrl || originalLicense.licenseFileUrl || null,
             stateFileUrl: null,
             transporterId: license.transporterId || 0,
-            aetNumber: license.aetNumber || null,
-            transporterName
+            aetNumber: license.aetNumber || originalLicense.aetNumber || null,
+            transporterName,
+            ...originalLicense // Preservar todos os campos originais
           });
         }
         
@@ -166,12 +171,6 @@ export default function IssuedLicensesPage() {
             console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
           }
           
-          // Garantir que o nome do transportador seja obtido de qualquer formato disponível
-          const transporterName = license.transporter_name || 
-                                (license as any).transporterName || 
-                                (typeof license.transporterId === 'object' && 'name' in license.transporterId ? 
-                                 (license.transporterId as any).name : null);
-          
           console.log(`Adicionando linha para licença ${license.id}, estado ${state}, transportador: ${transporterName}`);
           
           result.push({
@@ -185,11 +184,12 @@ export default function IssuedLicensesPage() {
             stateStatus,
             emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
             validUntil: stateValidUntil,
-            licenseFileUrl: license.licenseFileUrl,
+            licenseFileUrl: license.licenseFileUrl || originalLicense.licenseFileUrl || null,
             stateFileUrl,
             transporterId: license.transporterId || 0,
-            aetNumber: license.aetNumber || null, // Incluir número da AET
-            transporterName // Incluir nome do transportador
+            aetNumber: license.aetNumber || originalLicense.aetNumber || null,
+            transporterName,
+            ...originalLicense // Preservar todos os campos originais
           });
         }
       });

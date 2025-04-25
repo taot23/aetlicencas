@@ -119,6 +119,17 @@ export function LicenseList({
 
   // Function to render actions based on list type and license status
   const renderActions = (license: LicenseRequest) => {
+    // Função para obter a URL do arquivo da licença de qualquer estrutura
+    const getLicenseFileUrl = (license: any): string | null => {
+      // Tenta todas as possíveis propriedades onde a URL pode estar
+      return license.licenseFileUrl || 
+             license.license_file_url || 
+             (license as any).license_file_url || 
+             (license.stateFiles && license.stateFiles.length > 0 ? license.stateFiles[0].split(':')[1] : null);
+    };
+    
+    const licenseFileUrl = getLicenseFileUrl(license);
+    
     if (isDraftList) {
       return (
         <>
@@ -164,19 +175,19 @@ export function LicenseList({
               size="icon"
               asChild
               className="text-green-600 hover:text-green-800 hover:bg-green-50"
-              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+              title={licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
             >
               <a 
-                href={license.licenseFileUrl || '#'} 
+                href={licenseFileUrl || '#'} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={(e) => {
-                  if (!license.licenseFileUrl) {
+                  if (!licenseFileUrl) {
                     e.preventDefault();
                     alert('Arquivo da licença não disponível no momento.');
                   }
                 }}
-                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                className={!licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
               >
                 <Download className="h-4 w-4" />
               </a>
@@ -316,19 +327,19 @@ export function LicenseList({
                               size="sm"
                               asChild
                               className="text-green-600 border-green-200 mr-1"
-                              title={license.licenseFileUrl ? "Baixar licença" : "Arquivo não disponível"}
+                              title={getLicenseFileUrl(license) ? "Baixar licença" : "Arquivo não disponível"}
                             >
                               <a 
-                                href={license.licenseFileUrl || '#'} 
+                                href={getLicenseFileUrl(license) || '#'} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
-                                  if (!license.licenseFileUrl) {
+                                  if (!getLicenseFileUrl(license)) {
                                     e.preventDefault();
                                     alert('Arquivo da licença não disponível no momento.');
                                   }
                                 }}
-                                className={!license.licenseFileUrl ? "opacity-40 cursor-not-allowed" : ""}
+                                className={!getLicenseFileUrl(license) ? "opacity-40 cursor-not-allowed" : ""}
                               >
                                 <Download className="h-4 w-4 mr-1" /> Download
                               </a>
