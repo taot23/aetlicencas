@@ -13,6 +13,15 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+// Função para obter a URL do arquivo da licença de qualquer estrutura
+const getLicenseFileUrl = (license: any): string | null => {
+  // Tenta todas as possíveis propriedades onde a URL pode estar
+  return license.licenseFileUrl || 
+         license.license_file_url || 
+         (license as any).license_file_url || 
+         (license.stateFiles && license.stateFiles.length > 0 ? license.stateFiles[0].split(':')[1] : null);
+};
+
 interface LicenseDetailsCardProps {
   license: LicenseRequest;
 }
@@ -931,10 +940,10 @@ export function LicenseDetailsCard({ license }: LicenseDetailsCardProps) {
       )}
 
       {/* Botão de download para licença aprovada/liberada */}
-      {currentStatus === "approved" && license.licenseFileUrl && (
+      {currentStatus === "approved" && getLicenseFileUrl(license) && (
         <div className="mt-6 flex justify-center">
           <Button asChild className="w-full sm:w-auto flex items-center gap-2" size="lg">
-            <a href={license.licenseFileUrl} target="_blank" rel="noopener noreferrer">
+            <a href={getLicenseFileUrl(license)} target="_blank" rel="noopener noreferrer">
               <FileDown className="h-5 w-5" />
               Download da Licença Completa
             </a>

@@ -106,93 +106,113 @@ export default function IssuedLicensesPage() {
     }
     
     issuedLicenses.forEach(license => {
-      // Preserva todos os campos originais da licença
-      const originalLicense = { ...license };
-      
-      // Debugging - exibir dados da licença
-      console.log("Processando licença:", license.id, "Transportador:", license.transporterId, 
-                 "Nome transportador:", license.transporter_name || license.transporterName);
-      
-      // Garantir que temos um nome do transportador
-      const transporterName = license.transporter_name || 
-                            license.transporterName || 
-                            (typeof license.transporterId === 'object' && license.transporterId && 'name' in license.transporterId ? 
-                             (license.transporterId as any).name : "Não informado");
-      
-      // Verificar se license.states existe e é um array
-      if (!Array.isArray(license.states) || license.states.length === 0) {
-        console.log(`Licença ${license.id} não tem estados definidos ou é um array vazio`);
+      try {
+        // Normaliza os campos para lidar com diferentes formatos de dados
+        const normalizedLicense = {
+          id: license.id,
+          licenseId: license.id,
+          requestNumber: license.requestNumber || license.request_number,
+          type: license.type,
+          mainVehiclePlate: license.mainVehiclePlate || license.main_vehicle_plate,
+          status: license.status,
+          transporterId: license.transporterId || license.transporter_id || 0,
+          transporterName: license.transporter_name || license.transporterName || "Não informado",
+          aetNumber: license.aetNumber || license.aet_number || null,
+          emissionDate: license.updatedAt || license.updated_at || null,
+          validUntil: license.validUntil || license.valid_until || null,
+          licenseFileUrl: license.licenseFileUrl || license.license_file_url || null,
+          states: Array.isArray(license.states) ? license.states : [],
+          stateStatuses: Array.isArray(license.stateStatuses) ? license.stateStatuses : 
+                         Array.isArray(license.state_statuses) ? license.state_statuses : [],
+          stateFiles: Array.isArray(license.stateFiles) ? license.stateFiles : 
+                      Array.isArray(license.state_files) ? license.state_files : []
+        }; 
         
-        // Se a licença está aprovada, mas não tem estados definidos, criar uma linha padrão
-        if (license.status === 'approved') {
-          result.push({
-            id: license.id * 100, // Gerar ID único para a linha
-            licenseId: license.id,
-            requestNumber: license.requestNumber,
-            type: license.type,
-            mainVehiclePlate: license.mainVehiclePlate,
-            state: 'N/A',
-            status: 'approved',
-            stateStatus: 'approved',
-            emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
-            validUntil: license.validUntil ? license.validUntil.toString() : null,
-            licenseFileUrl: license.licenseFileUrl || originalLicense.licenseFileUrl || null,
-            stateFileUrl: null,
-            transporterId: license.transporterId || 0,
-            aetNumber: license.aetNumber || originalLicense.aetNumber || null,
-            transporterName,
-            ...originalLicense // Preservar todos os campos originais
-          });
-        }
+        // Debugging - exibir dados da licença
+        console.log("Processando licença normalizada:", normalizedLicense.id, 
+                   "Transportador:", normalizedLicense.transporterId, 
+                   "Nome transportador:", normalizedLicense.transporterName,
+                   "URL do arquivo:", normalizedLicense.licenseFileUrl);
         
-        return; // Pular para a próxima licença
-      }
-      
-      // Para cada licença, expandir para uma linha por estado
-      license.states.forEach((state, index) => {
-        // Verifica se este estado específico foi aprovado
-        const stateStatusEntry = license.stateStatuses?.find(entry => entry.startsWith(`${state}:`));
-        const stateStatus = stateStatusEntry?.split(':')?.[1] || 'pending_registration';
-        const stateFileEntry = license.stateFiles?.find(entry => entry.startsWith(`${state}:`));
-        const stateFileUrl = stateFileEntry?.split(':')?.[1] || null;
-        
-        console.log(`Estado ${state} tem status: ${stateStatus}, licença geral tem status: ${license.status}`);
-        
-        // SEMPRE incluir estados quando a licença tem status geral aprovado
-        // Esse é o ponto crítico que estava causando o problema!
-        if (license.status === 'approved') {
-          // Obter data de validade específica para este estado, se disponível
-          let stateValidUntil = license.validUntil ? license.validUntil.toString() : null;
+        // Verificar se license.states existe e é um array
+        if (!Array.isArray(normalizedLicense.states) || normalizedLicense.states.length === 0) {
+          console.log(`Licença ${normalizedLicense.id} não tem estados definidos ou é um array vazio`);
           
-          // Novo formato: "estado:status:data_validade"
-          if (stateStatusEntry && stateStatusEntry.split(':').length > 2) {
-            // Extrair data de validade do formato estado:status:data
-            stateValidUntil = stateStatusEntry.split(':')[2];
-            console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
+          // Se a licença está aprovada, mas não tem estados definidos, criar uma linha padrão
+          if (normalizedLicense.status === 'approved') {
+            result.push({
+              id: normalizedLicense.id * 100, // Gerar ID único para a linha
+              licenseId: normalizedLicense.id,
+              requestNumber: normalizedLicense.requestNumber,
+              type: normalizedLicense.type,
+              mainVehiclePlate: normalizedLicense.mainVehiclePlate,
+              state: 'N/A',
+              status: 'approved',
+              stateStatus: 'approved',
+              emissionDate: normalizedLicense.emissionDate ? normalizedLicense.emissionDate.toString() : null,
+              validUntil: normalizedLicense.validUntil ? normalizedLicense.validUntil.toString() : null,
+              licenseFileUrl: normalizedLicense.licenseFileUrl,
+              stateFileUrl: null,
+              transporterId: normalizedLicense.transporterId,
+              aetNumber: normalizedLicense.aetNumber,
+              transporterName: normalizedLicense.transporterName
+            });
           }
           
-          console.log(`Adicionando linha para licença ${license.id}, estado ${state}, transportador: ${transporterName}`);
-          
-          result.push({
-            id: license.id * 100 + index, // Gerar ID único para a linha
-            licenseId: license.id,
-            requestNumber: license.requestNumber,
-            type: license.type,
-            mainVehiclePlate: license.mainVehiclePlate,
-            state,
-            status: stateStatus,
-            stateStatus,
-            emissionDate: license.updatedAt ? license.updatedAt.toString() : null,
-            validUntil: stateValidUntil,
-            licenseFileUrl: license.licenseFileUrl || originalLicense.licenseFileUrl || null,
-            stateFileUrl,
-            transporterId: license.transporterId || 0,
-            aetNumber: license.aetNumber || originalLicense.aetNumber || null,
-            transporterName,
-            ...originalLicense // Preservar todos os campos originais
-          });
+          return; // Pular para a próxima licença
         }
-      });
+        
+        // Para cada licença, expandir para uma linha por estado
+        normalizedLicense.states.forEach((state, index) => {
+          try {
+            // Verifica se este estado específico foi aprovado
+            const stateStatusEntry = normalizedLicense.stateStatuses?.find(entry => entry.startsWith(`${state}:`));
+            const stateStatus = stateStatusEntry?.split(':')?.[1] || 'pending_registration';
+            const stateFileEntry = normalizedLicense.stateFiles?.find(entry => entry.startsWith(`${state}:`));
+            const stateFileUrl = stateFileEntry?.split(':')?.[1] || null;
+            
+            console.log(`Estado ${state} tem status: ${stateStatus}, licença geral tem status: ${normalizedLicense.status}`);
+            
+            // SEMPRE incluir estados quando a licença tem status geral aprovado
+            if (normalizedLicense.status === 'approved') {
+              // Obter data de validade específica para este estado, se disponível
+              let stateValidUntil = normalizedLicense.validUntil ? normalizedLicense.validUntil.toString() : null;
+              
+              // Novo formato: "estado:status:data_validade"
+              if (stateStatusEntry && stateStatusEntry.split(':').length > 2) {
+                // Extrair data de validade do formato estado:status:data
+                stateValidUntil = stateStatusEntry.split(':')[2];
+                console.log(`Data de validade extraída para ${state}: ${stateValidUntil}`);
+              }
+              
+              console.log(`Adicionando linha para licença ${normalizedLicense.id}, estado ${state}, transportador: ${normalizedLicense.transporterName}, URL arquivo: ${normalizedLicense.licenseFileUrl}`);
+              
+              // Criar uma entrada completa COM os campos normalizados
+              result.push({
+                id: normalizedLicense.id * 100 + index, // Gerar ID único para a linha
+                licenseId: normalizedLicense.id,
+                requestNumber: normalizedLicense.requestNumber,
+                type: normalizedLicense.type,
+                mainVehiclePlate: normalizedLicense.mainVehiclePlate,
+                state,
+                status: normalizedLicense.status, // Use o status GERAL da licença, não o do estado
+                stateStatus,
+                emissionDate: normalizedLicense.emissionDate ? normalizedLicense.emissionDate.toString() : null,
+                validUntil: stateValidUntil,
+                licenseFileUrl: normalizedLicense.licenseFileUrl,
+                stateFileUrl,
+                transporterId: normalizedLicense.transporterId,
+                aetNumber: normalizedLicense.aetNumber,
+                transporterName: normalizedLicense.transporterName
+              });
+            }
+          } catch (err) {
+            console.error(`Erro ao processar estado ${state} da licença ${normalizedLicense.id}:`, err);
+          }
+        });
+      } catch (err) {
+        console.error("Erro ao processar licença:", license.id, err);
+      }
     });
     
     console.log("Licenças expandidas:", result);
